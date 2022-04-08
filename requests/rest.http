@@ -1,0 +1,18 @@
+###
+POST http://{{host}}/fe/exec
+Content-Type: application/json
+Accept: application/json
+
+{
+  "function": {
+    "input": [
+      {"name": "str", "type": "String", "value": "Hello"},
+      {"name": "i32", "type": "Int32", "value": 31071996}
+    ],
+    "output": [
+      {"name": "str", "type": "String"},
+      {"name": "i32", "type": "Int32"}
+    ],
+    "code": "return {str, i32}"
+  }
+}

@@ -1,0 +1,92 @@
+syntax = "proto3";
+
+package viot;
+
+import "google/protobuf/any.proto";
+
+service FEngineExecutor {
+  rpc Execute(Script) returns (Result) {}
+}
+
+service FEngineThing {
+  rpc ResolveService(ScriptRequest) returns (Script) {}
+}
+
+service FEngineData {
+  rpc Select(SelectRequest) returns (Script) {}
+  rpc Insert(InsertRequest) returns (Script) {}
+  rpc Update(UpdateRequest) returns (Script) {}
+  rpc Delete(DeleteRequest) returns (Script) {}
+}
+
+
+//#endregion FEngineExecutor
+message Script {
+  Function function = 1;
+  repeated Variable attributes = 2;
+  map<string, Function> referee = 3;
+}
+
+message Function {
+  repeated Variable input = 1;
+  repeated Variable output = 2;
+
+  string code = 3;
+}
+
+message Result {
+  Variable output = 1;
+  UpdateScript update = 2;
+}
+
+message UpdateScript {
+
+}
+
+message Variable {
+  string name = 1;
+  Type   type = 2;
+
+  oneof value {
+    int32  i32 = 3;
+    int64  i64 = 4;
+    float  f32 = 5;
+    double f64 = 6;
+    bool   bol = 7;
+    string str = 8;
+    bytes  bin = 9;
+    google.protobuf.Any any = 10;
+  }
+}
+
+enum Type {
+  Any = 0;
+  Int32 = 1;
+  Int64 = 2;
+  Float = 3;
+  Double = 4;
+  Bool = 5;
+  String = 6;
+  Bytes = 7;
+  Object = 8;
+}
+//#endregion FEngineExecutor
+
+//#region FEngineData
+message ScriptRequest {
+
+}
+
+message SelectRequest {
+
+}
+message InsertRequest {
+
+}
+message UpdateRequest {
+
+}
+message DeleteRequest {
+
+}
+//#endregion FEngineData

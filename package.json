@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "protoc-gen-grpc": "^2.0.3"
+  }
+}

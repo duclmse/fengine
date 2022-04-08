@@ -1,0 +1,18 @@
+{
+  "printWidth": 120,
+  "bracketSpacing": false,
+  "arrowParens": "avoid",
+  "overrides": [
+    {
+      "files": ["*.js"],
+      "options": {
+        "bracketSpacing": false,
+        "trailingComma": "es5"
+      }
+    },
+    {
+      "files": ".prettierrc",
+      "options": {"parser": "json"}
+    }
+  ]
+}

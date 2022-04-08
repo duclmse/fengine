@@ -1,0 +1,25 @@
+{
+  "name": "fengine",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "duclmdev@gmail.com",
+  "license": "ISC",
+  "dependencies": {
+    "@grpc/grpc-js": "^1.5.6",
+    "@grpc/proto-loader": "^0.6.9",
+    "@mapbox/node-pre-gyp": "^1.0.9",
+    "async": "^3.2.3",
+    "dotenv": "^16.0.0",
+    "google-protobuf": "^3.20.0",
+    "grpc-tools": "^1.11.2",
+    "vm2": "^3.9.7"
+  },
+  "devDependencies": {
+    "lodash": "^4.17.21"
+  }
+}
