@@ -2,11 +2,10 @@ package grpc
 
 import (
 	"context"
-	"errors"
-	"fmt"
+	"google.golang.org/grpc"
 
 	"github.com/duclmse/fengine/fengine"
-	"github.com/duclmse/fengine/pb"
+	. "github.com/duclmse/fengine/pb"
 	kitot "github.com/go-kit/kit/tracing/opentracing"
 	kitgrpc "github.com/go-kit/kit/transport/grpc"
 	"github.com/opentracing/opentracing-go"
@@ -14,25 +13,25 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-var _ pb.FEngineServiceServer = (*grpcServer)(nil)
+var _ FEngineExecutorClient = (*grpcServer)(nil)
 
 type grpcServer struct {
 	identityNameInfo kitgrpc.Handler
 }
 
-func NewServer(tracer opentracing.Tracer, svc fengine.Service) pb.FEngineServiceServer {
+func NewServer(tracer opentracing.Tracer, svc fengine.Service) FEngineExecutorClient {
 	return &grpcServer{
 		identityNameInfo: kitgrpc.NewServer(
-			kitot.TraceServer(tracer, "Get")(grpcGet(svc)),
+			kitot.TraceServer(tracer, "Execute")(grpcGet(svc)),
 			decodeIdentifyNameRequest,
 			encodeIdentifyNameResponse,
 		),
 	}
 }
 
-func (gs grpcServer) GrpcGet(ctx context.Context, id *pb.ID) (*pb.Info, error) {
-	fmt.Printf("Executing GrpcGet...")
-	return nil, encodeError(errors.New("not implemented"))
+func (g grpcServer) Execute(ctx context.Context, in *Script, opts ...grpc.CallOption) (*Result, error) {
+	//TODO implement me
+	panic("implement me")
 }
 
 func encodeError(err error) error {

@@ -16,3 +16,32 @@ Accept: application/json
     "code": "return {str, i32}"
   }
 }
+
+###
+POST http://{{host}}/fe/condition
+Content-Type: application/json
+Accept: application/json
+
+{
+  "$and": [
+    {"id": {"$in": [1, 1.1, 2, 3, 4]}},
+    {
+      "$and": [
+        {"id": {"$nin": [1.1, 2, 3, 4]}},
+        {
+          "$or": [
+            {"trigger_time": {"$ge": "01:23:45", "$le": "12:34:56"}},
+            {"trigger_date": {"$ge": "2020-08-19", "$le": "2020-09-02"}}
+          ]
+        },
+        {"available": true}
+      ]
+    },
+    {
+      "$or": [
+        {"name": {"$find": "summer sale"}},
+        {"name": {"$match": "+summer -sale +(>vacation <firework)"}}
+      ]
+    }
+  ]
+}

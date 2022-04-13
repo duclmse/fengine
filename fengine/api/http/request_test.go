@@ -56,6 +56,23 @@ func Test_Unmarshall(t *testing.T) {
 	fmt.Printf("%s\n", string(data))
 }
 
+func Test_Filter(t *testing.T) {
+	type a struct {
+		a map[string]string `json:"-"`
+	}
+	data := []byte(`{
+		"key": "value"
+	}`)
+	va := a{}
+	err := json.Unmarshal(data, &va)
+	if err != nil {
+		fmt.Printf("%v\n", err)
+		fmt.Printf("%v\n", va.a)
+		return
+	}
+	fmt.Printf("%v\n", va.a)
+}
+
 func printArgs(variables []Variable) {
 	for i, arg := range variables {
 		fmt.Printf("%d %s %s(%v): %v\n", i, arg.Name, TypeString[arg.Type], arg.Type, arg.Value)

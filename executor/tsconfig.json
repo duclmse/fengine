@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "baseUrl": "./src",
+    "experimentalDecorators": true,
+    "jsx": "react",
+    "lib": ["DOM", "ES2015", "ES2015.Promise"],
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "noImplicitAny": true,
+    "noUnusedLocals": true,
+    "esModuleInterop": true,
+    "rootDirs": ["./src"],
+    "outDir": "dist",
+    "paths": {
+      "@project/app/modules/*": ["modules/*"]
+    },
+    "typeRoots": [
+      "node_modules/@types"
+    ],
+    "sourceMap": true,
+    "target": "ES6"
+  },
+  "include": ["src"],
+  "exclude": [
+    "node_modules",
+    "tools"
+  ]
+}

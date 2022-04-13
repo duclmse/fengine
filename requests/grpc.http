@@ -12,20 +12,19 @@ GRPC localhost:1234/viot.FEngineExecutor/Execute
       {"name": "i", "i32": 123}
     ],
     "output": [
-      {"name": "s", "type": "String"},
-      {"name": "i", "type": "Int32"}
+      {"name": "s"}
     ],
-    "code": "me.test({s, i});\nTable('a').Select({'and':[{'a':{'$gt':10}}]});\nreturn {i:i+me.i, s:s+me.s}"
+    "code": "me.test({s,i});\nTable('a').Select({and:[{a:{$gt:10,$lt:20}}]});\nme.i=0;\nreturn {i:i+me.i, s:s+me.s}"
   },
   "referee": {
     "test": {
       "input": [
-        {"name": "str", "type": "String"},
-        {"name": "i32", "type": "Int32"}
+        {"name": "str"},
+        {"name": "i32"}
       ],
       "output": [
-        {"name": "str", "type": "String"},
-        {"name": "i32", "type": "Int32"}
+        {"name": "str"},
+        {"name": "i32"}
       ],
       "code": "return {i32: i32+1, str: str+'!'}"
     }

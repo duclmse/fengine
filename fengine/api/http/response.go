@@ -2,8 +2,8 @@ package http
 
 import (
 	"context"
-	"encoding/json"
 	"github.com/duclmse/fengine/viot"
+	"github.com/goccy/go-json"
 	"net/http"
 )
 
@@ -20,9 +20,7 @@ func encodeResponse(_ context.Context, w http.ResponseWriter, response interface
 		for k, v := range ar.Headers() {
 			w.Header().Set(k, v)
 		}
-
 		w.WriteHeader(ar.Code())
-
 		if ar.Empty() {
 			return nil
 		}

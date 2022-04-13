@@ -1,10 +1,9 @@
 package viot
 
 import (
-	"os"
-	// "github.com/subosito/gotenv"
-	"encoding/json"
+	"github.com/goccy/go-json"
 	"net/http"
+	"os"
 )
 
 const version string = "0.10.0"
@@ -13,7 +12,6 @@ const version string = "0.10.0"
 type VersionInfo struct {
 	// Service contains service name.
 	Service string `json:"service"`
-
 	// Version contains service current version value.
 	Version string `json:"version"`
 }

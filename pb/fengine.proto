@@ -2,8 +2,6 @@ syntax = "proto3";
 
 package viot;
 
-import "google/protobuf/any.proto";
-
 service FEngineExecutor {
   rpc Execute(Script) returns (Result) {}
 }
@@ -37,6 +35,7 @@ message Function {
 message Result {
   Variable output = 1;
   UpdateScript update = 2;
+  repeated Variable attributes = 3;
 }
 
 message UpdateScript {
@@ -45,30 +44,17 @@ message UpdateScript {
 
 message Variable {
   string name = 1;
-  Type   type = 2;
 
   oneof value {
-    int32  i32 = 3;
-    int64  i64 = 4;
-    float  f32 = 5;
-    double f64 = 6;
-    bool   bol = 7;
-    string str = 8;
-    bytes  bin = 9;
-    google.protobuf.Any any = 10;
+    int32  i32 = 2;
+    int64  i64 = 3;
+    float  f32 = 4;
+    double f64 = 5;
+    bool   bool = 6;
+    string json = 7;
+    string string = 8;
+    bytes  binary = 9;
   }
-}
-
-enum Type {
-  Any = 0;
-  Int32 = 1;
-  Int64 = 2;
-  Float = 3;
-  Double = 4;
-  Bool = 5;
-  String = 6;
-  Bytes = 7;
-  Object = 8;
 }
 //#endregion FEngineExecutor
 
@@ -78,15 +64,24 @@ message ScriptRequest {
 }
 
 message SelectRequest {
-
+  repeated string fieldNames = 1;
+  string filter = 2;
 }
+
 message InsertRequest {
 
 }
+
 message UpdateRequest {
 
 }
+
 message DeleteRequest {
 
+}
+
+enum LogicRelation {
+  AND = 0;
+  OR = 1;
 }
 //#endregion FEngineData

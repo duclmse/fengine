@@ -14,15 +14,13 @@ require (
 	github.com/gogo/protobuf v1.3.2
 	github.com/golang/protobuf v1.5.2
 	github.com/jmoiron/sqlx v1.3.4
-	github.com/nats-io/nats.go v1.13.1-0.20220121202836-972a071d373d
-	github.com/nats-io/stan.go v0.10.2
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/prometheus/client_golang v1.12.1
 	github.com/rubenv/sql-migrate v1.1.1
 	github.com/stretchr/testify v1.7.0
 	github.com/uber/jaeger-client-go v2.30.0+incompatible
+	github.com/goccy/go-json v0.9.6
 	go.mongodb.org/mongo-driver v1.8.4
-	google.golang.org/genproto v0.0.0-20220308174144-ae0e22291548
 	google.golang.org/grpc v1.44.0
 )
 

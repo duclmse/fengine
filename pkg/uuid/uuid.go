@@ -1,20 +1,20 @@
 package uuid
 
 import (
-	fengine "github.com/duclmse/fengine/viot"
 	"github.com/duclmse/fengine/pkg/errors"
+	"github.com/duclmse/fengine/viot"
 	"github.com/gofrs/uuid"
 )
 
 // ErrGeneratingID indicates error in generating UUID
 var ErrGeneratingID = errors.New("generating id failed")
 
-var _ fengine.UUIDProvider = (*uuidProvider)(nil)
+var _ viot.UUIDProvider = (*uuidProvider)(nil)
 
 type uuidProvider struct{}
 
 // New instantiates a UUID provider.
-func New() fengine.UUIDProvider {
+func New() viot.UUIDProvider {
 	return &uuidProvider{}
 }
 

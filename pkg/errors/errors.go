@@ -1,12 +1,10 @@
 package errors
 
 var (
-	ErrForbidden   = New("access credentials are not sufficient to access this resource")
-	ErrUnAuthorize = New("Access credentials are invalid")
+	ErrForbidden = New("access credentials are not sufficient to access this resource")
 
 	ErrUUID = New("Wrong UUID format")
 
-	// error db
 	// ErrSaveDb indicates error while saving to database
 	ErrSaveDb = New("save entity to db error")
 	// ErrUpdateDb indicates error while updating database

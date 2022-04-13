@@ -4,15 +4,15 @@ import (
 	"context"
 	"time"
 
-	"github.com/duclmse/fengine/pb"
+	pb "github.com/duclmse/fengine/pb"
 	"github.com/go-kit/kit/endpoint"
-	kitot "github.com/go-kit/kit/tracing/opentracing"
+	ot "github.com/go-kit/kit/tracing/opentracing"
 	kitgrpc "github.com/go-kit/kit/transport/grpc"
 	"github.com/opentracing/opentracing-go"
 	"google.golang.org/grpc"
 )
 
-var _ pb.FEngineClient = (*grpcExecutorClient)(nil)
+var _ pb.FEngineExecutorClient = (*grpcExecutorClient)(nil)
 
 type grpcExecutorClient struct {
 	timeout time.Duration
@@ -24,12 +24,12 @@ func (client grpcExecutorClient) Execute(ctx context.Context, in *pb.Script, opt
 	panic("implement me")
 }
 
-func NewExecutorClient(conn *grpc.ClientConn, tracer opentracing.Tracer, timeout time.Duration) pb.FEngineClient {
+func NewExecutorClient(conn *grpc.ClientConn, tracer opentracing.Tracer, timeout time.Duration) pb.FEngineExecutorClient {
 	svcName := "pb.PricingService"
 
 	return &grpcExecutorClient{
 		timeout: timeout,
-		execute: kitot.TraceClient(tracer, "execute")(kitgrpc.NewClient(
+		execute: ot.TraceClient(tracer, "execute")(kitgrpc.NewClient(
 			conn, svcName, "Execute", encodeRequest, decodeResponse, pb.Result{},
 		).Endpoint()),
 	}
