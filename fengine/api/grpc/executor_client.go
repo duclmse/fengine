@@ -19,11 +19,6 @@ type grpcExecutorClient struct {
 	execute endpoint.Endpoint
 }
 
-func (client grpcExecutorClient) Execute(ctx context.Context, in *pb.Script, opts ...grpc.CallOption) (*pb.Result, error) {
-
-	panic("implement me")
-}
-
 func NewExecutorClient(conn *grpc.ClientConn, tracer opentracing.Tracer, timeout time.Duration) pb.FEngineExecutorClient {
 	svcName := "pb.PricingService"
 
@@ -33,6 +28,11 @@ func NewExecutorClient(conn *grpc.ClientConn, tracer opentracing.Tracer, timeout
 			conn, svcName, "Execute", encodeRequest, decodeResponse, pb.Result{},
 		).Endpoint()),
 	}
+}
+
+func (client grpcExecutorClient) Execute(ctx context.Context, in *pb.Script, opts ...grpc.CallOption) (*pb.Result, error) {
+
+	panic("implement me")
 }
 
 func encodeRequest(ctx context.Context, grpcReq interface{}) (request interface{}, err error) {

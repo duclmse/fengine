@@ -16,14 +16,10 @@ type logger struct {
 
 // Logger specifies logging API.
 type Logger interface {
-	Debug(string)
-	Info(string)
-	Warn(string)
-	Error(string)
-	Debug_(format string, args ...interface{})
-	Info_(format string, args ...interface{})
-	Warn_(format string, args ...interface{})
-	Error_(format string, args ...interface{})
+	Debug(format string, args ...interface{})
+	Info(format string, args ...interface{})
+	Warn(format string, args ...interface{})
+	Error(format string, args ...interface{})
 }
 
 // New returns wrapped go kit logger.
@@ -38,50 +34,26 @@ func New(out io.Writer, levelText string) (Logger, error) {
 	return &logger{l, level}, err
 }
 
-func (l logger) Info(msg string) {
-	if Info.isAllowed(l.level) {
-		_ = l.kitLogger.Log("level", Info.String(), "message", msg)
-	}
-}
-
-func (l logger) Debug(msg string) {
+func (l logger) Debug(msg string, opts ...interface{}) {
 	if Debug.isAllowed(l.level) {
-		_ = l.kitLogger.Log("level", Debug.String(), "message", msg)
+		_ = l.kitLogger.Log("level", Debug.String(), "message", fmt.Sprintf(msg, opts...))
 	}
 }
 
-func (l logger) Warn(msg string) {
+func (l logger) Warn(msg string, opts ...interface{}) {
 	if Warn.isAllowed(l.level) {
-		_ = l.kitLogger.Log("level", Warn.String(), "message", msg)
+		_ = l.kitLogger.Log("level", Warn.String(), "message", fmt.Sprintf(msg, opts...))
 	}
 }
 
-func (l logger) Error(msg string) {
+func (l logger) Error(msg string, opts ...interface{}) {
 	if Error.isAllowed(l.level) {
-		_ = l.kitLogger.Log("level", Error.String(), "message", msg)
+		_ = l.kitLogger.Log("level", Error.String(), "message", fmt.Sprintf(msg, opts...))
 	}
 }
 
-func (l logger) Debug_(msg string, opts ...interface{}) {
-	if Debug.isAllowed(l.level) {
-		_ = l.kitLogger.Log("level", Debug.String(), "message", fmt.Sprintf(msg, opts))
-	}
-}
-
-func (l logger) Warn_(msg string, opts ...interface{}) {
-	if Warn.isAllowed(l.level) {
-		_ = l.kitLogger.Log("level", Warn.String(), "message", fmt.Sprintf(msg, opts))
-	}
-}
-
-func (l logger) Error_(msg string, opts ...interface{}) {
-	if Error.isAllowed(l.level) {
-		_ = l.kitLogger.Log("level", Error.String(), "message", fmt.Sprintf(msg, opts))
-	}
-}
-
-func (l logger) Info_(msg string, opts ...interface{}) {
+func (l logger) Info(msg string, opts ...interface{}) {
 	if Info.isAllowed(l.level) {
-		_ = l.kitLogger.Log("level", Info.String(), "message", fmt.Sprintf(msg, opts))
+		_ = l.kitLogger.Log("level", Info.String(), "message", fmt.Sprintf(msg, opts...))
 	}
 }

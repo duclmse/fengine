@@ -67,9 +67,9 @@ proto:
 
 # sudo npm i -g grpc grpc-tools grpc_tools_node_protoc_ts
 jspb:
-	@npm run grpc_tools_node_protoc --ts_out=import_style=commonjs,binary:executor/src/ \
-		--grpc_out=grpc_js:executor/src/ pb/*.proto
-	@npm run grpc_tools_node_protoc --ts_out=executor/src/ \
+	@grpc_tools_node_protoc --js_out=import_style=commonjs,binary:executor/src/ \
+		--grpc_out=grpc_js:executor/src/ \
+		--ts_out=executor/src/ \
 		--plugin=protoc-gen-ts=./node_modules/.bin/protoc-gen-ts pb/*.proto
 	@echo "Done generating"
 

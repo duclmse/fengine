@@ -1,7 +1,7 @@
 import {Function, Result, Script, Variable} from "../pb/fengine_pb";
 import * as library from "../sdk/db";
 import {VM} from "vm2";
-import _ from "lodash";
+// import _ from "lodash";
 
 type MsgType = void | number | string | boolean | Uint8Array;
 type Func = (input: any) => MsgType;
@@ -133,7 +133,8 @@ export class Executor {
 
   compareAttributes(me: ThingReference, attributes: ThingReference) {
     for (let i in attributes) {
-      if (!_.isEqual(attributes[i], me[i])) {
+      // if (!_.isEqual(attributes[i], me[i])) {
+      if (attributes[i] !== me[i]) {
         console.log(`>>> ${i}: ${attributes[i]} -> ${me[i]}`);
       }
     }

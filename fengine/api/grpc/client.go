@@ -2,7 +2,6 @@ package grpc
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/go-kit/kit/endpoint"
@@ -11,20 +10,20 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"google.golang.org/grpc"
 
-	"github.com/duclmse/fengine/pb"
+	pb "github.com/duclmse/fengine/pb"
 )
 
-var _ pb.FEngineServiceClient = (*grpcClient)(nil)
+var _ pb.FEngineDataClient = (*grpcDataClient)(nil)
 
-type grpcClient struct {
+type grpcDataClient struct {
 	timeout time.Duration
 	grpcGet endpoint.Endpoint
 }
 
-func NewClient(conn *grpc.ClientConn, tracer opentracing.Tracer, timeout time.Duration) pb.FEngineServiceClient {
+func NewClient(conn *grpc.ClientConn, tracer opentracing.Tracer, timeout time.Duration) pb.FEngineDataClient {
 	svcName := "pb.PricingService"
 
-	return &grpcClient{
+	return &grpcDataClient{
 		timeout: timeout,
 		grpcGet: kitot.TraceClient(tracer, "identify_name")(kitgrpc.NewClient(
 			conn, svcName, "GrpcGet", encodeGetRequest, decodeGetResponse, pb.Result{},
@@ -32,15 +31,30 @@ func NewClient(conn *grpc.ClientConn, tracer opentracing.Tracer, timeout time.Du
 	}
 }
 
+func (client grpcDataClient) Select(ctx context.Context, in *pb.SelectRequest, opts ...grpc.CallOption) (*pb.Script, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (client grpcDataClient) Insert(ctx context.Context, in *pb.InsertRequest, opts ...grpc.CallOption) (*pb.Script, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (client grpcDataClient) Update(ctx context.Context, in *pb.UpdateRequest, opts ...grpc.CallOption) (*pb.Script, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (client grpcDataClient) Delete(ctx context.Context, in *pb.DeleteRequest, opts ...grpc.CallOption) (*pb.Script, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 func encodeGetRequest(ctx context.Context, grpcReq interface{}) (request interface{}, err error) {
-	return grpcReq.(*pb.ID), nil
+	return nil, nil
 }
 
 func decodeGetResponse(ctx context.Context, grpcRes interface{}) (response interface{}, err error) {
-	return grpcRes.(*pb.Info), nil
-}
-
-func (client grpcClient) GrpcGet(ctx context.Context, id *pb.ID, opts ...grpc.CallOption) (*pb.Info, error) {
-	fmt.Printf("id=%v, opts=%v\n", *id, opts)
 	return nil, nil
 }

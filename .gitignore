@@ -103,5 +103,10 @@ _deps
 
 
 # Project exclude paths
-/executor/node_modules/
-/frontend/node_modules/
+**/node_modules/
+**/package-lock.json
+go.sum
+*.pb.go
+*pb.js
+*pb.d.ts
+**/dist/

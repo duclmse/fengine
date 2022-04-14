@@ -18,6 +18,6 @@ func LoggingMiddleware(svc fengine.Service, logger log.Logger) fengine.Service {
 }
 
 func (l loggingMiddleware) Get(ctx context.Context, id string) (interface{}, error) {
-	l.logger.Debug_("")
+	l.logger.Debug("call get")
 	return l.svc.Get(ctx, id)
 }

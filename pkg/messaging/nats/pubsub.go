@@ -147,14 +147,14 @@ func (ps *pubsub) Close() {
 
 func (ps *pubsub) natsHandler(h messaging.MessageHandler) broker.MsgHandler {
 	return func(m *broker.Msg) {
-		ps.logger.Info(fmt.Sprintf("Received message: "))
+		ps.logger.Info("Received message: ")
 		var msg messaging.Message
 		if err := proto.Unmarshal(m.Data, &msg); err != nil {
-			ps.logger.Warn(fmt.Sprintf("Failed to unmarshal received message: %s", err))
+			ps.logger.Warn("Failed to unmarshal received message: %s", err)
 			return
 		}
 		if err := h(msg); err != nil {
-			ps.logger.Warn(fmt.Sprintf("Failed to handle message: %s", err))
+			ps.logger.Warn("Failed to handle message: %s", err)
 		}
 	}
 }

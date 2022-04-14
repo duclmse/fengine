@@ -72,7 +72,7 @@ func (sub subscriber) Unsubscribe(topic string) error {
 
 func (sub subscriber) mqttHandler(h messaging.MessageHandler) mqtt.MessageHandler {
 	return func(c mqtt.Client, m mqtt.Message) {
-		//sub.logger.Warn(fmt.Sprintf("mqttHandler received message: %v", string(m.Payload())))
+		//sub.logger.Warn("mqttHandler received message: %v", string(m.Payload()))
 
 		var msg messaging.Message
 		msg.Payload = m.Payload()
@@ -83,11 +83,11 @@ func (sub subscriber) mqttHandler(h messaging.MessageHandler) mqtt.MessageHandle
 		msg.Created = time.Now().UnixNano()
 
 		//if err := proto.Unmarshal(m.Payload(), &msg); err != nil {
-		//	sub.logger.Warn(fmt.Sprintf("Failed to unmarshal received message: %s", err))
+		//	sub.logger.Warn("Failed to unmarshal received message: %s", err)
 		//	return
 		//}
 		if err := h(msg); err != nil {
-			sub.logger.Warn(fmt.Sprintf("Failed to handle Mainflux message: %s", err))
+			sub.logger.Warn("Failed to handle Mainflux message: %s", err)
 		}
 	}
 }

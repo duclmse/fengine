@@ -43,7 +43,7 @@ func NewStanSub(url, queue, clusterid, clientid string, logger log.Logger) (Subs
 	}
 	conn, err := stan.Connect(clusterid, clientid, stan.NatsConn(nc),
 		stan.SetConnectionLostHandler(func(_ stan.Conn, reason error) {
-			logger.Error(fmt.Sprintf("Connection lost, reason: %v", reason))
+			logger.Error("Connection lost, reason: %v", reason)
 		}))
 	if err != nil {
 		return nil, err
@@ -66,7 +66,7 @@ func (ps *stanSubs) Subscribe(topic string, handler messaging.MessageHandler) er
 	if _, ok := ps.subscriptions[topic]; ok {
 		return errAlreadySubscribed
 	}
-	ps.logger.Info(fmt.Sprintf("Subcribe for topic: %s", topic))
+	ps.logger.Info("Subcribe for topic: %s", topic)
 	nh := ps.stanHandler(handler)
 
 	if ps.queue != "" {
@@ -112,14 +112,14 @@ func (ps *stanSubs) Close() {
 
 func (ps *stanSubs) stanHandler(h messaging.MessageHandler) stan.MsgHandler {
 	return func(m *stan.Msg) {
-		ps.logger.Info(fmt.Sprintf("Received message: "))
+		ps.logger.Info("Received message: ")
 		var msg messaging.Message
 		if err := proto.Unmarshal(m.Data, &msg); err != nil {
-			ps.logger.Warn(fmt.Sprintf("Failed to unmarshal received message: %s", err))
+			ps.logger.Warn("Failed to unmarshal received message: %s", err)
 			return
 		}
 		if err := h(msg); err != nil {
-			ps.logger.Warn(fmt.Sprintf("Failed to handle message: %s", err))
+			ps.logger.Warn("Failed to handle message: %s", err)
 		}
 	}
 }

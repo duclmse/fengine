@@ -1,44 +1,60 @@
 package grpc
 
 import (
-	"context"
-	"google.golang.org/grpc"
-
 	"github.com/duclmse/fengine/fengine"
 	. "github.com/duclmse/fengine/pb"
 	kitot "github.com/go-kit/kit/tracing/opentracing"
 	kitgrpc "github.com/go-kit/kit/transport/grpc"
 	"github.com/opentracing/opentracing-go"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
-var _ FEngineExecutorClient = (*grpcServer)(nil)
+var (
+	_ FEngineDataServer  = (*grpcDataServer)(nil)
+	_ FEngineThingServer = (*grpcThingServer)(nil)
+)
 
-type grpcServer struct {
-	identityNameInfo kitgrpc.Handler
+type grpcDataServer struct {
+	selectEndpoint kitgrpc.Handler
+	insertEndpoint kitgrpc.Handler
+	updateEndpoint kitgrpc.Handler
+	deleteEndpoint kitgrpc.Handler
 }
 
-func NewServer(tracer opentracing.Tracer, svc fengine.Service) FEngineExecutorClient {
-	return &grpcServer{
-		identityNameInfo: kitgrpc.NewServer(
-			kitot.TraceServer(tracer, "Execute")(grpcGet(svc)),
-			decodeIdentifyNameRequest,
-			encodeIdentifyNameResponse,
+type grpcThingServer struct {
+	resolveEndpoint *kitgrpc.Server
+}
+
+func NewDataServer(tracer opentracing.Tracer, svc fengine.Service) FEngineDataServer {
+	return &grpcDataServer{
+		selectEndpoint: kitgrpc.NewServer(
+			kitot.TraceServer(tracer, "Select")(grpcSelect(svc)),
+			decodeSelectRequest,
+			encodeSelectResponse,
+		),
+		insertEndpoint: kitgrpc.NewServer(
+			kitot.TraceServer(tracer, "Insert")(grpcInsert(svc)),
+			decodeInsertRequest,
+			encodeInsertResponse,
+		),
+		updateEndpoint: kitgrpc.NewServer(
+			kitot.TraceServer(tracer, "Update")(grpcUpdate(svc)),
+			decodeUpdateRequest,
+			encodeUpdateResponse,
+		),
+		deleteEndpoint: kitgrpc.NewServer(
+			kitot.TraceServer(tracer, "Delete")(grpcUpdate(svc)),
+			decodeDeleteRequest,
+			encodeDeleteResponse,
 		),
 	}
 }
 
-func (g grpcServer) Execute(ctx context.Context, in *Script, opts ...grpc.CallOption) (*Result, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func encodeError(err error) error {
-	switch err {
-	case nil:
-		return nil
-	default:
-		return status.Error(codes.Internal, "internal server error")
+func NewThingServer(tracer opentracing.Tracer, svc fengine.Service) FEngineThingServer {
+	return &grpcThingServer{
+		resolveEndpoint: kitgrpc.NewServer(
+			kitot.TraceServer(tracer, "Resolve")(grpcResolve(svc)),
+			decodeResolveRequest,
+			encodeResolveResponse,
+		),
 	}
 }
