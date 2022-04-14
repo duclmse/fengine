@@ -1,8 +1,10 @@
-import { CompletionContext } from "@codemirror/autocomplete";
+import {autocompletion, CompletionContext} from "@codemirror/autocomplete";
+import {EditorState} from "@codemirror/state";
+import {basicSetup} from "@codemirror/next/basic-setup";
 
 function myCompletions(context: CompletionContext) {
   let word = context.matchBefore(/\w*/);
-  if (word.from == word.to && !context.explicit) return null;
+  if (word === null || word.from == word.to && !context.explicit) return null;
   return {
     from: word.from,
     options: [
