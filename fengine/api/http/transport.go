@@ -31,8 +31,7 @@ func MakeHandler(tracer opentracing.Tracer, svc fengine.Service) http.Handler {
 
 	r := bone.New()
 
-	r.Post("/fe/exec", kit.NewServer(
-		kitot.TraceClient(tracer, "fe_exec")(getEndpoint(svc)),
+	r.Post("/fe/exec", kit.NewServer(kitot.TraceClient(tracer, "fe_exec")(getEndpoint(svc)),
 		decodeRequest, encodeResponse, opts...))
 
 	r.GetFunc("/version", viot.Version("pricing"))

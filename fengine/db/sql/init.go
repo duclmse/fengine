@@ -3,6 +3,7 @@ package sql
 import (
 	"fmt"
 	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
 	migrate "github.com/rubenv/sql-migrate"
 )
 
@@ -19,10 +20,10 @@ type Config struct {
 	SSLRootCert string
 }
 
-// Connect method is used to create a connection to the Postgres instance and applies any
-// unapply database migrations. A non-nil error is return to indicate failure
+// Connect method is used to create a connection to the Postgres instance and applies any unapply database migrations.
+// A non-nil error is return to indicate failure
 func Connect(cfg Config) (*sqlx.DB, error) {
-	url := fmt.Sprintf("host=%s port=%s user=%s dbname=%s password=%s sslmode=%s sslcert=%s sslkey=%s sslrootcert=%s", 
+	url := fmt.Sprintf("host=%s port=%s user=%s dbname=%s password=%s sslmode=%s sslcert=%s sslkey=%s sslrootcert=%s",
 		cfg.Host, cfg.Port, cfg.User, cfg.Name, cfg.Pass, cfg.SSLMode, cfg.SSLCert, cfg.SSLKey, cfg.SSLRootCert)
 
 	db, err := sqlx.Open("postgres", url)
@@ -72,11 +73,7 @@ func migrateDB(db *sqlx.DB) (int, error) {
 	}
 	migrations := &migrate.MemoryMigrationSource{
 		Migrations: []*migrate.Migration{
-			{
-				Id:   "Pricing_1",
-				Up:   up,
-				Down: down,
-			},
+			{Id: "Pricing_1", Up: up, Down: down},
 		},
 	}
 

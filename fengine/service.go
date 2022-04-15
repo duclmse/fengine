@@ -9,7 +9,6 @@ import (
 var _ Service = (*fengineService)(nil)
 
 type fengineService struct {
-	// user         viot.UserServiceClient
 	repository Repository
 	cache      Cache
 	idp        viot.UUIDProvider
@@ -19,15 +18,11 @@ type Service interface {
 	Get(ctx context.Context, id string) (interface{}, error)
 }
 
-func New(
-	//repository Repository,
-	//cache Cache,
-	idp viot.UUIDProvider,
-) Service {
+func New(idp viot.UUIDProvider, repository Repository, cache Cache) Service {
 	return &fengineService{
-		//repository: repository,
-		//cache:      cache,
-		idp: idp,
+		repository: repository,
+		cache:      cache,
+		idp:        idp,
 	}
 }
 

@@ -1,7 +1,10 @@
 package viot
 
 import (
+	_logger "github.com/duclmse/fengine/pkg/logger"
 	"github.com/goccy/go-json"
+	"github.com/subosito/gotenv"
+	"io"
 	"net/http"
 	"os"
 )
@@ -18,13 +21,13 @@ type VersionInfo struct {
 
 // Version exposes an HTTP handler for retrieving service version.
 func Version(service string) http.HandlerFunc {
-	return http.HandlerFunc(func(rw http.ResponseWriter, _ *http.Request) {
+	return func(rw http.ResponseWriter, _ *http.Request) {
 		res := VersionInfo{service, version}
 
 		data, _ := json.Marshal(res)
 
 		_, _ = rw.Write(data)
-	})
+	}
 }
 
 // Env reads specified environment variable. If no value has been found, fallback is returned.
@@ -34,6 +37,11 @@ func Env(key, fallback string) string {
 	}
 
 	return fallback
+}
+
+//LoadEnvFile loads environment variables defined in an .env formatted file.
+func LoadEnvFile(envFilePath string) error {
+	return gotenv.Load(envFilePath)
 }
 
 type UUIDProvider interface {
@@ -53,8 +61,11 @@ type Response interface {
 	Empty() bool
 }
 
-// LoadEnvFile loads environment variables defined in an .env formatted file.
-// func LoadEnvFile(envfilepath string) error {
-// 	err := gotenv.Load(envfilepath)
-// 	return err
-// }
+func Close(logger _logger.Logger, name string) func(io.Closer) {
+	return func(closer io.Closer) {
+		err := closer.Close()
+		if err != nil {
+			logger.Error("cannot close %s: %s", name, err.Error())
+		}
+	}
+}

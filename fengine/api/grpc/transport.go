@@ -42,7 +42,7 @@ func NewDataServer(tracer opentracing.Tracer, svc fengine.Service) FEngineDataSe
 			encodeUpdateResponse,
 		),
 		deleteEndpoint: kitgrpc.NewServer(
-			kitot.TraceServer(tracer, "Delete")(grpcUpdate(svc)),
+			kitot.TraceServer(tracer, "Delete")(grpcDelete(svc)),
 			decodeDeleteRequest,
 			encodeDeleteResponse,
 		),

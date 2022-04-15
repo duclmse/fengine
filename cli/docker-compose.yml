@@ -3,8 +3,8 @@ services:
     container_name: timescale
     image: timescale/timescaledb:latest-pg12
     environment:
-      - POSTGRES_PASSWORD=1
       - TZ=Asia/Ho_Chi_Minh
+      - POSTGRES_PASSWORD=1
     ports:
       - 5432:5432
     volumes:
@@ -12,4 +12,14 @@ services:
     restart: always
   redis:
     container_name: redis
-    image: redis
+    image: redis:6-alpine
+    environment:
+      - TZ=Asia/Ho_Chi_Minh
+    ports:
+      - 6379:6379
+    command: redis-server --save 20 1 --loglevel warning --requirepass eYVX7EwVmmxKPCDmwMtyKVge8oLd2t81
+    volumes:
+      - cache:/data
+volumes:
+  cache:
+    driver: local

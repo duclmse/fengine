@@ -32,8 +32,12 @@ func NewClient(conn *grpc.ClientConn, tracer opentracing.Tracer, timeout time.Du
 }
 
 func (client grpcDataClient) Select(ctx context.Context, in *pb.SelectRequest, opts ...grpc.CallOption) (*pb.Script, error) {
-	//TODO implement me
-	panic("implement me")
+
+	return &pb.Script{
+		Function:   nil,
+		Attributes: nil,
+		Referee:    nil,
+	}, nil
 }
 
 func (client grpcDataClient) Insert(ctx context.Context, in *pb.InsertRequest, opts ...grpc.CallOption) (*pb.Script, error) {

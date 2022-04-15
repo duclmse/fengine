@@ -61,7 +61,7 @@ test:
 		-tags test $(shell go list ./... | grep -v 'vendor\|cmd')
 	go tool cover -func .coverage.txt
 
-# go get github.com/gogo/protobuf/protoc-gen-gofast
+# sudo apt-get install gogoprotobuf
 proto:
 	@protoc --gofast_out=plugins=grpc:. pb/*.proto
 

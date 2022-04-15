@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/go-kit/kit/log"
 	"io"
+	"os"
 	"time"
 )
 
@@ -20,6 +21,7 @@ type Logger interface {
 	Info(format string, args ...interface{})
 	Warn(format string, args ...interface{})
 	Error(format string, args ...interface{})
+	Fatalf(format string, args ...interface{})
 }
 
 // New returns wrapped go kit logger.
@@ -34,26 +36,33 @@ func New(out io.Writer, levelText string) (Logger, error) {
 	return &logger{l, level}, err
 }
 
-func (l logger) Debug(msg string, opts ...interface{}) {
+func (l logger) Debug(format string, args ...interface{}) {
 	if Debug.isAllowed(l.level) {
-		_ = l.kitLogger.Log("level", Debug.String(), "message", fmt.Sprintf(msg, opts...))
+		_ = l.kitLogger.Log("level", Debug.String(), "message", fmt.Sprintf(format, args...))
 	}
 }
 
-func (l logger) Warn(msg string, opts ...interface{}) {
-	if Warn.isAllowed(l.level) {
-		_ = l.kitLogger.Log("level", Warn.String(), "message", fmt.Sprintf(msg, opts...))
-	}
-}
-
-func (l logger) Error(msg string, opts ...interface{}) {
-	if Error.isAllowed(l.level) {
-		_ = l.kitLogger.Log("level", Error.String(), "message", fmt.Sprintf(msg, opts...))
-	}
-}
-
-func (l logger) Info(msg string, opts ...interface{}) {
+func (l logger) Info(format string, args ...interface{}) {
 	if Info.isAllowed(l.level) {
-		_ = l.kitLogger.Log("level", Info.String(), "message", fmt.Sprintf(msg, opts...))
+		_ = l.kitLogger.Log("level", Info.String(), "message", fmt.Sprintf(format, args...))
 	}
+}
+
+func (l logger) Warn(format string, args ...interface{}) {
+	if Warn.isAllowed(l.level) {
+		_ = l.kitLogger.Log("level", Warn.String(), "message", fmt.Sprintf(format, args...))
+	}
+}
+
+func (l logger) Error(format string, args ...interface{}) {
+	if Error.isAllowed(l.level) {
+		_ = l.kitLogger.Log("level", Error.String(), "message", fmt.Sprintf(format, args...))
+	}
+}
+
+func (l logger) Fatalf(format string, args ...interface{}) {
+	if Error.isAllowed(l.level) {
+		_ = l.kitLogger.Log("level", Error.String(), "message", fmt.Sprintf(format, args...))
+	}
+	os.Exit(1)
 }
