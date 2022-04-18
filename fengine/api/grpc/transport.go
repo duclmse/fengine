@@ -24,6 +24,11 @@ type grpcThingServer struct {
 	resolveEndpoint *kitgrpc.Server
 }
 
+type GrpcService struct {
+	URL     string
+	Timeout int
+}
+
 func NewDataServer(tracer opentracing.Tracer, svc fengine.Service) FEngineDataServer {
 	return &grpcDataServer{
 		selectEndpoint: kitgrpc.NewServer(

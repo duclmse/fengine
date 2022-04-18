@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	. "github.com/duclmse/fengine/fengine/api/grpc"
 	"github.com/duclmse/fengine/fengine/db/sql"
 	. "github.com/duclmse/fengine/viot"
 )
@@ -17,7 +18,7 @@ const (
 	envDBPort        = "VT_FENGINE_DB_PORT"
 	envDBUser        = "VT_FENGINE_DB_USER"
 	envDBPass        = "VT_FENGINE_DB_PASS"
-	envDBName        = "VT_FENGINE_DB"
+	envDBName        = "VT_FENGINE_DB_NAME"
 	envDBSSLMode     = "VT_FENGINE_DB_SSL_MODE"
 	envDBSSLCert     = "VT_FENGINE_DB_SSL_CERT"
 	envDBSSLKey      = "VT_FENGINE_DB_SSL_KEY"
@@ -74,11 +75,6 @@ type Config struct {
 	GrpcServices map[string]GrpcService
 }
 
-type GrpcService struct {
-	URL     string
-	Timeout int64
-}
-
 type CacheConfig struct {
 	URL  string
 	Pass string
@@ -111,11 +107,11 @@ func getGrpcConfig(services ...string) map[string]GrpcService {
 		svc := strings.ToUpper(service)
 		url := Env(fmt.Sprintf(envGrpcUrl, svc), defGrpcURL)
 		timeoutCfg := fmt.Sprintf(envGrpcTimeout, svc)
-		timeout, err := strconv.ParseInt(Env(timeoutCfg, defGrpcTimeout), 10, 64)
+		timeout, err := strconv.ParseInt(Env(timeoutCfg, defGrpcTimeout), 10, 32)
 		if err != nil {
 			log.Fatalf("Invalid %s value: %s", timeoutCfg, err.Error())
 		}
-		config[service] = GrpcService{URL: url, Timeout: timeout}
+		config[service] = GrpcService{URL: url, Timeout: int(timeout)}
 	}
 	return config
 }

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"net"
 	"net/http"
 	"os"
@@ -30,7 +29,7 @@ import (
 	"github.com/duclmse/fengine/fengine/db/sql"
 	"github.com/duclmse/fengine/fengine/tracing"
 	pb "github.com/duclmse/fengine/pb"
-	_logger "github.com/duclmse/fengine/pkg/logger"
+	"github.com/duclmse/fengine/pkg/logger"
 	"github.com/duclmse/fengine/pkg/uuid"
 	. "github.com/duclmse/fengine/viot"
 )
@@ -38,38 +37,46 @@ import (
 func main() {
 	cfg := LoadConfig("./.env", "executor")
 
-	logger, err := _logger.New(os.Stdout, cfg.LogLevel)
+	log, err := logger.New(os.Stdout, cfg.LogLevel)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
 
-	serviceTracer, closer := InitJaeger("VTFEngine", cfg.JaegerURL, logger)
-	defer Close(logger, "jeager")(closer)
+	serviceTracer, closer := InitJaeger("VTFEngine", cfg.JaegerURL, log)
+	defer Close(log, "jeager")(closer)
 
-	cacheClient := ConnectToCache(cfg.Cache, logger)
-	cacheTracer, cacheCloser := InitJaeger("fengine_cache", cfg.JaegerURL, logger)
-	defer Close(logger, "cache")(cacheCloser)
+	cacheClient := ConnectToCache(cfg.Cache, log)
+	cacheTracer, cacheCloser := InitJaeger("fengine_cache", cfg.JaegerURL, log)
+	defer Close(log, "cache")(cacheCloser)
 
-	db := ConnectToDB(cfg.DbConfig, logger)
-	defer Close(logger, "db")(db)
+	db := ConnectToDB(cfg.DbConfig, log)
+	defer Close(log, "db")(db)
 
-	serviceTracer, dbCloser := InitJaeger("vtfengine_db", cfg.JaegerURL, logger)
-	defer Close(logger, "vtfengine_db")(dbCloser)
+	serviceTracer, dbCloser := InitJaeger("fengine_db", cfg.JaegerURL, log)
+	defer Close(log, "fengine_db")(dbCloser)
 
 	// Connect to User service
-	userConn := ConnectToGrpcService("user", cfg, logger)
-	defer Close(logger, "user service")(userConn)
+	executorConn := ConnectToGrpcService("executor", cfg, log)
+	defer Close(log, "executor connection")(executorConn)
 
-	// userTracer, userCloser := InitJaeger("user", cfg.JaegerURL, logger)
-	// defer userCloser.Close()
-	// uc := usrapi.NewClient(userConn, userTracer, cfg.UserTimeout)
+	executorTracer, executorCloser := InitJaeger("executor", cfg.JaegerURL, log)
+	defer Close(log, "executor")(executorCloser)
+	exeClient := grpc_api.NewExecutorClient(executorConn, executorTracer, cfg.GrpcServices["executor"])
 
 	// Create FEngine Service
-	svc := newService(serviceTracer, cacheClient, db, cacheTracer, logger) //db, , esClient,
+	components := service.ServiceComponent{
+		Tracer:      serviceTracer,
+		Cache:       cacheClient,
+		CacheTracer: cacheTracer,
+		ExeClient:   exeClient,
+		DB:          db,
+		Log:         log,
+	}
+	svc := newService(components)
 
 	errs := make(chan error, 2)
-	go startHTTPServer(http_api.MakeHandler(serviceTracer, svc), cfg.HttpPort, cfg, logger, errs)
-	go startGRPCServer(svc, serviceTracer, cfg, logger, errs)
+	go startHTTPServer(http_api.MakeHandler(svc, components), cfg, log, errs)
+	go startGRPCServer(svc, serviceTracer, cfg, log, errs)
 
 	go func() {
 		c := make(chan os.Signal)
@@ -78,10 +85,10 @@ func main() {
 	}()
 
 	err = <-errs
-	logger.Error("FEngine service terminated: %s", err)
+	log.Error("FEngine service terminated: %s", err)
 }
 
-func InitJaeger(svcName, url string, logger _logger.Logger) (opentracing.Tracer, io.Closer) {
+func InitJaeger(svcName, url string, log logger.Logger) (opentracing.Tracer, io.Closer) {
 	if url == "" {
 		return opentracing.NoopTracer{}, ioutil.NopCloser(nil)
 	}
@@ -92,17 +99,17 @@ func InitJaeger(svcName, url string, logger _logger.Logger) (opentracing.Tracer,
 		Reporter:    &jconfig.ReporterConfig{LocalAgentHostPort: url, LogSpans: true},
 	}.NewTracer()
 	if err != nil {
-		logger.Error("Failed to init jaeger client: %s", err)
+		log.Error("Failed to init jaeger client: %s", err)
 		os.Exit(1)
 	}
 
 	return tracer, closer
 }
 
-func ConnectToCache(cache CacheConfig, logger _logger.Logger) *redis.Client {
+func ConnectToCache(cache CacheConfig, log logger.Logger) *redis.Client {
 	db, err := strconv.Atoi(cache.DB)
 	if err != nil {
-		logger.Error("Failed to connect to cache: %s", err)
+		log.Error("Failed to connect to cache: %s", err)
 		os.Exit(1)
 	}
 
@@ -113,53 +120,51 @@ func ConnectToCache(cache CacheConfig, logger _logger.Logger) *redis.Client {
 	})
 }
 
-func ConnectToDB(dbCfg sql.Config, logger _logger.Logger) *sqlx.DB {
-	logger.Info("db info: %s:%s/%s user: %s pass: %s", dbCfg.Host, dbCfg.Port, dbCfg.Name, dbCfg.User, dbCfg.Pass)
+func ConnectToDB(dbCfg sql.Config, log logger.Logger) *sqlx.DB {
+	log.Info("db info: %s:%s/%s user: %s pass: %s", dbCfg.Host, dbCfg.Port, dbCfg.Name, dbCfg.User, dbCfg.Pass)
 	db, err := sql.Connect(dbCfg)
 	if err != nil {
-		logger.Fatalf("Failed to connect to postgres: %s", err)
+		log.Fatalf("Failed to connect to postgres: %s", err)
 	}
 	return db
 }
 
-func ConnectToGrpcService(name string, cfg Config, logger _logger.Logger) *grpc.ClientConn {
+func ConnectToGrpcService(name string, cfg Config, log logger.Logger) *grpc.ClientConn {
 	var opts grpc.DialOption
 	if cfg.CaCerts != "" {
 		tpc, err := credentials.NewClientTLSFromFile(cfg.CaCerts, "")
 		if err != nil {
-			logger.Error("Failed to create tls credentials: %s", err)
+			log.Error("Failed to create tls credentials: %s", err)
 			os.Exit(1)
 		}
 		opts = grpc.WithTransportCredentials(tpc)
 	} else {
-		logger.Info("gRPC communication is not encrypted")
+		log.Info("gRPC communication is not encrypted")
 		opts = grpc.WithTransportCredentials(insecure.NewCredentials())
 	}
 
 	url := cfg.GrpcServices[name].URL
 	conn, err := grpc.Dial(url, opts)
 	if err != nil {
-		log.Panicf("Failed to connect to %s service %s", name, err)
+		log.Fatalf("Failed to connect to %s service %s", name, err)
 	}
-	logger.Info("Connected to %s service by GRPC: %s", name, url)
+	log.Info("Connected to %s service by GRPC: %s", name, url)
 	return conn
 }
 
 // newService create new instantiate
-func newService(
-	pTracer opentracing.Tracer, cacheClient *redis.Client, db *sqlx.DB, cacheTracer opentracing.Tracer, logger _logger.Logger,
-) service.Service {
-	database := sql.NewDatabase(db)
+func newService(component service.ServiceComponent) service.Service {
+	database := sql.NewDatabase(component.DB)
 	repo := sql.NewFEngineRepository(database)
-	repo = tracing.FEngineRepositoryMiddleware(pTracer, repo)
+	repo = tracing.FEngineRepositoryMiddleware(component.Tracer, repo)
 
-	serviceCache := cache.NewFEngineCache(cacheClient)
-	serviceCache = tracing.FEngineCacheMiddleware(cacheTracer, serviceCache)
+	serviceCache := cache.NewFEngineCache(component.Cache)
+	serviceCache = tracing.FEngineCacheMiddleware(component.CacheTracer, serviceCache)
 
 	// Create new fengine service
-	svc := service.New(uuid.New(), repo, serviceCache)
+	svc := service.New(uuid.New(), repo, serviceCache, component.ExeClient, component.Log)
 	//svc = serviceCache.NewEventStoreMiddleware(svc, serviceCache)
-	svc = api.LoggingMiddleware(svc, logger)
+	svc = api.LoggingMiddleware(svc, component.Log)
 	svc = api.MetricsMiddleware(
 		svc,
 		kitprometheus.NewCounterFrom(stdprometheus.CounterOpts{
@@ -179,24 +184,23 @@ func newService(
 }
 
 // Start HTTP Server
-func startHTTPServer(handler http.Handler, port string, cfg Config, logger _logger.Logger, errs chan error) {
-	p := fmt.Sprintf(":%s", port)
+func startHTTPServer(handler http.Handler, cfg Config, log logger.Logger, errs chan error) {
+	p := fmt.Sprintf(":%s", cfg.HttpPort)
 	if cfg.ServerCert != "" || cfg.ServerKey != "" {
-		logger.Info("vtFEngine service started using https on port %s with cert %s key %s",
-			port, cfg.ServerCert, cfg.ServerKey)
+		log.Info("FEngine HTTP service started on port %s (cert: %s; key: %s)", p, cfg.ServerCert, cfg.ServerKey)
 		errs <- http.ListenAndServeTLS(p, cfg.ServerCert, cfg.ServerKey, handler)
 		return
 	}
-	logger.Info("FEngine HTTP service started on port %s", cfg.HttpPort)
+	log.Info("FEngine HTTP service started on port %s", p)
 	errs <- http.ListenAndServe(p, handler)
 }
 
 //Start GRPC server
-func startGRPCServer(svc service.Service, tracer opentracing.Tracer, cfg Config, logger _logger.Logger, errs chan error) {
+func startGRPCServer(svc service.Service, tracer opentracing.Tracer, cfg Config, log logger.Logger, errs chan error) {
 	port := fmt.Sprintf(":%s", cfg.AuthGRPCPort)
 	listener, err := net.Listen("tcp", port)
 	if err != nil {
-		logger.Error("Failed to listen on port %s: %s", cfg.AuthGRPCPort, err)
+		log.Error("Failed to listen on port %s: %s", port, err)
 		os.Exit(1)
 	}
 
@@ -204,14 +208,13 @@ func startGRPCServer(svc service.Service, tracer opentracing.Tracer, cfg Config,
 	if cfg.ServerCert != "" || cfg.ServerKey != "" {
 		credential, err := credentials.NewServerTLSFromFile(cfg.ServerCert, cfg.ServerKey)
 		if err != nil {
-			logger.Error("Failed to load VTFEngine certificates: %s", err)
+			log.Error("Failed to load FEngine certificates: %s", err)
 			os.Exit(1)
 		}
-		logger.Info(fmt.Sprintf("VT-FEngine gRPC service started using https on port %s with cert %s key %s",
-			cfg.AuthGRPCPort, cfg.ServerCert, cfg.ServerKey))
+		log.Info("FEngine gRPC service started on port %s (cert: %s; key %s)", port, cfg.ServerCert, cfg.ServerKey)
 		server = grpc.NewServer(grpc.Creds(credential))
 	} else {
-		logger.Info("FEngine gRPC service started on port %s", cfg.AuthGRPCPort)
+		log.Info("FEngine gRPC service started on port %s", port)
 		server = grpc.NewServer()
 	}
 	pb.RegisterFEngineDataServer(server, grpc_api.NewDataServer(tracer, svc))

@@ -64,13 +64,14 @@ test:
 # sudo apt-get install gogoprotobuf
 proto:
 	@protoc --gofast_out=plugins=grpc:. pb/*.proto
+	@echo "Done generating"
 
 # sudo npm i -g grpc grpc-tools grpc_tools_node_protoc_ts
 jspb:
-	@grpc_tools_node_protoc --js_out=import_style=commonjs,binary:executor/src/ \
-		--grpc_out=grpc_js:executor/src/ \
-		--ts_out=executor/src/ \
-		--plugin=protoc-gen-ts=./node_modules/.bin/protoc-gen-ts pb/*.proto
+	@grpc_tools_node_protoc --js_out=import_style=commonjs,binary:executor/src/ --ts_out=executor/src/ \
+		--grpc_out=grpc_js:executor/src/ --plugin=protoc-gen-ts=./node_modules/.bin/protoc-gen-ts pb/*.proto
+	@awk '{sub(/import \* as grpc from "grpc";/, "import * as grpc from \"@grpc/grpc-js\";"); print}' \
+		./executor/src/pb/fengine_grpc_pb.d.ts > t && mv t ./executor/src/pb/fengine_grpc_pb.d.ts
 	@echo "Done generating"
 
 dockers: $(DOCKERS)

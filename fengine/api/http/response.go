@@ -13,7 +13,7 @@ type Response struct {
 	Data interface{} `json:"data"`
 }
 
-func encodeResponse(_ context.Context, w http.ResponseWriter, response interface{}) error {
+func encodeExecResponse(_ context.Context, w http.ResponseWriter, response interface{}) error {
 	w.Header().Set("Content-Type", contentType)
 
 	if ar, ok := response.(viot.Response); ok {

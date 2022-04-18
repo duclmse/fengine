@@ -1,32 +1,30 @@
-package main
+package grpc
 
 import (
 	"context"
 	"fmt"
-	"github.com/duclmse/fengine/fengine/api/grpc"
+	"github.com/duclmse/fengine/cmd/fengine"
 	. "github.com/duclmse/fengine/pb"
-	_logger "github.com/duclmse/fengine/pkg/logger"
+	logger "github.com/duclmse/fengine/pkg/logger"
 	"github.com/duclmse/fengine/viot"
-	"log"
 	"os"
 	"testing"
-	"time"
 )
 
 func TestExecutorClient(t *testing.T) {
-	config := LoadConfig("./.env", "executor")
-	logger, err := _logger.New(os.Stdout, config.LogLevel)
+	config := main.LoadConfig("./.env", "executor")
+	log, err := logger.New(os.Stdout, config.LogLevel)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
-	client := ConnectToGrpcService("executor", config, logger)
+	client := main.ConnectToGrpcService("executor", config, log)
 	//fmt.Printf("%+v\n", client)
 	execConfig := config.GrpcServices["executor"]
 	//fmt.Printf("%+v\n")
-	serviceTracer, dbCloser := InitJaeger("fengine", config.JaegerURL, logger)
-	defer viot.Close(logger, "vtfengine_db")(dbCloser)
+	serviceTracer, dbCloser := main.InitJaeger("fengine", config.JaegerURL, log)
+	defer viot.Close(log, "vtfengine_db")(dbCloser)
 
-	executorClient := grpc.NewExecutorClient(client, serviceTracer, time.Duration(execConfig.Timeout)*time.Second)
+	executorClient := NewExecutorClient(client, serviceTracer, execConfig)
 	execute, err := executorClient.Execute(context.Background(), &Script{
 		Function: &Function{
 			Input: []*Variable{

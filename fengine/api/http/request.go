@@ -3,9 +3,13 @@ package http
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
+
+	pb "github.com/duclmse/fengine/pb"
 )
 
 type Type int
@@ -22,21 +26,24 @@ const (
 
 //region Data structure
 
-type Variable struct {
+type JsonVariable struct {
 	Name  string      `json:"name,omitempty"`
 	Type  Type        `json:"type"`
 	Value interface{} `json:"value,omitempty"`
 }
 
-type Function struct {
-	Input  []Variable `json:"input,omitempty"`
-	Output []Variable `json:"output,omitempty"`
-	Code   string     `json:"code,omitempty"`
+type JsonVars []JsonVariable
+
+type JsonFunction struct {
+	Input  JsonVars `json:"input,omitempty"`
+	Output JsonVars `json:"output,omitempty"`
+	Code   string   `json:"code,omitempty"`
 }
 
-type Execution struct {
-	Function Function   `json:"function,omitempty"`
-	Referee  []Function `json:"referee,omitempty"`
+type JsonScript struct {
+	Attributes []JsonVariable          `json:"attributes"`
+	Function   JsonFunction            `json:"function,omitempty"`
+	Referee    map[string]JsonFunction `json:"referee,omitempty"`
 }
 
 var TypeString = map[Type]string{
@@ -59,14 +66,14 @@ var TypeID = map[string]Type{
 	"Bytes":  Bytes,
 }
 
-//endregion Data structure
-
 func (s *Type) MarshalJSON() ([]byte, error) {
 	buffer := bytes.NewBufferString(`"`)
 	buffer.WriteString(TypeString[*s])
 	buffer.WriteString(`"`)
 	return buffer.Bytes(), nil
 }
+
+//endregion Data structure
 
 func (s *Type) UnmarshalJSON(b []byte) error {
 	var j string
@@ -79,17 +86,80 @@ func (s *Type) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-func decodeRequest(ctx context.Context, request *http.Request) (interface{}, error) {
+func decodeExecRequest(ctx context.Context, request *http.Request) (interface{}, error) {
 	body, err := io.ReadAll(request.Body)
 	if err != nil {
 		return nil, err
 	}
 
-	var execution Execution
+	var execution JsonScript
 	err = json.Unmarshal(body, &execution)
 	if err != nil {
-		return body, nil
+		fmt.Printf("decode exec: %s\n", err)
+		return nil, err
 	}
 
-	return nil, nil
+	return execution.ToScript(), nil
+}
+
+func (json JsonScript) ToScript() pb.Script {
+	return pb.Script{
+		Function:   json.Function.ToFunction(),
+		Attributes: ReadVars(json.Attributes),
+		Referee:    ReadReferee(json.Referee),
+	}
+}
+
+func ReadReferee(referee map[string]JsonFunction) map[string]*pb.Function {
+	m := make(map[string]*pb.Function, len(referee))
+	for k, v := range referee {
+		m[k] = v.ToFunction()
+	}
+	return m
+}
+
+func ReadVars(attrs JsonVars) []*pb.Variable {
+	variables := make([]*pb.Variable, len(attrs))
+	for _, v := range attrs {
+		variables = append(variables, v.ToVariable())
+	}
+	return variables
+}
+
+func (f JsonFunction) ToFunction() *pb.Function {
+	return &pb.Function{
+		Input:  ReadVars(f.Input),
+		Output: ReadVars(f.Output),
+		Code:   f.Code,
+	}
+}
+
+func (json JsonVariable) ToVariable() *pb.Variable {
+	name := json.Name
+	if json.Value == nil {
+		return &pb.Variable{Name: name}
+	}
+	switch json.Type {
+	case Int32:
+		return &pb.Variable{Name: name, Value: &pb.Variable_I32{I32: int32(json.Value.(float64))}}
+	case Int64:
+		return &pb.Variable{Name: name, Value: &pb.Variable_I64{I64: int64(json.Value.(float64))}}
+	case Float:
+		return &pb.Variable{Name: name, Value: &pb.Variable_F32{F32: float32(json.Value.(float64))}}
+	case Double:
+		return &pb.Variable{Name: name, Value: &pb.Variable_F64{F64: json.Value.(float64)}}
+	case Bool:
+		return &pb.Variable{Name: name, Value: &pb.Variable_Bool{Bool: json.Value.(bool)}}
+	case String:
+		return &pb.Variable{Name: name, Value: &pb.Variable_String_{String_: json.Value.(string)}}
+	case Bytes:
+		s := json.Value.(string)
+		binary, err := base64.StdEncoding.DecodeString(s)
+		if err != nil {
+			fmt.Printf("cannot decode base64 with %s\n", s)
+			return &pb.Variable{}
+		}
+		return &pb.Variable{Name: name, Value: &pb.Variable_Binary{Binary: binary}}
+	}
+	return &pb.Variable{Name: name}
 }

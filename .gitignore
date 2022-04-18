@@ -110,3 +110,4 @@ go.sum
 *pb.d.ts
 **/dist/
 **/.cache
+**/.parcel-cache

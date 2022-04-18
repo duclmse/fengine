@@ -1,19 +1,35 @@
 ###
-POST http://{{host}}/fe/exec
+POST {{host}}/fe/exec
 Content-Type: application/json
 Accept: application/json
 
 {
+  "attributes": [
+    {"name": "s", "type": "String", "value": "s_vl"},
+    {"name": "i", "type": "Int32", "value": 100}
+  ],
   "function": {
     "input": [
-      {"name": "str", "type": "String", "value": "Hello"},
-      {"name": "i32", "type": "Int32", "value": 31071996}
+      {"name": "s", "type": "String", "value": "hello"},
+      {"name": "i", "type": "Int32", "value": 123}
     ],
     "output": [
-      {"name": "str", "type": "String"},
-      {"name": "i32", "type": "Int32"}
+      {"name": "s"}
     ],
-    "code": "return {str, i32}"
+    "code": "me.test({s,i});\nTable('a').Select({and:[{a:{$gt:10,$lt:20}}]});\nme.i=0;\nreturn {i:i+me.i, s:s+me.s}"
+  },
+  "referee": {
+    "test": {
+      "input": [
+        {"name": "str", "type": "String"},
+        {"name": "i32", "type": "Int32"}
+      ],
+      "output": [
+        {"name": "str"},
+        {"name": "i32"}
+      ],
+      "code": "return {i32: i32+1, str: str+'!'}"
+    }
   }
 }
 

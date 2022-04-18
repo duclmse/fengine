@@ -20,11 +20,10 @@ type grpcExecutorClient struct {
 	execute endpoint.Endpoint
 }
 
-func NewExecutorClient(conn *grpc.ClientConn, tracer opentracing.Tracer, timeout time.Duration) FEngineExecutorClient {
+func NewExecutorClient(conn *grpc.ClientConn, tracer opentracing.Tracer, config GrpcService) FEngineExecutorClient {
 	svcName := "viot.FEngineExecutor"
-
 	return &grpcExecutorClient{
-		timeout: timeout,
+		timeout: time.Duration(config.Timeout) * time.Second,
 		execute: ot.TraceClient(tracer, "execute")(kitgrpc.NewClient(
 			conn, svcName, "Execute", encodeExecuteRequest, decodeExecuteResponse, Result{},
 		).Endpoint()),

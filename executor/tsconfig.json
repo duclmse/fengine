@@ -23,7 +23,7 @@
     ],
     "rootDirs": ["./src"],
     "sourceMap": true,
-    "target": "ES6"
+    "target": "ES2021"
   },
   "include": ["src"],
   "exclude": [

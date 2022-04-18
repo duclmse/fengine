@@ -2,5 +2,5 @@ FROM node:16
 
 COPY ./dist ~/
 
-CMD []
+CMD ["node", "index.js"]
 

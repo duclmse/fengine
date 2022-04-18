@@ -20,7 +20,7 @@ func Test_Marshall(t *testing.T) {
 			"code": "return {str, i32}"
 		}
 	}`)
-	var execution Execution
+	var execution JsonScript
 	err := json.Unmarshal(data, &execution)
 	if err != nil {
 		t.Errorf("Err parsing JSON: %s", err)
@@ -35,13 +35,13 @@ func Test_Marshall(t *testing.T) {
 }
 
 func Test_Unmarshall(t *testing.T) {
-	execution := Execution{
-		Function: Function{
-			Input: []Variable{
+	execution := JsonScript{
+		Function: JsonFunction{
+			Input: []JsonVariable{
 				{Name: "str", Type: String, Value: "hello"},
 				{Name: "i32", Type: Int32, Value: 3212312},
 			},
-			Output: []Variable{
+			Output: []JsonVariable{
 				{Name: "str", Type: String},
 				{Name: "i32", Type: Int32},
 			},
@@ -73,7 +73,7 @@ func Test_Filter(t *testing.T) {
 	fmt.Printf("%v\n", va.a)
 }
 
-func printArgs(variables []Variable) {
+func printArgs(variables []JsonVariable) {
 	for i, arg := range variables {
 		fmt.Printf("%d %s %s(%v): %v\n", i, arg.Name, TypeString[arg.Type], arg.Type, arg.Value)
 	}
