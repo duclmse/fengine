@@ -66,7 +66,7 @@ func migrateDB(db *sqlx.DB) (int, error) {
 		`CREATE TABLE IF NOT EXISTS entity (
 			"id"          UUID,
 			"name"        VARCHAR(255),
-			"entity_type" ENTITY_TYPE,
+			"type"        ENTITY_TYPE,
 			"description" VARCHAR(500),
 			"project_id"  UUID,
 			PRIMARY KEY (id)

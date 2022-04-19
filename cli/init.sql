@@ -67,19 +67,22 @@ DROP TYPE "method_type";
 
 ------------------------------------------------------------------------------------------------------------------------
 -- region DML
-INSERT INTO entity ("id", "name", "type", "project_id")
-VALUES
-    ('21d2f737-31ea-4fad-a5a9-5c2fbb3e01ab'::UUID, 'Shape', 'shape', '8039354f-397a-4284-a078-f8e8ded1c6c2'::UUID),
-    ('3c62e869-d806-4b7a-a770-b07c0d435452'::UUID, 'Template', 'template', '8039354f-397a-4284-a078-f8e8ded1c6c2'::UUID),
-    ('1d6d5123-3fb8-4ab1-956f-c6f96847471d'::UUID, 'Thing1', 'thing', '8039354f-397a-4284-a078-f8e8ded1c6c2'::UUID),
-    ('1ca71bc4-c127-4d4d-8a86-0872c4363be2'::UUID, 'Thing2', 'thing', '8039354f-397a-4284-a078-f8e8ded1c6c2'::UUID);
-
 -- @formatter:off
+
 DO $$ DECLARE
     shape_id UUID := '21d2f737-31ea-4fad-a5a9-5c2fbb3e01ab'::UUID;
     templ_id UUID := '3c62e869-d806-4b7a-a770-b07c0d435452'::UUID;
     thing_id UUID := '1d6d5123-3fb8-4ab1-956f-c6f96847471d'::UUID;
+    _project_id UUID := '8039354f-397a-4284-a078-f8e8ded1c6c2'::UUID;
+    str_i32 VARCHAR := '[{"name":"str","type":"string"},{"name":"i32","type":"i32"}]'::jsonb;
+    s_i VARCHAR := '[{"name":"s","type":"string"},{"name":"i","type":"i32"}]'::jsonb;
 BEGIN
+INSERT INTO entity ("id", "name", "type", "project_id")
+VALUES
+    (shape_id, 'Shape', 'shape', _project_id),
+    (templ_id, 'Template', 'template', _project_id),
+    (thing_id, 'Thing1', 'thing', _project_id);
+
     INSERT INTO attribute (entity_id, "name", "type", value_i32) VALUES (shape_id, 'i', 'i32', 3200);
     INSERT INTO attribute (entity_id, "name", "type", value_i64) VALUES (shape_id, 'l', 'i64', 3200);
     INSERT INTO attribute (entity_id, "name", "type", value_f32) VALUES (shape_id, 'f', 'f32', 3200);
@@ -89,14 +92,16 @@ BEGIN
     INSERT INTO attribute (entity_id, "name", "type", value_string) VALUES (shape_id, 's', 'string', 'svl');
     INSERT INTO attribute (entity_id, "name", "type", value_binary) VALUES (shape_id, 'B', 'binary', 'svl'::BYTEA);
 
-    INSERT INTO attribute (entity_id, "name", "from", "type") VALUES (templ_id, 'i', shape_id, 'i32');
-    INSERT INTO attribute (entity_id, "name", "from", "type") VALUES (templ_id, 'l', shape_id, 'i64');
-    INSERT INTO attribute (entity_id, "name", "from", "type") VALUES (templ_id, 'f', shape_id, 'f32');
-    INSERT INTO attribute (entity_id, "name", "from", "type") VALUES (templ_id, 'd', shape_id, 'f64');
-    INSERT INTO attribute (entity_id, "name", "from", "type") VALUES (templ_id, 'b', shape_id, 'bool');
-    INSERT INTO attribute (entity_id, "name", "from", "type") VALUES (templ_id, 'j', shape_id, 'json');
-    INSERT INTO attribute (entity_id, "name", "from", "type") VALUES (templ_id, 's', shape_id, 'string');
-    INSERT INTO attribute (entity_id, "name", "from", "type") VALUES (templ_id, 'B', shape_id, 'binary');
+    INSERT INTO attribute (entity_id, "name", "from", "type")
+    VALUES
+        (templ_id, 'i', shape_id, 'i32'),
+        (templ_id, 'l', shape_id, 'i64'),
+        (templ_id, 'f', shape_id, 'f32'),
+        (templ_id, 'd', shape_id, 'f64'),
+        (templ_id, 'b', shape_id, 'bool'),
+        (templ_id, 'j', shape_id, 'json'),
+        (templ_id, 's', shape_id, 'string'),
+        (templ_id, 'B', shape_id, 'binary');
 
     INSERT INTO attribute (entity_id, "name", "from", "type", value_i32) VALUES (thing_id, 'i', shape_id, 'i32', 1);
     INSERT INTO attribute (entity_id, "name", "from", "type", value_i64) VALUES (thing_id, 'l', shape_id, 'i64', 2);
@@ -106,24 +111,17 @@ BEGIN
     INSERT INTO attribute (entity_id, "name", "from", "type", value_json) VALUES (thing_id, 'j', shape_id, 'json', '{}'::JSONB);
     INSERT INTO attribute (entity_id, "name", "from", "type", value_string) VALUES (thing_id, 's', shape_id, 'string', 'svl');
     INSERT INTO attribute (entity_id, "name", "from", "type", value_binary) VALUES (thing_id, 'B', shape_id, 'binary', 'b'::BYTEA);
-END $$ LANGUAGE plpgsql;
 
-
-DO $$ DECLARE
-    shape_id UUID := '21d2f737-31ea-4fad-a5a9-5c2fbb3e01ab'::UUID;
-    templ_id UUID := '3c62e869-d806-4b7a-a770-b07c0d435452'::UUID;
-    thing_id UUID := '1d6d5123-3fb8-4ab1-956f-c6f96847471d'::UUID;
-BEGIN
     INSERT INTO method (entity_id, "name", "input", "output", "from", code)
     VALUES
-        (shape_id, 'shape_method', '[{"name":"str","type":"string"},{"name":"i32","type":"i32"}]'::jsonb, 'json', null, 'return {i32:i32+1,str:str+"!"}'),
-        (templ_id, 'shape_method', '[{"name":"str","type":"string"},{"name":"i32","type":"i32"}]'::jsonb, 'json', shape_id, null),
-        (thing_id, 'shape_method', '[{"name":"str","type":"string"},{"name":"i32","type":"i32"}]'::jsonb, 'json', shape_id, null),
+        (shape_id, 'shape_method', str_i32, 'json', null, 'return {i32:i32+1,str:str+"!"}'),
+        (templ_id, 'shape_method', str_i32, 'json', shape_id, null),
+        (thing_id, 'shape_method', str_i32, 'json', shape_id, null),
 
-        (templ_id, 'templ_method', '[{"name":"s","type":"string"},{"name":"i","type":"i32"}]'::jsonb, 'json', null, 'return {s:i32+"!"+s}'),
-        (thing_id, 'templ_method', '[{"name":"s","type":"string"},{"name":"i","type":"i32"}]'::jsonb, 'json', templ_id, null),
+        (templ_id, 'templ_method', s_i, 'json', null, 'return {s:i32+"!"+s}'),
+        (thing_id, 'templ_method', s_i, 'json', templ_id, null),
 
-        (thing_id, 'thing_method', '[{"name":"s","type":"string"},{"name":"i","type":"i32"}]'::jsonb, 'json', null, 'me.test({s,i});\nTable(''a'').Select({and:[{a:{$gt:10,$lt:20}}]});\nme.i=0;\nreturn {i:i+me.i, s:s+me.s}');
+        (thing_id, 'thing_method', s_i, 'json', null, 'me.test({s,i});\nTable(''a'').Select({and:[{a:{$gt:10,$lt:20}}]});\nme.i=0;\nreturn {i:i+me.i, s:s+me.s}');
 END $$ LANGUAGE plpgsql;
 -- endregion DML
 ------------------------------------------------------------------------------------------------------------------------

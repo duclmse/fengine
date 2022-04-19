@@ -2,6 +2,7 @@ package fengine
 
 import (
 	"context"
+	"github.com/duclmse/fengine/fengine/db/sql"
 
 	"github.com/go-redis/redis/v8"
 	"github.com/jmoiron/sqlx"
@@ -9,17 +10,15 @@ import (
 
 	. "github.com/duclmse/fengine/pb"
 	"github.com/duclmse/fengine/pkg/logger"
-	"github.com/duclmse/fengine/viot"
 )
 
-var _ Service = (*fengineService)(nil)
+var _ Service = (*FengineService)(nil)
 
-type fengineService struct {
-	repository Repository
-	cache      Cache
-	idp        viot.UUIDProvider
-	execClient FEngineExecutorClient
-	log        logger.Logger
+type FengineService struct {
+	Repository sql.Repository
+	Cache      Cache
+	ExecClient FEngineExecutorClient
+	Log        logger.Logger
 }
 
 type Service interface {
@@ -35,17 +34,11 @@ type ServiceComponent struct {
 	ExeClient   FEngineExecutorClient
 }
 
-func New(idp viot.UUIDProvider, repository Repository, cache Cache, client FEngineExecutorClient, log logger.Logger) Service {
-	return &fengineService{
-		repository: repository,
-		cache:      cache,
-		idp:        idp,
-		execClient: client,
-		log:        log,
-	}
+func (s FengineService) New() Service {
+	return &s
 }
 
-func (s fengineService) Get(ctx context.Context, id string) (interface{}, error) {
-	s.log.Info("service.go Get")
+func (s FengineService) Get(ctx context.Context, id string) (interface{}, error) {
+	s.Log.Info("service.go Get")
 	return nil, nil
 }

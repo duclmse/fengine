@@ -1,6 +1,7 @@
 package viot
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -56,7 +57,11 @@ type Response interface {
 func Close(log logger.Logger, name string) func(io.Closer) {
 	return func(closer io.Closer) {
 		if err := closer.Close(); err != nil {
-			log.Error("cannot close %s: %s", name, err.Error())
+			if log == nil {
+				fmt.Printf("cannot close %s: %s\n", name, err.Error())
+			} else {
+				log.Error("cannot close %s: %s", name, err.Error())
+			}
 		}
 	}
 }

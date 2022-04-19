@@ -3,13 +3,15 @@ package sql
 import (
 	"context"
 	"database/sql"
+	"github.com/duclmse/fengine/pkg/logger"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/opentracing/opentracing-go"
 )
 
 type database struct {
-	DB *sqlx.DB
+	DB  *sqlx.DB
+	Log logger.Logger
 }
 
 // Database provides a database interface
@@ -26,41 +28,44 @@ type Database interface {
 }
 
 // NewDatabase creates a DeviceDatabase instance
-func NewDatabase(db *sqlx.DB) Database {
+func NewDatabase(DB *sqlx.DB) Database {
 	return &database{
-		DB: db,
+		DB: DB,
 	}
 }
 
-func (dm database) NamedExecContext(ctx context.Context, query string, args interface{}) (sql.Result, error) {
-	addSpanTags(ctx, query)
-	sqlx.In("SELECT ")
-	return dm.DB.NamedExecContext(ctx, query, args)
+func (db database) Logger() logger.Logger {
+	return db.Log
 }
 
-func (dm database) QueryRowxContext(ctx context.Context, query string, args ...interface{}) *sqlx.Row {
+func (db database) NamedExecContext(ctx context.Context, query string, args interface{}) (sql.Result, error) {
 	addSpanTags(ctx, query)
-	return dm.DB.QueryRowxContext(ctx, query, args...)
+	return db.DB.NamedExecContext(ctx, query, args)
 }
 
-func (dm database) NamedQueryContext(ctx context.Context, query string, args interface{}) (*sqlx.Rows, error) {
+func (db database) QueryRowxContext(ctx context.Context, query string, args ...interface{}) *sqlx.Row {
 	addSpanTags(ctx, query)
-	return dm.DB.NamedQueryContext(ctx, query, args)
+	return db.DB.QueryRowxContext(ctx, query, args...)
 }
 
-func (dm database) GetContext(ctx context.Context, dest interface{}, query string, args ...interface{}) error {
+func (db database) NamedQueryContext(ctx context.Context, query string, args interface{}) (*sqlx.Rows, error) {
 	addSpanTags(ctx, query)
-	return dm.DB.GetContext(ctx, dest, query, args...)
+	return db.DB.NamedQueryContext(ctx, query, args)
 }
 
-func (dm database) BeginTxx(ctx context.Context, opts *sql.TxOptions) (*sqlx.Tx, error) {
+func (db database) GetContext(ctx context.Context, dest interface{}, query string, args ...interface{}) error {
+	addSpanTags(ctx, query)
+	return db.DB.GetContext(ctx, dest, query, args...)
+}
+
+func (db database) BeginTxx(ctx context.Context, opts *sql.TxOptions) (*sqlx.Tx, error) {
 	span := opentracing.SpanFromContext(ctx)
 	if span != nil {
 		span.SetTag("span.kind", "client")
 		span.SetTag("peer.service", "postgres")
 		span.SetTag("db.type", "sql")
 	}
-	return dm.DB.BeginTxx(ctx, opts)
+	return db.DB.BeginTxx(ctx, opts)
 }
 
 func addSpanTags(ctx context.Context, query string) {

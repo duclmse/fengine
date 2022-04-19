@@ -3,7 +3,7 @@ package uuid
 import (
 	"github.com/duclmse/fengine/pkg/errors"
 	"github.com/duclmse/fengine/viot"
-	"github.com/gofrs/uuid"
+	"github.com/google/uuid"
 )
 
 // ErrGeneratingID indicates error in generating UUID

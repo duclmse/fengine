@@ -1,18 +1,19 @@
 package sql
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"testing"
 
-	"github.com/gofrs/uuid"
+	"github.com/google/uuid"
 
 	"github.com/duclmse/fengine/pkg/logger"
 	"github.com/duclmse/fengine/viot"
 )
 
 func TestGenUUID(t *testing.T) {
-	if id, err := uuid.NewV4(); err != nil {
+	if id, err := uuid.NewRandom(); err != nil {
 		fmt.Printf("err")
 	} else {
 		fmt.Printf("uuid:= %s\n", id)
@@ -20,16 +21,10 @@ func TestGenUUID(t *testing.T) {
 }
 
 func TestUuid(t *testing.T) {
-	type Thing struct {
-		ID          uuid.UUID `json:"id" sql:",type:uuid"`
-		Name        string    `json:"name"`
-		Description string    `json:"description"`
-	}
-	things := make([]Thing, 0)
-
 	config := Config{Host: "localhost", Port: "5432", User: "postgres", Pass: "1", Name: "postgres", SSLMode: "disable"}
 	log, err := logger.New(os.Stdout, "debug")
 	if err != nil {
+		log.Error("cannot create logger %s", err)
 		return
 	}
 	db, err := Connect(config, log)
@@ -37,19 +32,26 @@ func TestUuid(t *testing.T) {
 		log.Error("cannot connect %s", err)
 		return
 	}
-	rows, err := db.Query(`SELECT id, name FROM entity`)
+	rows, err := db.QueryxContext(context.Background(), `SELECT * FROM entity WHERE id = $1::UUID`, `21d2f737-31ea-4fad-a5a9-5c2fbb3e01ab`)
 	if err != nil {
 		log.Error("err %s", err.Error())
 		return
 	}
 	defer viot.Close(log, "")(rows)
 
+	things := make([]Entity, 0)
 	for rows.Next() {
-		t := &Thing{}
-		if err := rows.Scan(&t.ID, &t.Name); err != nil {
+		t := &Entity{}
+		if err := rows.StructScan(t); err != nil {
+			log.Error("err %s", err.Error())
 			return
 		}
 		things = append(things, *t)
 	}
+	log.Info("%d", len(things))
 	log.Struct(things)
+}
+
+func TestFengineRepository_GetThingService(t *testing.T) {
+
 }

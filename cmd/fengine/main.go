@@ -30,7 +30,6 @@ import (
 	"github.com/duclmse/fengine/fengine/tracing"
 	pb "github.com/duclmse/fengine/pb"
 	"github.com/duclmse/fengine/pkg/logger"
-	"github.com/duclmse/fengine/pkg/uuid"
 	. "github.com/duclmse/fengine/viot"
 )
 
@@ -159,7 +158,12 @@ func newService(component service.ServiceComponent) service.Service {
 	serviceCache = tracing.FEngineCacheMiddleware(component.CacheTracer, serviceCache)
 
 	// Create new fengine service
-	svc := service.New(uuid.New(), repo, serviceCache, component.ExeClient, component.Log)
+	svc := service.FengineService{
+		Repository: repo,
+		Cache:      serviceCache,
+		ExecClient: component.ExeClient,
+		Log:        component.Log,
+	}.New()
 	//svc = serviceCache.NewEventStoreMiddleware(svc, serviceCache)
 	svc = api.LoggingMiddleware(svc, component.Log)
 	svc = api.MetricsMiddleware(

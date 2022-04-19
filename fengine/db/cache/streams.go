@@ -4,12 +4,7 @@ import (
 	"context"
 
 	"github.com/duclmse/fengine/fengine"
-	"github.com/go-redis/redis"
-)
-
-const (
-	streamID  = "viot.pricing"
-	streamLen = 1000
+	"github.com/go-redis/redis/v8"
 )
 
 var (
@@ -44,5 +39,5 @@ func (es eventStore) Get(ctx context.Context, id string) (interface{}, error) {
 }
 
 func (fec fengineCache) Get(ctx context.Context, id string) (interface{}, error) {
-	return fec.client.Get(id), nil
+	return fec.client.Get(ctx, id), nil
 }
