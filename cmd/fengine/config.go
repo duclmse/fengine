@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/subosito/gotenv"
+
 	. "github.com/duclmse/fengine/fengine/api/grpc"
 	"github.com/duclmse/fengine/fengine/db/sql"
 	. "github.com/duclmse/fengine/viot"
@@ -82,10 +84,9 @@ type CacheConfig struct {
 }
 
 func LoadConfig(envFile string, grpcServices ...string) Config {
-	err := LoadEnvFile(envFile)
-	if err != nil {
+	if err := gotenv.Load(envFile); err != nil {
 		abs, _ := filepath.Abs(envFile)
-		log.Fatalf("Cannot load env file from %s", abs)
+		fmt.Printf("Cannot load env file from %s", abs)
 	}
 	return Config{
 		DbConfig:     getDbConfig(),

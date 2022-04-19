@@ -34,7 +34,7 @@ func MakeHandler(svc fengine.Service, component fengine.ServiceComponent) http.H
 		kitot.TraceClient(tracer, "fe_exec")(execEndpoint(svc, component)),
 		decodeExecRequest, encodeExecResponse, opts...))
 
-	r.GetFunc("/version", viot.Version("pricing"))
+	r.GetFunc("/version", viot.Version("fengine"))
 	r.Handle("/metrics", promhttp.Handler())
 
 	return r

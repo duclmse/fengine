@@ -1,7 +1,7 @@
 import {sendUnaryData, Server, ServerUnaryCall} from "@grpc/grpc-js";
 import {FEngineExecutorService} from "../pb/fengine_grpc_pb";
-import {Result, Script} from "../pb/fengine_pb"
-import {Executor} from "../executor/engine";
+import {Result, Script} from "../pb/fengine_pb";
+import {Executor} from "./engine";
 
 export function getServer() {
   const server = new Server();

@@ -5,7 +5,11 @@ import (
 )
 
 type Repository interface {
-	Get(ctx context.Context, id string) (interface{}, error)
+	GetAllThingServices(ctx context.Context, id string) (interface{}, error)
+	GetThingService(ctx context.Context, id string) (interface{}, error)
+	InsertThingService(ctx context.Context, id string) (interface{}, error)
+	UpdateThingService(ctx context.Context, id string) (interface{}, error)
+	DeleteThingService(ctx context.Context, id string) (interface{}, error)
 }
 
 type Cache interface {

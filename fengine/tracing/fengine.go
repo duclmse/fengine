@@ -22,6 +22,31 @@ type fengineCacheMiddleware struct {
 	cache  fengine.Cache
 }
 
+func (frm fengineRepositoryMiddleware) GetAllThingServices(ctx context.Context, id string) (interface{}, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (frm fengineRepositoryMiddleware) GetThingService(ctx context.Context, id string) (interface{}, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (frm fengineRepositoryMiddleware) InsertThingService(ctx context.Context, id string) (interface{}, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (frm fengineRepositoryMiddleware) UpdateThingService(ctx context.Context, id string) (interface{}, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (frm fengineRepositoryMiddleware) DeleteThingService(ctx context.Context, id string) (interface{}, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 func FEngineRepositoryMiddleware(tracer opentracing.Tracer, repo fengine.Repository) fengine.Repository {
 	return fengineRepositoryMiddleware{
 		tracer: tracer,
@@ -34,14 +59,6 @@ func FEngineCacheMiddleware(tracer opentracing.Tracer, cache fengine.Cache) feng
 		tracer: tracer,
 		cache:  cache,
 	}
-}
-
-func (frm fengineRepositoryMiddleware) Get(ctx context.Context, id string) (interface{}, error) {
-	span := createSpan(ctx, frm.tracer, "Get")
-	defer span.Finish()
-
-	ctx = opentracing.ContextWithSpan(ctx, span)
-	return frm.repo.Get(ctx, id)
 }
 
 func (frm fengineCacheMiddleware) Get(ctx context.Context, id string) (interface{}, error) {

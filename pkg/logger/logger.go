@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/go-kit/kit/log"
 	"io"
-	"os"
 	"time"
 )
 
@@ -22,6 +21,7 @@ type Logger interface {
 	Warn(format string, args ...interface{})
 	Error(format string, args ...interface{})
 	Fatalf(format string, args ...interface{})
+	Struct(interface{})
 }
 
 // New returns wrapped go kit logger.
@@ -62,7 +62,14 @@ func (l logger) Error(format string, args ...interface{}) {
 
 func (l logger) Fatalf(format string, args ...interface{}) {
 	if Error.isAllowed(l.level) {
-		_ = l.kitLogger.Log("level", Error.String(), "message", fmt.Sprintf(format, args...))
+		msg := fmt.Sprintf(format, args...)
+		_ = l.kitLogger.Log("level", Error.String(), "message", msg)
+		panic(msg)
 	}
-	os.Exit(1)
+}
+
+func (l logger) Struct(arg interface{}) {
+	if Info.isAllowed(l.level) {
+		_ = l.kitLogger.Log("level", Info.String(), "message", arg)
+	}
 }

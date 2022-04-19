@@ -5,27 +5,25 @@ import (
 	"strings"
 )
 
+// Level represents severity level while logging.
+type Level uint
+
 const (
-	// Error level is used when logging errors.
 	Error Level = iota + 1
-	// Warn level is used when logging warnings.
 	Warn
-	// Info level is used when logging info data.
 	Info
-	// Debug level is used when logging debugging info.
 	Debug
+	Trace
 )
 
 var ErrInvalidLogLevel = errors.New("unrecognized log level")
-
-// Level represents severity level while logging.
-type Level int
 
 var levels = map[Level]string{
 	Error: "error",
 	Warn:  "warn",
 	Info:  "info",
 	Debug: "debug",
+	Trace: "trace",
 }
 
 func (lvl Level) String() string {
@@ -38,6 +36,8 @@ func (lvl Level) isAllowed(logLevel Level) bool {
 
 func (lvl *Level) UnmarshalText(text string) error {
 	switch strings.ToLower(text) {
+	case "trace":
+		*lvl = Trace
 	case "debug":
 		*lvl = Debug
 	case "info":

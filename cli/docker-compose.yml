@@ -20,6 +20,13 @@ services:
     command: redis-server --save 20 1 --loglevel warning --requirepass eYVX7EwVmmxKPCDmwMtyKVge8oLd2t81
     volumes:
       - cache:/data
+  prometheus:
+    container_name: prometheus
+    image: prom/prometheus
+    environment:
+      - TZ=Asia/Ho_Chi_Minh
+    ports:
+      - 9090:9090
 volumes:
   cache:
     driver: local

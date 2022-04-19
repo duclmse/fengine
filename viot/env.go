@@ -1,12 +1,13 @@
 package viot
 
 import (
-	_logger "github.com/duclmse/fengine/pkg/logger"
-	"github.com/goccy/go-json"
-	"github.com/subosito/gotenv"
 	"io"
 	"net/http"
 	"os"
+
+	"github.com/goccy/go-json"
+
+	"github.com/duclmse/fengine/pkg/logger"
 )
 
 const version string = "0.10.0"
@@ -23,9 +24,7 @@ type VersionInfo struct {
 func Version(service string) http.HandlerFunc {
 	return func(rw http.ResponseWriter, _ *http.Request) {
 		res := VersionInfo{service, version}
-
 		data, _ := json.Marshal(res)
-
 		_, _ = rw.Write(data)
 	}
 }
@@ -39,11 +38,6 @@ func Env(key, fallback string) string {
 	return fallback
 }
 
-//LoadEnvFile loads environment variables defined in an .env formatted file.
-func LoadEnvFile(envFilePath string) error {
-	return gotenv.Load(envFilePath)
-}
-
 type UUIDProvider interface {
 	// ID generates the unique identifier.
 	ID() (string, error)
@@ -53,19 +47,16 @@ type UUIDProvider interface {
 type Response interface {
 	// Code returns HTTP response code.
 	Code() int
-
 	// Headers returns map of HTTP headers with their values.
 	Headers() map[string]string
-
 	// Empty indicates if HTTP response has content.
 	Empty() bool
 }
 
-func Close(logger _logger.Logger, name string) func(io.Closer) {
+func Close(log logger.Logger, name string) func(io.Closer) {
 	return func(closer io.Closer) {
-		err := closer.Close()
-		if err != nil {
-			logger.Error("cannot close %s: %s", name, err.Error())
+		if err := closer.Close(); err != nil {
+			log.Error("cannot close %s: %s", name, err.Error())
 		}
 	}
 }

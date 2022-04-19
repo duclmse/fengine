@@ -1,5 +1,5 @@
 const {ServerCredentials} = require("@grpc/grpc-js");
-const {getServer} = require("./grpc/server");
+const {getServer} = require("./executor/server");
 
 require("dotenv").config();
 

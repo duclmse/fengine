@@ -3,7 +3,7 @@ package fengine
 import (
 	"context"
 
-	"github.com/go-redis/redis"
+	"github.com/go-redis/redis/v8"
 	"github.com/jmoiron/sqlx"
 	"github.com/opentracing/opentracing-go"
 

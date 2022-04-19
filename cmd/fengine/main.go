@@ -12,7 +12,7 @@ import (
 	"syscall"
 
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
-	"github.com/go-redis/redis"
+	"github.com/go-redis/redis/v8"
 	"github.com/jmoiron/sqlx"
 	"github.com/opentracing/opentracing-go"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
@@ -39,7 +39,7 @@ func main() {
 
 	log, err := logger.New(os.Stdout, cfg.LogLevel)
 	if err != nil {
-		log.Fatalf(err.Error())
+		fmt.Printf("%s", err.Error())
 	}
 
 	serviceTracer, closer := InitJaeger("VTFEngine", cfg.JaegerURL, log)
@@ -51,9 +51,6 @@ func main() {
 
 	db := ConnectToDB(cfg.DbConfig, log)
 	defer Close(log, "db")(db)
-
-	serviceTracer, dbCloser := InitJaeger("fengine_db", cfg.JaegerURL, log)
-	defer Close(log, "fengine_db")(dbCloser)
 
 	// Connect to User service
 	executorConn := ConnectToGrpcService("executor", cfg, log)
@@ -120,9 +117,9 @@ func ConnectToCache(cache CacheConfig, log logger.Logger) *redis.Client {
 	})
 }
 
-func ConnectToDB(dbCfg sql.Config, log logger.Logger) *sqlx.DB {
-	log.Info("db info: %s:%s/%s user: %s pass: %s", dbCfg.Host, dbCfg.Port, dbCfg.Name, dbCfg.User, dbCfg.Pass)
-	db, err := sql.Connect(dbCfg)
+func ConnectToDB(cfg sql.Config, log logger.Logger) *sqlx.DB {
+	log.Info("db info: %s:%s/%s user: %s pass: %s", cfg.Host, cfg.Port, cfg.Name, cfg.User, cfg.Pass)
+	db, err := sql.Connect(cfg, log)
 	if err != nil {
 		log.Fatalf("Failed to connect to postgres: %s", err)
 	}

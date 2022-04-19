@@ -4,6 +4,10 @@ package viot;
 
 service FEngineExecutor {
   rpc Execute(Script) returns (Result) {}
+  rpc AddService(ThingMethod) returns (Result) {}
+  rpc UpdateService(ThingMethod) returns (Result) {}
+  rpc DeleteService(ThingMethod) returns (Result) {}
+
 }
 
 service FEngineThing {
@@ -20,41 +24,65 @@ service FEngineData {
 
 //#endregion FEngineExecutor
 message Script {
-  Function function = 1;
-  repeated Variable attributes = 2;
-  map<string, Function> referee = 3;
+  string function = 1;
+  map<string, Function> services = 2;
+  map<string, Function> subscription = 3;
+}
+
+message ThingMethod {
+  bytes thingID = 1;
+  map<string, Function> services = 2;
+  map<string, Function> subscription = 3;
+}
+
+message Subscription {
+
 }
 
 message Function {
-  repeated Variable input = 1;
-  repeated Variable output = 2;
-
+  repeated Argument input = 1;
+  Argument output = 2;
   string code = 3;
 }
 
 message Result {
-  Variable output = 1;
-  UpdateScript update = 2;
-  repeated Variable attributes = 3;
+  Argument output = 1;
+  repeated Argument attributes = 3;
 }
 
 message UpdateScript {
 
 }
 
-message Variable {
+message Parameter {
   string name = 1;
+  Type type = 2;
+}
 
+message Argument {
+  string name = 1;
+  Type type = 2;
   oneof value {
-    int32  i32 = 2;
-    int64  i64 = 3;
-    float  f32 = 4;
-    double f64 = 5;
-    bool   bool = 6;
-    string json = 7;
-    string string = 8;
-    bytes  binary = 9;
+    int32  i32 = 3;
+    int64  i64 = 4;
+    float  f32 = 5;
+    double f64 = 6;
+    bool   bool = 7;
+    string json = 8;
+    string string = 9;
+    bytes  binary = 10;
   }
+}
+
+enum Type {
+  i32 = 0;
+  i64 = 1;
+  f32 = 2;
+  f64 = 3;
+  bool = 4;
+  json = 5;
+  string = 6;
+  binary = 7;
 }
 //#endregion FEngineExecutor
 
@@ -64,20 +92,32 @@ message ScriptRequest {
 }
 
 message SelectRequest {
-  repeated string fieldNames = 1;
-  string filter = 2;
+  string table = 1;
+  repeated string fieldNames = 2;
+  string filter = 3;
+  int32 limit = 4;
+  int32 offset = 5;
 }
 
 message InsertRequest {
+  string table = 1;
+  repeated Argument fieldNames = 2;
+}
 
+message UpsertRequest {
+  string table = 1;
+  repeated Argument fieldNames = 2;
 }
 
 message UpdateRequest {
-
+  string table = 1;
+  repeated Argument fieldNames = 2;
+  string filter = 3;
 }
 
 message DeleteRequest {
-
+  string table = 1;
+  string filter = 2;
 }
 
 enum LogicRelation {
