@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func Test_Marshall(t *testing.T) {
+func Test_Unmarshall(t *testing.T) {
 	data := []byte(`{
 		"function": {
 			"input": [
@@ -34,7 +34,7 @@ func Test_Marshall(t *testing.T) {
 	printArgs(function.Output)
 }
 
-func Test_Unmarshall(t *testing.T) {
+func Test_Marshall(t *testing.T) {
 	execution := JsonScript{
 		Function: JsonFunction{
 			Input: []JsonVariable{
@@ -58,7 +58,7 @@ func Test_Unmarshall(t *testing.T) {
 
 func Test_Filter(t *testing.T) {
 	type a struct {
-		a map[string]string `json:"-"`
+		A map[string]string `json:"-"`
 	}
 	data := []byte(`{
 		"key": "value"
@@ -67,10 +67,10 @@ func Test_Filter(t *testing.T) {
 	err := json.Unmarshal(data, &va)
 	if err != nil {
 		fmt.Printf("%v\n", err)
-		fmt.Printf("%v\n", va.a)
+		fmt.Printf("%v\n", va.A)
 		return
 	}
-	fmt.Printf("%v\n", va.a)
+	fmt.Printf("%v\n", va.A)
 }
 
 func printArgs(variables []JsonVariable) {

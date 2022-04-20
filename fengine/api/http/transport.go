@@ -5,7 +5,7 @@ import (
 	"errors"
 	"net/http"
 
-	kitot "github.com/go-kit/kit/tracing/opentracing"
+	trace "github.com/go-kit/kit/tracing/opentracing"
 	kit "github.com/go-kit/kit/transport/http"
 	"github.com/go-zoo/bone"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -28,16 +28,23 @@ func MakeHandler(svc fengine.Service, component fengine.ServiceComponent) http.H
 		kit.ServerErrorEncoder(encodeError),
 	}
 
-	r := bone.New()
+	mux := bone.New()
 	tracer := component.Tracer
-	r.Post("/fe/exec", kit.NewServer(
-		kitot.TraceClient(tracer, "fe_exec")(execEndpoint(svc, component)),
+
+	mux.Get("/fe/thing/:id/service", kit.NewServer(
+		trace.TraceClient(tracer, "fe_exec")(execEndpoint(svc, component)),
+		decodeAllServiceRequest, encodeAllServiceResponse, opts...))
+	mux.Get("/fe/thing/:id/service/:service", kit.NewServer(
+		trace.TraceClient(tracer, "fe_exec")(execEndpoint(svc, component)),
+		decodeServiceRequest, encodeServiceResponse, opts...))
+	mux.Post("/fe/exec", kit.NewServer(
+		trace.TraceClient(tracer, "fe_exec")(execEndpoint(svc, component)),
 		decodeExecRequest, encodeExecResponse, opts...))
 
-	r.GetFunc("/version", viot.Version("fengine"))
-	r.Handle("/metrics", promhttp.Handler())
+	mux.GetFunc("/version", viot.Version("fengine"))
+	mux.Handle("/metrics", promhttp.Handler())
 
-	return r
+	return mux
 }
 
 func encodeError(_ context.Context, err error, w http.ResponseWriter) {

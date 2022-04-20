@@ -9,13 +9,10 @@ import (
 	"github.com/opentracing/opentracing-go"
 )
 
-type database struct {
-	DB  *sqlx.DB
-	Log logger.Logger
-}
-
 // Database provides a database interface
 type Database interface {
+	Connection() *sqlx.DB
+
 	NamedExecContext(context.Context, string, interface{}) (sql.Result, error)
 
 	QueryRowxContext(context.Context, string, ...interface{}) *sqlx.Row
@@ -25,6 +22,7 @@ type Database interface {
 	GetContext(context.Context, interface{}, string, ...interface{}) error
 
 	BeginTxx(context.Context, *sql.TxOptions) (*sqlx.Tx, error)
+	QueryxContext(ctx context.Context, query string, args ...interface{}) (*sqlx.Rows, error)
 }
 
 // NewDatabase creates a DeviceDatabase instance
@@ -34,8 +32,22 @@ func NewDatabase(DB *sqlx.DB) Database {
 	}
 }
 
+type database struct {
+	DB  *sqlx.DB
+	Log logger.Logger
+}
+
+func (db database) Connection() *sqlx.DB {
+	return db.DB
+}
+
 func (db database) Logger() logger.Logger {
 	return db.Log
+}
+
+func (db database) QueryxContext(ctx context.Context, query string, args ...interface{}) (*sqlx.Rows, error) {
+	addSpanTags(ctx, query)
+	return db.DB.QueryxContext(ctx, query, args...)
 }
 
 func (db database) NamedExecContext(ctx context.Context, query string, args interface{}) (sql.Result, error) {

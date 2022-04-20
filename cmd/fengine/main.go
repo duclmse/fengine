@@ -13,7 +13,6 @@ import (
 
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	"github.com/go-redis/redis/v8"
-	"github.com/jmoiron/sqlx"
 	"github.com/opentracing/opentracing-go"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
 	jconfig "github.com/uber/jaeger-client-go/config"
@@ -28,7 +27,7 @@ import (
 	"github.com/duclmse/fengine/fengine/db/cache"
 	"github.com/duclmse/fengine/fengine/db/sql"
 	"github.com/duclmse/fengine/fengine/tracing"
-	pb "github.com/duclmse/fengine/pb"
+	"github.com/duclmse/fengine/pb"
 	"github.com/duclmse/fengine/pkg/logger"
 	. "github.com/duclmse/fengine/viot"
 )
@@ -48,7 +47,10 @@ func main() {
 	cacheTracer, cacheCloser := InitJaeger("fengine_cache", cfg.JaegerURL, log)
 	defer Close(log, "cache")(cacheCloser)
 
-	db := ConnectToDB(cfg.DbConfig, log)
+	db, err := sql.Connect(cfg.DbConfig, log)
+	if err != nil {
+		log.Fatalf("Failed to connect to postgres: %s", err)
+	}
 	defer Close(log, "db")(db)
 
 	// Connect to User service
@@ -105,8 +107,7 @@ func InitJaeger(svcName, url string, log logger.Logger) (opentracing.Tracer, io.
 func ConnectToCache(cache CacheConfig, log logger.Logger) *redis.Client {
 	db, err := strconv.Atoi(cache.DB)
 	if err != nil {
-		log.Error("Failed to connect to cache: %s", err)
-		os.Exit(1)
+		log.Fatalf("Failed to connect to cache: %s", err)
 	}
 
 	return redis.NewClient(&redis.Options{
@@ -114,15 +115,6 @@ func ConnectToCache(cache CacheConfig, log logger.Logger) *redis.Client {
 		Password: cache.Pass,
 		DB:       db,
 	})
-}
-
-func ConnectToDB(cfg sql.Config, log logger.Logger) *sqlx.DB {
-	log.Info("db info: %s:%s/%s user: %s pass: %s", cfg.Host, cfg.Port, cfg.Name, cfg.User, cfg.Pass)
-	db, err := sql.Connect(cfg, log)
-	if err != nil {
-		log.Fatalf("Failed to connect to postgres: %s", err)
-	}
-	return db
 }
 
 func ConnectToGrpcService(name string, cfg Config, log logger.Logger) *grpc.ClientConn {
@@ -150,8 +142,7 @@ func ConnectToGrpcService(name string, cfg Config, log logger.Logger) *grpc.Clie
 
 // newService create new instantiate
 func newService(component service.ServiceComponent) service.Service {
-	database := sql.NewDatabase(component.DB)
-	repo := sql.NewFEngineRepository(database)
+	repo := sql.NewFEngineRepository(component.DB)
 	repo = tracing.FEngineRepositoryMiddleware(component.Tracer, repo)
 
 	serviceCache := cache.NewFEngineCache(component.Cache)

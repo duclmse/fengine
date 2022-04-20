@@ -26,6 +26,7 @@ type Config struct {
 func Connect(cfg Config, log logger.Logger) (*sqlx.DB, error) {
 	url := fmt.Sprintf("host=%s port=%s user=%s dbname=%s password=%s sslmode=%s sslcert=%s sslkey=%s sslrootcert=%s",
 		cfg.Host, cfg.Port, cfg.User, cfg.Name, cfg.Pass, cfg.SSLMode, cfg.SSLCert, cfg.SSLKey, cfg.SSLRootCert)
+	log.Info("db info: %s", url)
 
 	db, err := sqlx.Open("postgres", url)
 	if err != nil {
@@ -93,10 +94,13 @@ func migrateDB(db *sqlx.DB) (int, error) {
 		`CREATE TABLE IF NOT EXISTS "method" (
 			"entity_id" UUID,
 			"name"      VARCHAR(255),
+			"type"	    METHOD_TYPE,
 			"input"     JSONB,
 			"output"    VAR_TYPE,
 			"from"      UUID,
 			"code"      TEXT,
+			"create_ts" TIMESTAMP DEFAULT NOW(),
+			"update_ts" TIMESTAMP,
 			PRIMARY KEY ("entity_id", "name"),
 			FOREIGN KEY ("entity_id") REFERENCES entity ("id"),
 			FOREIGN KEY ("from") REFERENCES entity ("id")

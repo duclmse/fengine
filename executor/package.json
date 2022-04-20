@@ -8,7 +8,7 @@
     "build": "npx tsc -b --incremental --traceResolution",
     "pb": "parcel build ./src/index.js",
     "clean": "rm -rf ./dist",
-    "cleanAll": "rm -rf ./node_modules && rm -rf ./dist",
+    "cleanAll": "rm -rf ./node_modules && rm -rf ./dist && rm package-lock.json",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "duclmdev@gmail.com",

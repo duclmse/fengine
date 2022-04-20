@@ -4,7 +4,7 @@ import (
 	"database/sql/driver"
 	"errors"
 	"fmt"
-	"github.com/google/uuid"
+	. "github.com/google/uuid"
 )
 
 type EntityType uint8
@@ -34,34 +34,55 @@ const (
 )
 
 type Entity struct {
-	Id          *uuid.UUID `sql:"id,type:uuid"`
+	Id          *UUID      `sql:"id,type:uuid"`
 	Name        string     `sql:"name"`
 	Type        EntityType `sql:"type"`
-	Description string     `sql:"description"`
-	ProjectId   *uuid.UUID `db:"project_id" sql:",type:uuid"`
+	Description *string    `sql:"description"`
+	ProjectId   *UUID      `sql:"project_id,type:uuid"`
 }
 
 type Attribute struct {
-	EntityId    *uuid.UUID `sql:"entity_id,type:uuid"`
-	Name        string     `sql:"name"`
-	Type        VarType    `sql:"var_type"`
-	From        *uuid.UUID `sql:"from,type:uuid"`
-	ValueI32    int32      `sql:"value_i32"`
-	ValueI64    int32      `sql:"value_i64"`
-	ValueF32    float32    `sql:"value_f32"`
-	ValueF64    float64    `sql:"value_f64"`
-	ValueBool   bool       `sql:"value_bool"`
-	ValueJson   string     `sql:"value_json"`
-	ValueString string     `sql:"value_string"`
-	ValueBinary []byte     `sql:"value_binary"`
+	EntityId    *UUID   `sql:"entity_id,type:uuid"`
+	Name        string  `sql:"name"`
+	Type        VarType `sql:"var_type"`
+	From        *UUID   `sql:"from,type:uuid"`
+	ValueI32    int32   `sql:"value_i32"`
+	ValueI64    int32   `sql:"value_i64"`
+	ValueF32    float32 `sql:"value_f32"`
+	ValueF64    float64 `sql:"value_f64"`
+	ValueBool   bool    `sql:"value_bool"`
+	ValueJson   *string `sql:"value_json"`
+	ValueString *string `sql:"value_string"`
+	ValueBinary []byte  `sql:"value_binary"`
 }
 
 type Method struct {
-	EntityId    *uuid.UUID `sql:"entity_id,type:uuid"`
+	EntityId *UUID      `sql:"entity_id,type:uuid"`
+	Name     string     `sql:"name"`
+	Input    EntityType `sql:"entity_type"`
+	Output   *string    `sql:"description"`
+	From     UUID       `sql:"from,type:uuid"`
+	Code     *string    `sql:"code,type:uuid"`
+}
+
+type EntityMethod struct {
+	Id          *UUID      `sql:"id,type:uuid"`
 	Name        string     `sql:"name"`
-	EntityType  EntityType `sql:"entity_type"`
-	Description string     `sql:"description"`
-	ProjectId   *uuid.UUID `sql:"project_id,type:uuid"`
+	Type        EntityType `sql:"type"`
+	Description *string    `sql:"description"`
+	ProjectId   *UUID      `db:"project_id" sql:",type:uuid"`
+	MethodName  string     `sql:"name"`
+	Input       *string    `sql:"entity_type"`
+	Output      *string    `sql:"description"`
+	From        *UUID      `sql:"from,type:uuid"`
+	Code        *string    `sql:"code,type:uuid"`
+}
+
+type Field struct {
+}
+
+type Table struct {
+	Fields map[string]Field
 }
 
 func (et *EntityType) Scan(value interface{}) error {

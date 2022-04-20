@@ -13,6 +13,14 @@ type Response struct {
 	Data interface{} `json:"data"`
 }
 
+func encodeAllServiceResponse(ctx context.Context, writer http.ResponseWriter, i interface{}) error {
+	return nil
+}
+
+func encodeServiceResponse(ctx context.Context, writer http.ResponseWriter, i interface{}) error {
+	return nil
+}
+
 func encodeExecResponse(_ context.Context, w http.ResponseWriter, response interface{}) error {
 	w.Header().Set("Content-Type", contentType)
 

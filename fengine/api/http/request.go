@@ -12,6 +12,8 @@ import (
 	pb "github.com/duclmse/fengine/pb"
 )
 
+//region Data structure
+
 type Type int
 
 const (
@@ -23,8 +25,6 @@ const (
 	String
 	Bytes
 )
-
-//region Data structure
 
 type JsonVariable struct {
 	Name  string      `json:"name,omitempty"`
@@ -66,24 +66,26 @@ var TypeID = map[string]Type{
 	"Bytes":  Bytes,
 }
 
-func (s *Type) MarshalJSON() ([]byte, error) {
-	buffer := bytes.NewBufferString(`"`)
-	buffer.WriteString(TypeString[*s])
-	buffer.WriteString(`"`)
-	return buffer.Bytes(), nil
-}
-
 //endregion Data structure
 
-func (s *Type) UnmarshalJSON(b []byte) error {
-	var j string
-	err := json.Unmarshal(b, &j)
+func decodeAllServiceRequest(ctx context.Context, r *http.Request) (interface{}, error) {
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	// Note that if the string cannot be found then it will be set to the zero value, 'Created' in this case.
-	*s = TypeID[j]
-	return nil
+
+	var execution JsonScript
+	err = json.Unmarshal(body, &execution)
+	if err != nil {
+		fmt.Printf("decode exec: %s\n", err)
+		return nil, err
+	}
+
+	return execution.ToScript(), nil
+}
+
+func decodeServiceRequest(ctx context.Context, request *http.Request) (interface{}, error) {
+	return nil, nil
 }
 
 func decodeExecRequest(ctx context.Context, request *http.Request) (interface{}, error) {
@@ -102,28 +104,32 @@ func decodeExecRequest(ctx context.Context, request *http.Request) (interface{},
 	return execution.ToScript(), nil
 }
 
+//#region handle data structure
+
+func (s *Type) MarshalJSON() ([]byte, error) {
+	buffer := bytes.NewBufferString(`"`)
+	buffer.WriteString(TypeString[*s])
+	buffer.WriteString(`"`)
+	return buffer.Bytes(), nil
+}
+
+func (s *Type) UnmarshalJSON(b []byte) error {
+	var j string
+	err := json.Unmarshal(b, &j)
+	if err != nil {
+		return err
+	}
+	// Note that if the string cannot be found then it will be set to the zero value, 'Created' in this case.
+	*s = TypeID[j]
+	return nil
+}
+
 func (json JsonScript) ToScript() pb.Script {
 	return pb.Script{
 		Function:   json.Function.ToFunction(),
 		Attributes: ReadVars(json.Attributes),
 		Referee:    ReadReferee(json.Referee),
 	}
-}
-
-func ReadReferee(referee map[string]JsonFunction) map[string]*pb.Function {
-	m := make(map[string]*pb.Function, len(referee))
-	for k, v := range referee {
-		m[k] = v.ToFunction()
-	}
-	return m
-}
-
-func ReadVars(attrs JsonVars) []*pb.Variable {
-	variables := make([]*pb.Variable, len(attrs))
-	for _, v := range attrs {
-		variables = append(variables, v.ToVariable())
-	}
-	return variables
 }
 
 func (f JsonFunction) ToFunction() *pb.Function {
@@ -163,3 +169,21 @@ func (json JsonVariable) ToVariable() *pb.Variable {
 	}
 	return &pb.Variable{Name: name}
 }
+
+func ReadReferee(referee map[string]JsonFunction) map[string]*pb.Function {
+	m := make(map[string]*pb.Function, len(referee))
+	for k, v := range referee {
+		m[k] = v.ToFunction()
+	}
+	return m
+}
+
+func ReadVars(attrs JsonVars) []*pb.Variable {
+	variables := make([]*pb.Variable, len(attrs))
+	for _, v := range attrs {
+		variables = append(variables, v.ToVariable())
+	}
+	return variables
+}
+
+//#endregion handle data structure

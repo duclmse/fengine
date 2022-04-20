@@ -1,4 +1,7 @@
 ###
+POST {{host}}/fe/thing/
+
+###
 POST {{host}}/fe/exec
 Content-Type: application/json
 Accept: application/json
@@ -34,7 +37,7 @@ Accept: application/json
 }
 
 ###
-POST http://{{host}}/fe/condition
+POST {{host}}/fe/condition
 Content-Type: application/json
 Accept: application/json
 

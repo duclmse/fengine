@@ -9,11 +9,17 @@ import (
 	"github.com/go-kit/kit/endpoint"
 )
 
+func getServiceEndpoint(svc fengine.Service, c fengine.ServiceComponent) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		return nil, nil
+	}
+}
+
 func execEndpoint(svc fengine.Service, c fengine.ServiceComponent) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		if script, ok := request.(Script); ok {
 			c.Log.Info("Received script %v", script)
-			result, err := c.ExeClient.Execute(context.Background(), &script)
+			result, err := svc.Execute(context.Background(), &script)
 			if err != nil {
 				c.Log.Error("Error in executing %s\n", err.Error())
 				return nil, err

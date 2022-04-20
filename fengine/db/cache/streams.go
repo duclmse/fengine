@@ -2,14 +2,12 @@ package cache
 
 import (
 	"context"
-
-	"github.com/duclmse/fengine/fengine"
 	"github.com/go-redis/redis/v8"
 )
 
 var (
-	_ fengine.Service = (*eventStore)(nil)
-	_ fengine.Cache   = (*fengineCache)(nil)
+	//_ fengine.Service = (*eventStore)(nil)
+	_ Cache = (*fengineCache)(nil)
 )
 
 type fengineCache struct {
@@ -17,25 +15,17 @@ type fengineCache struct {
 }
 
 type eventStore struct {
-	svc    fengine.Service
 	client *redis.Client
 }
 
-func NewFEngineCache(client *redis.Client) fengine.Cache {
+type Cache interface {
+	Get(ctx context.Context, id string) (interface{}, error)
+}
+
+func NewFEngineCache(client *redis.Client) Cache {
 	return &fengineCache{
 		client: client,
 	}
-}
-
-func NewEventStoreMiddleware(svc fengine.Service, client *redis.Client) fengine.Service {
-	return &eventStore{
-		svc:    svc,
-		client: client,
-	}
-}
-
-func (es eventStore) Get(ctx context.Context, id string) (interface{}, error) {
-	return es.svc.Get(ctx, id)
 }
 
 func (fec fengineCache) Get(ctx context.Context, id string) (interface{}, error) {

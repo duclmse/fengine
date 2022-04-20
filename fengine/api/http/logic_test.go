@@ -26,7 +26,12 @@ func Test_DynamicUnmarshall(t *testing.T) {
 		fmt.Printf("err> %v\n", err)
 		return
 	}
-	buildLogic(logic)
+	sb := new(strings.Builder)
+	err := buildLogic(logic, sb)
+	if err != nil {
+		return
+	}
+	fmt.Printf("%s\n", sb.String())
 }
 
 var LogicOperator = map[string]string{
@@ -46,41 +51,40 @@ var ComparisonOperator = map[string]string{
 
 type Relations map[string]interface{}
 
-func buildLogic(logic Relations) error {
+func buildLogic(logic Relations, sb *strings.Builder) error {
 	if len(logic) > 1 {
 		return errors.New("cannot have more than one relation")
 	}
 	for k, v := range logic {
-		err := buildRelations(k, v)
+		err := buildRelations(k, v, sb)
 		if err != nil {
 			return err
 		}
 	}
-	fmt.Printf("\n")
 	return nil
 }
 
-func buildRelations(op string, relations interface{}) error {
+func buildRelations(op string, relations interface{}, sb *strings.Builder) error {
 	switch r := relations.(type) {
 	case map[string]interface{}:
 		//fmt.Printf("map %v\n", r)
 	case []interface{}:
-		fmt.Printf("(")
+		sb.WriteString("(")
 		for i, v := range r {
 			if i > 0 {
-				fmt.Printf(" %s ", LogicOperator[op])
+				sb.WriteString(fmt.Sprintf(" %s ", LogicOperator[op]))
 			}
-			_, err := buildCondition(v)
+			_, err := buildCondition(v, sb)
 			if err != nil {
 				return err
 			}
 		}
-		fmt.Printf(")")
+		sb.WriteString(")")
 	}
 	return nil
 }
 
-func buildCondition(condition interface{}) (interface{}, error) {
+func buildCondition(condition interface{}, sb *strings.Builder) (interface{}, error) {
 	switch c := condition.(type) {
 	case map[string]interface{}:
 		if len(c) > 1 {
@@ -88,55 +92,53 @@ func buildCondition(condition interface{}) (interface{}, error) {
 		}
 		for k, v := range c {
 			if strings.HasPrefix(k, "$") {
-				err := buildRelations(k, v)
+				err := buildRelations(k, v, sb)
 				if err != nil {
 					return nil, err
 				}
 			} else {
-				_, err := buildComparison(k, v)
+				_, err := buildComparison(k, v, sb)
 				if err != nil {
 					return nil, err
 				}
-
 			}
 		}
 	}
 	return nil, nil
 }
 
-func buildComparison(field string, comparison interface{}) (interface{}, error) {
+// build expression fragment (a < b) from {a: {$lt: b}}
+func buildComparison(field string, comparison interface{}, sb *strings.Builder) (interface{}, error) {
 	switch c := comparison.(type) {
 	case map[string]interface{}:
 		i := 0
 		for k, v := range c {
 			if i > 0 {
-				fmt.Printf(" and ")
+				sb.WriteString(fmt.Sprintf(" and "))
 			}
-			fmt.Printf("%s %s %v", field, ComparisonOperator[k], checkLogicOperand(v))
+			sb.WriteString(fmt.Sprintf("%s %s ", field, ComparisonOperator[k]))
+			checkLogicOperand(v, sb)
 			i++
 		}
-		//fmt.Printf("\n")
 	}
 	return nil, nil
 }
 
-func checkLogicOperand(value interface{}) string {
+// build
+func checkLogicOperand(value interface{}, sb *strings.Builder) {
 	switch o := value.(type) {
 	case string:
-		return fmt.Sprintf("'%s'", o)
+		sb.WriteString(fmt.Sprintf("'%s'", o))
 	case int8, int16, int32, int64, float32, float64:
-		return fmt.Sprintf("%v", o)
+		sb.WriteString(fmt.Sprintf("%v", o))
 	case []interface{}:
-		var sb strings.Builder
 		sb.WriteString("(")
 		for i, v := range o {
 			if i > 0 {
 				sb.WriteString(",")
 			}
-			sb.WriteString(checkLogicOperand(v))
+			checkLogicOperand(v, sb)
 		}
 		sb.WriteString(")")
-		return sb.String()
 	}
-	return ""
 }
