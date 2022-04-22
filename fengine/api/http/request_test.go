@@ -1,8 +1,10 @@
-package http
+package http_test
 
 import (
 	"encoding/json"
 	"fmt"
+	. "github.com/duclmse/fengine/fengine"
+	. "github.com/duclmse/fengine/fengine/api/http"
 	"testing"
 )
 
@@ -11,11 +13,11 @@ func Test_Unmarshall(t *testing.T) {
 		"function": {
 			"input": [
 				{"name": "str", "type": "String", "value": "Hello"},
-				{"name": "i32", "type": "Int32", "value": 31071996}
+				{"name": "i32", "type": "I32", "value": 31071996}
 			],
 			"output": [
 				{"name": "str", "type": "String"},
-				{"name": "i32", "type": "Int32"}
+				{"name": "i32", "type": "I32"}
 			],
 			"code": "return {str, i32}"
 		}
@@ -29,7 +31,7 @@ func Test_Unmarshall(t *testing.T) {
 	fmt.Printf("%v\n", execution)
 	function := execution.Function
 	fmt.Printf("Input ---\n")
-	printArgs(function.Input)
+	printParams(function.Input)
 	fmt.Printf("Output ---\n")
 	printArgs(function.Output)
 }
@@ -37,15 +39,12 @@ func Test_Unmarshall(t *testing.T) {
 func Test_Marshall(t *testing.T) {
 	execution := JsonScript{
 		Function: JsonFunction{
-			Input: []JsonVariable{
-				{Name: "str", Type: String, Value: "hello"},
-				{Name: "i32", Type: Int32, Value: 3212312},
-			},
-			Output: []JsonVariable{
+			Input: []JsonParameter{
 				{Name: "str", Type: String},
-				{Name: "i32", Type: Int32},
+				{Name: "i32", Type: I32},
 			},
-			Code: "return {str, i32}",
+			Output: Json,
+			Code:   "return {str, i32}",
 		},
 	}
 	data, err := json.Marshal(execution)
@@ -73,14 +72,14 @@ func Test_Filter(t *testing.T) {
 	fmt.Printf("%v\n", va.A)
 }
 
-func printArgs(variables []JsonVariable) {
-	for i, arg := range variables {
-		fmt.Printf("%d %s %s(%v): %v\n", i, arg.Name, TypeString[arg.Type], arg.Type, arg.Value)
+func printParams(args JsonParams) {
+	for i, arg := range args {
+		fmt.Printf("%d %s %s(%v)\n", i, arg.Name, TypeString[arg.Type], arg.Type)
 	}
 }
 
-func Assert(t *testing.T, expected interface{}, actual interface{}, message string) {
-	if expected != actual {
-		t.Errorf(`%s: Expected "%v" but got "%v"`, message, expected, actual)
+func printArgs(args []JsonArgument) {
+	for i, arg := range args {
+		fmt.Printf("%d %s %s(%v): %v\n", i, arg.Name, TypeString[arg.Type], arg.Type, arg.Value)
 	}
 }

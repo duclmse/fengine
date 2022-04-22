@@ -1,8 +1,9 @@
-package sql
+package sql_test
 
 import (
 	"context"
 	"fmt"
+	. "github.com/duclmse/fengine/fengine/db/sql"
 	"github.com/jmoiron/sqlx"
 	"os"
 	"testing"
@@ -57,11 +58,25 @@ func TestUuid(t *testing.T) {
 
 func TestFengineRepository_GetThingService(t *testing.T) {
 	log, db := connect(t)
-	repository := NewFEngineRepository(db)
-	service, err := repository.GetThingService(context.Background(), uuid.MustParse("21d2f737-31ea-4fad-a5a9-5c2fbb3e01ab"), "shape_method")
+	repository := NewFEngineRepository(db, log)
+	service, err := repository.GetThingService(context.Background(), uuid.MustParse("1d6d5123-3fb8-4ab1-956f-c6f96847471d"), "templ_method")
 	if err != nil {
 		t.Errorf("err %s\n", err.Error())
 		return
 	}
 	log.Struct(service)
+}
+
+func TestFengineRepository_GetAllThingService(t *testing.T) {
+	log, db := connect(t)
+	repository := NewFEngineRepository(db, log)
+	service, err := repository.GetThingAllServices(context.Background(), uuid.MustParse("21d2f737-31ea-4fad-a5a9-5c2fbb3e01ab"))
+	if err != nil {
+		t.Errorf("err %s\n", err.Error())
+		return
+	}
+	fmt.Printf("%+v\n", service)
+}
+
+func TestJsonString_Scan(t *testing.T) {
 }

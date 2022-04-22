@@ -1,5 +1,8 @@
 ###
-POST {{host}}/fe/thing/
+GET {{host}}/fe/thing/{{thing}}/service
+
+###
+GET {{host}}/fe/thing/{{thing}}/service/templ_method
 
 ###
 POST {{host}}/fe/exec

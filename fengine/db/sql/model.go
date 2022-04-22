@@ -33,6 +33,8 @@ const (
 	Binary
 )
 
+type JsonString string
+
 type Entity struct {
 	Id          *UUID      `sql:"id,type:uuid"`
 	Name        string     `sql:"name"`
@@ -57,25 +59,25 @@ type Attribute struct {
 }
 
 type Method struct {
-	EntityId *UUID      `sql:"entity_id,type:uuid"`
-	Name     string     `sql:"name"`
-	Input    EntityType `sql:"entity_type"`
-	Output   *string    `sql:"description"`
-	From     UUID       `sql:"from,type:uuid"`
-	Code     *string    `sql:"code,type:uuid"`
+	EntityId *UUID       `sql:"entity_id,type:uuid"`
+	Name     string      `sql:"name"`
+	Input    *JsonString `sql:"input"`
+	Output   *string     `sql:"output"`
+	From     UUID        `sql:"from,type:uuid"`
+	Code     *string     `sql:"code,type:uuid"`
 }
 
 type EntityMethod struct {
-	Id          *UUID      `sql:"id,type:uuid"`
-	Name        string     `sql:"name"`
-	Type        EntityType `sql:"type"`
-	Description *string    `sql:"description"`
-	ProjectId   *UUID      `db:"project_id" sql:",type:uuid"`
-	MethodName  string     `sql:"name"`
-	Input       *string    `sql:"entity_type"`
-	Output      *string    `sql:"description"`
-	From        *UUID      `sql:"from,type:uuid"`
-	Code        *string    `sql:"code,type:uuid"`
+	Id          *UUID       `json:"id" sql:"id,type:uuid"`
+	Name        string      `json:"name" sql:"name"`
+	Type        EntityType  `json:"type" sql:"type"`
+	Description *string     `json:"description" sql:"description"`
+	ProjectId   *UUID       `json:"project_id" db:"project_id" sql:",type:uuid"`
+	MethodName  string      `json:"method_name" sql:"name"`
+	Input       *JsonString `json:"input,omitempty" sql:"entity_type"`
+	Output      *string     `json:"output" sql:"output"`
+	From        *UUID       `json:"from,omitempty" sql:"from,type:uuid"`
+	Code        *string     `json:"code" sql:"code,type:uuid"`
 }
 
 type Field struct {
@@ -135,4 +137,11 @@ func (vt *VarType) Scan(value interface{}) error {
 
 func (vt VarType) Value() (driver.Value, error) {
 	return int(vt), nil
+}
+
+func (js *JsonString) MarshalJSON() ([]byte, error) {
+	if js == nil {
+		return []byte(`"null"`), nil
+	}
+	return []byte(*js), nil
 }

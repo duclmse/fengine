@@ -21,8 +21,9 @@ type Database interface {
 
 	GetContext(context.Context, interface{}, string, ...interface{}) error
 
-	BeginTxx(context.Context, *sql.TxOptions) (*sqlx.Tx, error)
 	QueryxContext(ctx context.Context, query string, args ...interface{}) (*sqlx.Rows, error)
+
+	BeginTxx(context.Context, *sql.TxOptions) (*sqlx.Tx, error)
 }
 
 // NewDatabase creates a DeviceDatabase instance

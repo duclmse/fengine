@@ -1,5 +1,6 @@
-export class Cache {
-  cache: Map<string, any> = new Map<string, any>();
+import {MethodId, Function} from "../pb/fengine_pb";
+
+export class Cache extends Map<MethodId, Function> {
 
 }
 

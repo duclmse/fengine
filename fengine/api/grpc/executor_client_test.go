@@ -7,6 +7,7 @@ import (
 	. "github.com/duclmse/fengine/pb"
 	logger "github.com/duclmse/fengine/pkg/logger"
 	"github.com/duclmse/fengine/viot"
+	"github.com/google/uuid"
 	"os"
 	"testing"
 )
@@ -25,33 +26,24 @@ func TestExecutorClient(t *testing.T) {
 	defer viot.Close(log, "vtfengine_db")(dbCloser)
 
 	executorClient := NewExecutorClient(client, serviceTracer, execConfig)
+	id, _ := uuid.MustParse(``).MarshalBinary()
 	execute, err := executorClient.Execute(context.Background(), &Script{
-		Function: &Function{
-			Input: []*Variable{
-				{Name: "s", Value: &Variable_String_{String_: "string"}},
-				{Name: "i", Value: &Variable_I32{I32: 100}},
-			},
-			Output: []*Variable{
-				{Name: "i"},
-			},
-			Code: `
-				me.test({s,i});
-				Table('a').Select({and:[{a:{$gt:10,$lt:20}}]});
-				me.i=0;
-				return {i:i+me.i, s:s+me.s}
-			`,
+		Function: &MethodId{
+			ThingID:    id,
+			MethodName: "",
+			Type:       MethodType_service,
 		},
 		Attributes: []*Variable{
 			{Name: "s", Value: &Variable_String_{String_: "string"}},
 			{Name: "i", Value: &Variable_I32{I32: 100}},
 		},
-		Referee: map[string]*Function{
+		Services: map[string]*Function{
 			"test": {
-				Input: []*Variable{
-					{Name: "str", Value: &Variable_String_{String_: "hello"}},
-					{Name: "i32", Value: &Variable_I32{I32: 200}},
+				Input: []*Parameter{
+					{Name: "str", Type: Type_string},
+					{Name: "i32", Type: Type_i32},
 				},
-				Output: []*Variable{{Name: "i"}},
+				Output: Type_json,
 				Code:   `return {i32: i32+1, str: str+'!'}`,
 			},
 		},
