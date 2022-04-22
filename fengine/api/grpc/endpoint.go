@@ -8,6 +8,7 @@ import (
 
 func grpcSelect(svc Service) Endpoint {
 	return func(ctx Context, request interface{}) (interface{}, error) {
+
 		return nil, nil
 	}
 }

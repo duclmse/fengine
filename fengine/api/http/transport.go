@@ -32,14 +32,14 @@ func MakeHandler(svc fengine.Service, component fengine.ServiceComponent) http.H
 	tracer := component.Tracer
 
 	mux.Get("/fe/thing/:id/service", kit.NewServer(
-		trace.TraceClient(tracer, "fe_exec")(execEndpoint(svc, component)),
-		decodeAllServiceRequest, encodeAllServiceResponse, opts...))
+		trace.TraceClient(tracer, "fe_get_all_services")(getAllServicesEndpoint(svc, component)),
+		decodeAllServiceRequest, encodeResponse, opts...))
 	mux.Get("/fe/thing/:id/service/:service", kit.NewServer(
-		trace.TraceClient(tracer, "fe_exec")(execEndpoint(svc, component)),
-		decodeServiceRequest, encodeServiceResponse, opts...))
-	mux.Post("/fe/exec", kit.NewServer(
-		trace.TraceClient(tracer, "fe_exec")(execEndpoint(svc, component)),
-		decodeExecRequest, encodeExecResponse, opts...))
+		trace.TraceClient(tracer, "fe_get_service")(getServiceEndpoint(svc, component)),
+		decodeServiceRequest, encodeResponse, opts...))
+	mux.Post("/fe/thing/:id/service/:service", kit.NewServer(
+		trace.TraceClient(tracer, "fe_exec_service")(execServiceEndpoint(svc, component)),
+		decodeExecRequest, encodeResponse, opts...))
 
 	mux.GetFunc("/version", viot.Version("fengine"))
 	mux.Handle("/metrics", promhttp.Handler())

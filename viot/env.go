@@ -32,16 +32,11 @@ func Version(service string) http.HandlerFunc {
 
 // Env reads specified environment variable. If no value has been found, fallback is returned.
 func Env(key, fallback string) string {
-	if v := os.Getenv(key); v != "" {
+	if v, ok := os.LookupEnv(key); ok {
 		return v
 	}
 
 	return fallback
-}
-
-type UUIDProvider interface {
-	// ID generates the unique identifier.
-	ID() (string, error)
 }
 
 // Response contains HTTP response specific methods.

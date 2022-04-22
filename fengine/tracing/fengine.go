@@ -29,13 +29,13 @@ type fengineRepositoryMiddleware struct {
 	repo   sql.Repository
 }
 
-func (frm fengineRepositoryMiddleware) GetAllThingServices(ctx context.Context, thingId UUID) (interface{}, error) {
-	span := createSpan(ctx, frm.tracer, "GetAllThingServices")
+func (frm fengineRepositoryMiddleware) GetThingAllServices(ctx context.Context, thingId UUID) (interface{}, error) {
+	span := createSpan(ctx, frm.tracer, "GetThingAllServices")
 	defer span.Finish()
-	return frm.repo.GetAllThingServices(ContextWithSpan(ctx, span), thingId)
+	return frm.repo.GetThingAllServices(ContextWithSpan(ctx, span), thingId)
 }
 
-func (frm fengineRepositoryMiddleware) GetThingService(ctx context.Context, thingId UUID, service string) (sql.EntityMethod, error) {
+func (frm fengineRepositoryMiddleware) GetThingService(ctx context.Context, thingId UUID, service string) (*sql.EntityMethod, error) {
 	span := createSpan(ctx, frm.tracer, "GetThingService")
 	defer span.Finish()
 	return frm.repo.GetThingService(ContextWithSpan(ctx, span), thingId, service)
@@ -50,13 +50,13 @@ func (frm fengineRepositoryMiddleware) InsertThingService(ctx context.Context, i
 func (frm fengineRepositoryMiddleware) UpdateThingService(ctx context.Context, id string) (interface{}, error) {
 	span := createSpan(ctx, frm.tracer, "GetThingService")
 	defer span.Finish()
-	return frm.repo.InsertThingService(ContextWithSpan(ctx, span), id)
+	return frm.repo.UpdateThingService(ContextWithSpan(ctx, span), id)
 }
 
 func (frm fengineRepositoryMiddleware) DeleteThingService(ctx context.Context, id string) (interface{}, error) {
 	span := createSpan(ctx, frm.tracer, "GetThingService")
 	defer span.Finish()
-	return frm.repo.InsertThingService(ContextWithSpan(ctx, span), id)
+	return frm.repo.DeleteThingService(ContextWithSpan(ctx, span), id)
 }
 
 //#endregion FEngineRepositoryMiddleware

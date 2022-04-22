@@ -33,24 +33,16 @@ func NewDataServer(tracer opentracing.Tracer, svc fengine.Service) FEngineDataSe
 	return &grpcDataServer{
 		selectEndpoint: kitgrpc.NewServer(
 			kitot.TraceServer(tracer, "Select")(grpcSelect(svc)),
-			decodeSelectRequest,
-			encodeSelectResponse,
-		),
+			decodeSelectRequest, encodeSelectResponse),
 		insertEndpoint: kitgrpc.NewServer(
 			kitot.TraceServer(tracer, "Insert")(grpcInsert(svc)),
-			decodeInsertRequest,
-			encodeInsertResponse,
-		),
+			decodeInsertRequest, encodeInsertResponse),
 		updateEndpoint: kitgrpc.NewServer(
 			kitot.TraceServer(tracer, "Update")(grpcUpdate(svc)),
-			decodeUpdateRequest,
-			encodeUpdateResponse,
-		),
+			decodeUpdateRequest, encodeUpdateResponse),
 		deleteEndpoint: kitgrpc.NewServer(
 			kitot.TraceServer(tracer, "Delete")(grpcDelete(svc)),
-			decodeDeleteRequest,
-			encodeDeleteResponse,
-		),
+			decodeDeleteRequest, encodeDeleteResponse),
 	}
 }
 

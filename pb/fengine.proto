@@ -7,30 +7,36 @@ service FEngineExecutor {
   rpc AddService(ThingMethod) returns (Result) {}
   rpc UpdateService(ThingMethod) returns (Result) {}
   rpc DeleteService(ThingMethod) returns (Result) {}
-
 }
 
 service FEngineThing {
-  rpc ResolveService(ScriptRequest) returns (Script) {}
+  rpc ResolveService(ScriptRequest) returns (Result) {}
 }
 
 service FEngineData {
-  rpc Select(SelectRequest) returns (Script) {}
-  rpc Insert(InsertRequest) returns (Script) {}
-  rpc Update(UpdateRequest) returns (Script) {}
-  rpc Delete(DeleteRequest) returns (Script) {}
+  rpc Select(SelectRequest) returns (Result) {}
+  rpc Insert(InsertRequest) returns (Result) {}
+  rpc Update(UpdateRequest) returns (Result) {}
+  rpc Delete(DeleteRequest) returns (Result) {}
 }
 
 
 //#endregion FEngineExecutor
 message Script {
-  string function = 1;
-  map<string, Function> services = 2;
-  map<string, Function> subscription = 3;
+  MethodId methodId = 1;
+  repeated Variable attributes = 2;
+  map<string, Function> services = 3;
+  map<string, Function> subscription = 4;
+}
+
+message MethodId {
+  bytes thingID = 1;
+  string methodName = 2;
+  MethodType type = 3;
 }
 
 message ThingMethod {
-  bytes thingID = 1;
+  MethodId methodId = 1;
   map<string, Function> services = 2;
   map<string, Function> subscription = 3;
 }
@@ -40,14 +46,14 @@ message Subscription {
 }
 
 message Function {
-  repeated Argument input = 1;
-  Argument output = 2;
+  repeated Parameter input = 1;
+  Type output = 2;
   string code = 3;
 }
 
 message Result {
-  Argument output = 1;
-  repeated Argument attributes = 3;
+  Variable output = 1;
+  repeated Variable attributes = 3;
 }
 
 message UpdateScript {
@@ -59,7 +65,7 @@ message Parameter {
   Type type = 2;
 }
 
-message Argument {
+message Variable {
   string name = 1;
   Type type = 2;
   oneof value {
@@ -74,6 +80,11 @@ message Argument {
   }
 }
 
+enum MethodType {
+  service = 0;
+  subscription = 1;
+}
+
 enum Type {
   i32 = 0;
   i64 = 1;
@@ -84,9 +95,11 @@ enum Type {
   string = 6;
   binary = 7;
 }
-//#endregion FEngineExecutor
 
-//#region FEngineData
+//#endregion
+
+
+
 message ScriptRequest {
 
 }
@@ -101,17 +114,17 @@ message SelectRequest {
 
 message InsertRequest {
   string table = 1;
-  repeated Argument fieldNames = 2;
+  repeated Variable fieldNames = 2;
 }
 
 message UpsertRequest {
   string table = 1;
-  repeated Argument fieldNames = 2;
+  repeated Variable fieldNames = 2;
 }
 
 message UpdateRequest {
   string table = 1;
-  repeated Argument fieldNames = 2;
+  repeated Variable fieldNames = 2;
   string filter = 3;
 }
 
@@ -120,8 +133,4 @@ message DeleteRequest {
   string filter = 2;
 }
 
-enum LogicRelation {
-  AND = 0;
-  OR = 1;
-}
-//#endregion FEngineData
+//#endregion

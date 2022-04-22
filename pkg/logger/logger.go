@@ -9,11 +9,6 @@ import (
 
 var _ Logger = (*logger)(nil)
 
-type logger struct {
-	kitLogger log.Logger
-	level     Level
-}
-
 // Logger specifies logging API.
 type Logger interface {
 	Debug(format string, args ...interface{})
@@ -21,6 +16,7 @@ type Logger interface {
 	Warn(format string, args ...interface{})
 	Error(format string, args ...interface{})
 	Fatalf(format string, args ...interface{})
+	Elapse(format string, args ...interface{}) func(time.Time, *error)
 	Struct(interface{})
 }
 
@@ -34,6 +30,11 @@ func New(out io.Writer, levelText string) (Logger, error) {
 	l := log.NewJSONLogger(log.NewSyncWriter(out))
 	l = log.With(l, "ts", log.DefaultTimestampUTC)
 	return &logger{l, level}, err
+}
+
+type logger struct {
+	kitLogger log.Logger
+	level     Level
 }
 
 func (l logger) Debug(format string, args ...interface{}) {
@@ -65,6 +66,18 @@ func (l logger) Fatalf(format string, args ...interface{}) {
 		msg := fmt.Sprintf(format, args...)
 		_ = l.kitLogger.Log("level", Error.String(), "message", msg)
 		panic(msg)
+	}
+}
+
+func (l logger) Elapse(format string, args ...interface{}) func(time.Time, *error) {
+	return func(begin time.Time, err *error) {
+		if *err != nil {
+			args = append(args, time.Since(begin), (*err).Error())
+			_ = l.kitLogger.Log("level", Info.String(), "message", fmt.Sprintf(format+" took %s with error: %s.", args...))
+			return
+		}
+		args = append(args, time.Since(begin))
+		_ = l.kitLogger.Log("level", Info.String(), "message", fmt.Sprintf(format+" took %s without error.", args...))
 	}
 }
 

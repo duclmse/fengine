@@ -27,7 +27,7 @@ import (
 	"github.com/duclmse/fengine/fengine/db/cache"
 	"github.com/duclmse/fengine/fengine/db/sql"
 	"github.com/duclmse/fengine/fengine/tracing"
-	"github.com/duclmse/fengine/pb"
+	pb "github.com/duclmse/fengine/pb"
 	"github.com/duclmse/fengine/pkg/logger"
 	. "github.com/duclmse/fengine/viot"
 )
@@ -142,7 +142,7 @@ func ConnectToGrpcService(name string, cfg Config, log logger.Logger) *grpc.Clie
 
 // newService create new instantiate
 func newService(component service.ServiceComponent) service.Service {
-	repo := sql.NewFEngineRepository(component.DB)
+	repo := sql.NewFEngineRepository(component.DB, component.Log)
 	repo = tracing.FEngineRepositoryMiddleware(component.Tracer, repo)
 
 	serviceCache := cache.NewFEngineCache(component.Cache)

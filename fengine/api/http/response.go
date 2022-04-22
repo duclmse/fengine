@@ -2,9 +2,11 @@ package http
 
 import (
 	"context"
-	"github.com/duclmse/fengine/viot"
-	"github.com/goccy/go-json"
 	"net/http"
+
+	"github.com/goccy/go-json"
+
+	"github.com/duclmse/fengine/viot"
 )
 
 type Response struct {
@@ -13,15 +15,7 @@ type Response struct {
 	Data interface{} `json:"data"`
 }
 
-func encodeAllServiceResponse(ctx context.Context, writer http.ResponseWriter, i interface{}) error {
-	return nil
-}
-
-func encodeServiceResponse(ctx context.Context, writer http.ResponseWriter, i interface{}) error {
-	return nil
-}
-
-func encodeExecResponse(_ context.Context, w http.ResponseWriter, response interface{}) error {
+func encodeResponse(_ context.Context, w http.ResponseWriter, response interface{}) error {
 	w.Header().Set("Content-Type", contentType)
 
 	if ar, ok := response.(viot.Response); ok {

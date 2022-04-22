@@ -1,5 +1,8 @@
-function test() {
-  console.log(arguments);
-}
+const {VM, VMScript} = require('vm2');
 
-test("adas", "adsasd", "asdasd");
+const vm = new VM();
+const script = new VMScript('Math.rndom()');
+script.compile()
+console.log("dasds");
+console.log(vm.run(script));
+console.log(vm.run(script));
