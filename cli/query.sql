@@ -1,4 +1,4 @@
-SELECT COUNT(*), PG_SIZE_PRETTY(PG_TOTAL_RELATION_SIZE('weather_metrics')) FROM weather_metrics;
+SELECT COUNT(*), PG_SIZE_PRETTY(PG_TOTAL_RELATION_SIZE('service')) FROM service;
 
 
 SELECT

@@ -2,24 +2,21 @@ package sql
 
 import (
 	"database/sql/driver"
+	"encoding/base64"
 	"errors"
 	"fmt"
+	pb "github.com/duclmse/fengine/pb"
 	. "github.com/google/uuid"
+	"strings"
 )
 
 type EntityType uint8
-type MethodType uint8
 type VarType uint8
 
 const (
 	Shape EntityType = iota
 	Template
 	Thing
-)
-
-const (
-	Service MethodType = iota
-	Subscription
 )
 
 const (
@@ -46,7 +43,7 @@ type Entity struct {
 type Attribute struct {
 	EntityId    *UUID   `sql:"entity_id,type:uuid"`
 	Name        string  `sql:"name"`
-	Type        VarType `sql:"var_type"`
+	Type        pb.Type `sql:"type"`
 	From        *UUID   `sql:"from,type:uuid"`
 	ValueI32    int32   `sql:"value_i32"`
 	ValueI64    int32   `sql:"value_i64"`
@@ -58,36 +55,35 @@ type Attribute struct {
 	ValueBinary []byte  `sql:"value_binary"`
 }
 
-type Method struct {
-	EntityId *UUID       `sql:"entity_id,type:uuid"`
-	Name     string      `sql:"name"`
-	Input    *JsonString `sql:"input"`
-	Output   *string     `sql:"output"`
-	From     UUID        `sql:"from,type:uuid"`
-	Code     *string     `sql:"code,type:uuid"`
-}
-
-type EntityMethod struct {
+type EntityService struct {
 	Id          *UUID       `json:"id" sql:"id,type:uuid"`
 	Name        string      `json:"name" sql:"name"`
 	Type        EntityType  `json:"type" sql:"type"`
 	Description *string     `json:"description" sql:"description"`
 	ProjectId   *UUID       `json:"project_id" db:"project_id" sql:",type:uuid"`
-	MethodName  string      `json:"method_name" sql:"name"`
 	Input       *JsonString `json:"input,omitempty" sql:"entity_type"`
 	Output      *string     `json:"output" sql:"output"`
 	From        *UUID       `json:"from,omitempty" sql:"from,type:uuid"`
 	Code        *string     `json:"code" sql:"code,type:uuid"`
+	CreateTs    Time        `json:"create_ts" sql:"create_ts"`
+	UpdateTs    Time        `json:"update_ts" sql:"update_ts"`
 }
 
-type Field struct {
+type EntitySubscription struct {
+	Id          *UUID       `json:"id" sql:"id,type:uuid"`
+	Name        string      `json:"name" sql:"name"`
+	Type        EntityType  `json:"type" sql:"type"`
+	Description *string     `json:"description" sql:"description"`
+	ProjectId   *UUID       `json:"project_id" db:"project_id" sql:",type:uuid"`
+	Input       *JsonString `json:"input,omitempty" sql:"entity_type"`
+	Output      *string     `json:"output" sql:"output"`
+	From        *UUID       `json:"from,omitempty" sql:"from,type:uuid"`
+	Code        *string     `json:"code" sql:"code,type:uuid"`
+	CreateTs    Time        `json:"create_ts" sql:"create_ts"`
+	UpdateTs    Time        `json:"update_ts" sql:"update_ts"`
 }
 
-type Table struct {
-	Fields map[string]Field
-}
-
-func (et *EntityType) Scan(value interface{}) error {
+func (et *EntityType) Scan(value any) error {
 	if i, ok := value.([]byte); ok {
 		*et = map[string]EntityType{
 			"shape":    Shape,
@@ -103,22 +99,7 @@ func (et EntityType) Value() (driver.Value, error) {
 	return int(et), nil
 }
 
-func (mt *MethodType) Scan(value interface{}) error {
-	if i, ok := value.([]byte); ok {
-		*mt = map[string]MethodType{
-			"service":      Service,
-			"subscription": Subscription,
-		}[string(i)]
-		return nil
-	}
-	return errors.New("scan source is not int")
-}
-
-func (mt MethodType) Value() (driver.Value, error) {
-	return int(mt), nil
-}
-
-func (vt *VarType) Scan(value interface{}) error {
+func (vt *VarType) Scan(value any) error {
 	if i, ok := value.([]byte); ok {
 		*vt = map[string]VarType{
 			"i32":    I32,
@@ -144,4 +125,354 @@ func (js *JsonString) MarshalJSON() ([]byte, error) {
 		return []byte(`"null"`), nil
 	}
 	return []byte(*js), nil
+}
+
+type EntityDefinition struct {
+	ProjectId     UUID           `json:"project_id"`
+	Name          string         `json:"name"`
+	Type          EntityType     `json:"type"`
+	BaseTemplate  UUID           `json:"base_template"`
+	BaseShapes    []UUID         `json:"base_shapes"`
+	Attributes    []Variable     `json:"attributes"`
+	Services      []Function     `json:"services"`
+	Subscriptions []Subscription `json:"subscriptions"`
+}
+
+type Args []Variable
+
+type Variable struct {
+	Name  string      `json:"name,omitempty"`
+	Type  pb.Type     `json:"type"`
+	Value interface{} `json:"value,omitempty"`
+}
+
+type Params []Parameter
+
+type Parameter struct {
+	Name string  `json:"name,omitempty"`
+	Type pb.Type `json:"type"`
+}
+
+type ThingService struct {
+	EntityId UUID    `json:"entity_id"`
+	Name     string  `json:"name"`
+	Input    Params  `json:"input,omitempty"`
+	Output   pb.Type `json:"output,omitempty"`
+	Code     string  `json:"code,omitempty"`
+}
+
+type ThingServiceId struct {
+	EntityId UUID   `json:"entity_id"`
+	Name     string `json:"name"`
+}
+
+type Function struct {
+	Name   string  `json:"name"`
+	Input  Params  `json:"input,omitempty"`
+	Output pb.Type `json:"output,omitempty"`
+	Code   string  `json:"code,omitempty"`
+}
+
+type ThingSubscription struct {
+	EntityId  UUID     `json:"entity_id"`
+	Name      string   `json:"name"`
+	Enabled   bool     `json:"enabled"`
+	Event     string   `json:"event"`
+	Attribute Variable `json:"attribute"`
+}
+
+type ThingSubscriptionId struct {
+	EntityId UUID   `json:"entity_id"`
+	Name     string `json:"name"`
+}
+
+type Subscription struct {
+	Name      string   `json:"name"`
+	Enabled   bool     `json:"enabled"`
+	Event     string   `json:"event"`
+	Attribute Variable `json:"attribute"`
+}
+
+type ServiceRequest struct {
+	ThingId     UUID   `json:"thing_id"`
+	ServiceName string `json:"service_name"`
+	Input       Args   `json:"input"`
+}
+
+type TableDefinition struct {
+	Name   string  `json:"name"`
+	Fields []Field `json:"fields"`
+}
+
+type Field struct {
+	Name         string  `json:"name"`
+	Type         pb.Type `json:"type" sql:"type"`
+	IsPrimaryKey bool    `json:"is_primary_key" json:"is_primary_key"`
+	IsLogged     bool    `json:"is_logged" json:"is_logged"`
+}
+
+type SelectRequest struct {
+	Table   string   `json:"table"`
+	Fields  []string `json:"fields"`
+	Filter  Filter   `json:"filter"`
+	GroupBy []string `json:"group_by"`
+	Limit   int      `json:"limit"`
+	Offset  int      `json:"offset"`
+	OrderBy []string `json:"order_by"`
+}
+
+type AttributeHistoryRequest struct {
+}
+
+func (sr SelectRequest) ToSQL() (string, error) {
+	fields := defaultValue(strings.Join(sr.Fields, ", "), "*", "")
+	groupBy := defaultValue(strings.Join(sr.GroupBy, ", "), "", " GROUP BY ")
+	orderBy := defaultValue(strings.Join(sr.OrderBy, ", "), "", " ORDER BY ")
+	logic, err := sr.Filter.BuildLogic()
+	if err != nil {
+		fmt.Printf("err %s\n", err.Error())
+		return "", err
+	}
+	if sr.Limit == 0 || sr.Limit > 10000 {
+		sr.Limit = 10000
+	}
+	if filter := logic.String(); filter != "" {
+		return fmt.Sprintf("SELECT %s FROM %s WHERE %s%s%s LIMIT %d OFFSET %d",
+			fields, sr.Table, filter, groupBy, orderBy, sr.Limit, sr.Offset), nil
+	}
+	return fmt.Sprintf("SELECT %s FROM %s%s%s LIMIT %d OFFSET %d",
+		fields, sr.Table, groupBy, orderBy, sr.Limit, sr.Offset), nil
+}
+
+func defaultValue(a, b, prefix string) string {
+	if a == "" {
+		return b
+	}
+	return prefix + a
+}
+
+type InsertRequest struct {
+	Table  string                 `json:"table"`
+	Values map[string]interface{} `json:"values"`
+}
+
+type UpdateRequest struct {
+	Table  string        `json:"table"`
+	Values []pb.Variable `json:"values"`
+	Filter Filter        `json:"filter"`
+}
+
+type DeleteRequest struct {
+	Table  string        `json:"table"`
+	Values []pb.Variable `json:"values"`
+	Filter Filter        `json:"filter"`
+}
+
+func (f Function) ToFunction() *pb.Function {
+	return &pb.Function{
+		Input: ReadParams(f.Input),
+		//Output: f.Output,
+		Code: f.Code,
+	}
+}
+
+func ReadParams(params Params) []*pb.Parameter {
+	variables := make([]*pb.Parameter, len(params))
+	for _, v := range params {
+		variables = append(variables, v.ToParameter())
+	}
+	return variables
+}
+
+func ReadArgs(args Args) []*pb.Variable {
+	variables := make([]*pb.Variable, len(args))
+	for _, v := range args {
+		variables = append(variables, v.ToArgument())
+	}
+	return variables
+}
+
+func (a Parameter) ToParameter() *pb.Parameter {
+	return &pb.Parameter{
+		Name: a.Name,
+		Type: a.Type,
+	}
+}
+
+func (a Variable) ToArgument() *pb.Variable {
+	name := a.Name
+	if a.Value == nil {
+		return &pb.Variable{Name: name}
+	}
+	switch a.Type {
+	case pb.Type_i32:
+		return &pb.Variable{Name: name, Type: pb.Type_i32, Value: &pb.Variable_I32{I32: int32(a.Value.(float64))}}
+	case pb.Type_i64:
+		return &pb.Variable{Name: name, Type: pb.Type_i64, Value: &pb.Variable_I64{I64: int64(a.Value.(float64))}}
+	case pb.Type_f32:
+		return &pb.Variable{Name: name, Type: pb.Type_f32, Value: &pb.Variable_F32{F32: float32(a.Value.(float64))}}
+	case pb.Type_f64:
+		return &pb.Variable{Name: name, Type: pb.Type_f64, Value: &pb.Variable_F64{F64: a.Value.(float64)}}
+	case pb.Type_bool:
+		return &pb.Variable{Name: name, Type: pb.Type_bool, Value: &pb.Variable_Bool{Bool: a.Value.(bool)}}
+	case pb.Type_json:
+		return &pb.Variable{Name: name, Type: pb.Type_json, Value: &pb.Variable_Json{Json: a.Value.(string)}}
+	case pb.Type_string:
+		return &pb.Variable{Name: name, Type: pb.Type_string, Value: &pb.Variable_String_{String_: a.Value.(string)}}
+	case pb.Type_binary:
+		s := a.Value.(string)
+		binary, err := base64.StdEncoding.DecodeString(s)
+		if err != nil {
+			fmt.Printf("cannot decode base64 with %s\n", s)
+			return &pb.Variable{}
+		}
+		return &pb.Variable{Name: name, Type: pb.Type_binary, Value: &pb.Variable_Binary{Binary: binary}}
+	}
+	return nil
+}
+
+func ReadMethods(referee map[string]Function) map[string]*pb.Function {
+	m := make(map[string]*pb.Function, len(referee))
+	for k, v := range referee {
+		m[k] = v.ToFunction()
+	}
+	return m
+}
+
+func (td TableDefinition) ToSQL() (string, error) {
+	var sb strings.Builder
+	sb.WriteString(fmt.Sprintf("CREATE TABLE %s (", td.Name))
+	keys := []string{}
+	for k, v := range td.Fields {
+		s := fmt.Sprintf("%s %s,", k, v)
+		if v.IsPrimaryKey {
+			keys = append(keys, v.Name)
+		}
+		sb.WriteString(s)
+	}
+	if len(keys) > 0 {
+
+	}
+	sb.WriteString(");")
+	return sb.String(), nil
+}
+
+var LogicOperator = map[string]string{
+	"$and": "and",
+	"$or":  "or",
+}
+
+var ComparisonOperator = map[string]string{
+	"$gt": ">",
+	"$ge": ">=",
+	"$eq": "=",
+	"$ne": "!=",
+	"$le": "<=",
+	"$lt": "<",
+	"$in": "in",
+}
+
+type Filter map[string]interface{}
+
+func (logic Filter) BuildLogic() (*strings.Builder, error) {
+	if len(logic) > 1 {
+		return nil, errors.New("cannot have more than one relation")
+	}
+	sb := new(strings.Builder)
+	for k, v := range logic {
+		if strings.HasPrefix(k, "$") {
+			if err := buildRelations(k, v, sb); err != nil {
+				fmt.Printf("error building logic %s\n", err.Error())
+				return nil, err
+			}
+		} else if err := buildComparison(k, v, sb); err != nil {
+			fmt.Printf("error building condition %s\n", err.Error())
+			return nil, err
+		}
+
+	}
+	return sb, nil
+}
+
+func buildRelations(op string, relations interface{}, sb *strings.Builder) error {
+	switch r := relations.(type) {
+	case map[string]interface{}:
+		//fmt.Printf("map %v\n", r)
+	case []interface{}:
+		sb.WriteString("(")
+		for i, v := range r {
+			if i > 0 {
+				sb.WriteString(fmt.Sprintf(" %s ", LogicOperator[op]))
+			}
+			if err := buildCondition(v, sb); err != nil {
+				return err
+			}
+		}
+		sb.WriteString(")")
+	}
+	return nil
+}
+
+// build expression fragment (a < b) from {a: {$lt: b}}
+func buildCondition(condition interface{}, sb *strings.Builder) error {
+	switch c := condition.(type) {
+	case map[string]interface{}:
+		if len(c) > 1 {
+			return errors.New("condition cannot have more than one key")
+		}
+		for k, v := range c {
+			if strings.HasPrefix(k, "$") {
+				if err := buildRelations(k, v, sb); err != nil {
+					return err
+				}
+			} else if err := buildComparison(k, v, sb); err != nil {
+				return err
+			}
+		}
+	default:
+		fmt.Printf("build cond with %v\n", c)
+	}
+	return nil
+}
+
+// build expression fragment (a < b) from {$lt: b}
+func buildComparison(field string, comparison interface{}, sb *strings.Builder) error {
+	//fmt.Printf("build comp with %t\n", comparison)
+	switch c := comparison.(type) {
+	case map[string]interface{}:
+		i := 0
+		for k, v := range c {
+			if !strings.HasPrefix(k, "$") {
+				return errors.New("expect comparison operator (start with '$')")
+			}
+			if i > 0 {
+				sb.WriteString(fmt.Sprintf(" and "))
+			}
+			sb.WriteString(fmt.Sprintf("%s %s ", field, ComparisonOperator[k]))
+			checkLogicOperand(v, sb)
+			i++
+		}
+	default:
+		//fmt.Printf("build comp with %v\n", c)
+	}
+	return nil
+}
+
+// build
+func checkLogicOperand(value interface{}, sb *strings.Builder) {
+	switch o := value.(type) {
+	case string:
+		sb.WriteString(fmt.Sprintf("'%s'", o))
+	case int, int8, int16, int32, int64, float32, float64:
+		sb.WriteString(fmt.Sprintf("%v", o))
+	case []interface{}:
+		sb.WriteString("(")
+		for i, v := range o {
+			if i > 0 {
+				sb.WriteString(",")
+			}
+			checkLogicOperand(v, sb)
+		}
+		sb.WriteString(")")
+	}
 }

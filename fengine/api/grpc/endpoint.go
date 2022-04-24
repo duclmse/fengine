@@ -7,32 +7,32 @@ import (
 )
 
 func grpcSelect(svc Service) Endpoint {
-	return func(ctx Context, request interface{}) (interface{}, error) {
+	return func(ctx Context, request any) (any, error) {
 
 		return nil, nil
 	}
 }
 
 func grpcInsert(svc Service) Endpoint {
-	return func(ctx Context, request interface{}) (interface{}, error) {
+	return func(ctx Context, request any) (any, error) {
 		return nil, nil
 	}
 }
 
 func grpcUpdate(svc Service) Endpoint {
-	return func(ctx Context, request interface{}) (interface{}, error) {
+	return func(ctx Context, request any) (any, error) {
 		return nil, nil
 	}
 }
 
 func grpcDelete(svc Service) Endpoint {
-	return func(ctx Context, request interface{}) (interface{}, error) {
+	return func(ctx Context, request any) (any, error) {
 		return nil, nil
 	}
 }
 
 func grpcResolve(svc Service) Endpoint {
-	return func(ctx Context, request interface{}) (interface{}, error) {
+	return func(ctx Context, request any) (any, error) {
 		return nil, nil
 	}
 }

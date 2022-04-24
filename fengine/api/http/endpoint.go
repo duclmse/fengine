@@ -2,8 +2,7 @@ package http
 
 import (
 	"context"
-	"github.com/google/uuid"
-
+	"github.com/duclmse/fengine/fengine/db/sql"
 	"github.com/go-kit/kit/endpoint"
 
 	"github.com/duclmse/fengine/fengine"
@@ -11,23 +10,26 @@ import (
 )
 
 func getAllServicesEndpoint(svc fengine.Service, c fengine.ServiceComponent) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		return nil, nil
+	return func(ctx context.Context, request any) (response any, err error) {
+		req, ok := request.(allServiceRequest)
+		if !ok {
+			return nil, errors.New("invalid input")
+		}
+		service, err := svc.GetThingAllServices(ctx, req.thingId)
+		if err != nil {
+			return nil, err
+		}
+		return service, nil
 	}
 }
 
 func getServiceEndpoint(svc fengine.Service, c fengine.ServiceComponent) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		//c.DB.
-		req, ok := request.(serviceRequest)
+	return func(ctx context.Context, request any) (any, error) {
+		req, ok := request.(sql.ThingServiceId)
 		if !ok {
 			return nil, errors.New("invalid input")
 		}
-		id, err := uuid.Parse(req.thingId)
-		if err != nil {
-			return nil, errors.New("invalid input")
-		}
-		service, err := svc.GetThingService(ctx, id, req.serviceName)
+		service, err := svc.GetThingService(ctx, req)
 		if err != nil {
 			return nil, err
 		}
@@ -36,13 +38,13 @@ func getServiceEndpoint(svc fengine.Service, c fengine.ServiceComponent) endpoin
 }
 
 func execServiceEndpoint(svc fengine.Service, c fengine.ServiceComponent) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		script, ok := request.(fengine.JsonScript)
+	return func(ctx context.Context, request any) (any, error) {
+		script, ok := request.(sql.ServiceRequest)
 		if !ok {
 			return nil, errors.New("invalid input")
 		}
 		c.Log.Info("Received script %v", script)
-		result, err := svc.ExecuteService(context.Background(), &script)
+		result, err := svc.ExecuteService(ctx, script)
 		if err != nil {
 			c.Log.Error("Error in executing %s\n", err.Error())
 			return nil, err

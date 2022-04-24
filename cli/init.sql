@@ -12,25 +12,27 @@ DO $$ BEGIN
     END IF;
 END $$;
 
-DO $$ BEGIN
-    IF NOT EXISTS(SELECT 1 FROM pg_type WHERE typname = 'method_type')
-        THEN CREATE TYPE METHOD_TYPE AS ENUM ('service', 'subscription');
-    END IF;
-END $$;
-
-CREATE TABLE IF NOT EXISTS entity (
+CREATE TABLE IF NOT EXISTS "project" (
     "id"          UUID,
     "name"        VARCHAR(255) UNIQUE,
-    "type"        ENTITY_TYPE,
+    "description" VARCHAR(500),
+    PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS "entity" (
+    "id"          UUID,
+    "name"        VARCHAR(255) UNIQUE,
+    "type"        ENTITY_TYPE NOT NULL,
     "description" VARCHAR(500),
     "project_id"  UUID,
-    PRIMARY KEY (id)
+    PRIMARY KEY (id),
+    FOREIGN KEY (project_id) REFERENCES project (id)
 );
 
 CREATE TABLE IF NOT EXISTS "attribute" (
     "entity_id"    UUID,
-    "name"         VARCHAR(255),
-    "type"         VAR_TYPE,
+    "name"         VARCHAR(255) NOT NULL,
+    "type"         VAR_TYPE     NOT NULL,
     "from"         UUID,
     "value_i32"    INT4,
     "value_i64"    INT4,
@@ -45,9 +47,9 @@ CREATE TABLE IF NOT EXISTS "attribute" (
     FOREIGN KEY ("from") REFERENCES entity ("id")
 );
 
-CREATE TABLE IF NOT EXISTS "method" (
+CREATE TABLE IF NOT EXISTS "service" (
     "entity_id" UUID,
-    "name"      VARCHAR(255),
+    "name"      VARCHAR(255) NOT NULL,
     "input"     JSONB,
     "output"    VAR_TYPE,
     "from"      UUID,
@@ -57,31 +59,47 @@ CREATE TABLE IF NOT EXISTS "method" (
     FOREIGN KEY ("from") REFERENCES entity ("id")
 );
 
-DROP TABLE "method";
+CREATE TABLE IF NOT EXISTS "subscription" (
+    "entity_id" UUID,
+    "name"      VARCHAR(255) NOT NULL,
+    "input"     JSONB,
+    "from"      UUID,
+    "code"      TEXT,
+    PRIMARY KEY ("entity_id", "name"),
+    FOREIGN KEY ("entity_id") REFERENCES entity ("id"),
+    FOREIGN KEY ("from") REFERENCES entity ("id")
+);
+
+DROP TABLE "service";
+DROP TABLE "subscription";
 DROP TABLE "attribute";
 DROP TABLE "entity";
+
 DROP TYPE "var_type";
 DROP TYPE "entity_type";
-DROP TYPE "method_type";
 -- endregion DDL
 
 ------------------------------------------------------------------------------------------------------------------------
 -- region DML
 -- @formatter:off
 
+INSERT INTO project ("id", "name")
+VALUES
+    ('8039354f-397a-4284-a078-f8e8ded1c6c2'::UUID, 'IoT');
+
 DO $$ DECLARE
     shape_id UUID := '21d2f737-31ea-4fad-a5a9-5c2fbb3e01ab'::UUID;
     templ_id UUID := '3c62e869-d806-4b7a-a770-b07c0d435452'::UUID;
     thing_id UUID := '1d6d5123-3fb8-4ab1-956f-c6f96847471d'::UUID;
     _project_id UUID := '8039354f-397a-4284-a078-f8e8ded1c6c2'::UUID;
-    str_i32 VARCHAR := '[{"name":"str","type":"string"},{"name":"i32","type":"i32"}]'::jsonb;
-    s_i VARCHAR := '[{"name":"s","type":"string"},{"name":"i","type":"i32"}]'::jsonb;
+    str_i32 JSONB := '[{"name":"str","type":"string"},{"name":"i32","type":"i32"}]'::JSONB;
+    s_i JSONB := '[{"name":"s","type":"string"},{"name":"i","type":"i32"}]'::JSONB;
 BEGIN
-INSERT INTO entity ("id", "name", "type", "project_id")
-VALUES
-    (shape_id, 'Shape', 'shape', _project_id),
-    (templ_id, 'Template', 'template', _project_id),
-    (thing_id, 'Thing1', 'thing', _project_id);
+    INSERT INTO entity ("id", "name", "type", "project_id")
+    VALUES
+        (shape_id, 'Shape', 'shape', _project_id),
+        (templ_id, 'Template', 'template', _project_id),
+        (thing_id, 'Thing1', 'thing', _project_id);
 
     INSERT INTO attribute (entity_id, "name", "type", value_i32) VALUES (shape_id, 'i', 'i32', 3200);
     INSERT INTO attribute (entity_id, "name", "type", value_i64) VALUES (shape_id, 'l', 'i64', 3200);
@@ -112,7 +130,7 @@ VALUES
     INSERT INTO attribute (entity_id, "name", "from", "type", value_string) VALUES (thing_id, 's', shape_id, 'string', 'svl');
     INSERT INTO attribute (entity_id, "name", "from", "type", value_binary) VALUES (thing_id, 'B', shape_id, 'binary', 'b'::BYTEA);
 
-    INSERT INTO method (entity_id, "name", "input", "output", "from", code)
+    INSERT INTO service ("entity_id", "name", "input", "output", "from", code)
     VALUES
         (shape_id, 'shape_method', str_i32, 'json', null, 'return {i32:i32+1,str:str+"!"}'),
         (templ_id, 'shape_method', str_i32, 'json', shape_id, null),
@@ -121,7 +139,7 @@ VALUES
         (templ_id, 'templ_method', s_i, 'json', null, 'return {s:i32+"!"+s}'),
         (thing_id, 'templ_method', s_i, 'json', templ_id, null),
 
-        (thing_id, 'thing_method', s_i, 'json', null, 'me.test({s,i});\nTable(''a'').Select({and:[{a:{$gt:10,$lt:20}}]});\nme.i=0;\nreturn {i:i+me.i, s:s+me.s}');
+        (thing_id, 'thing_method', s_i, 'json', null, E'me.test({s,i});%nTable(''a'').Select({and:[{a:{$gt:10,$lt:20}}]});\nme.i=0;\nreturn {i:i+me.i, s:s+me.s}');
 END $$ LANGUAGE plpgsql;
 -- endregion DML
 ------------------------------------------------------------------------------------------------------------------------
@@ -130,7 +148,14 @@ END $$ LANGUAGE plpgsql;
 SELECT
     m1.entity_id, m1.name, m1."input", m1."output", m1."from",
     CASE WHEN m1."from" IS NULL THEN m1."code" ELSE m2."code" END AS code
-FROM "method" m1
-         LEFT JOIN "method" m2 ON m1."from" = m2.entity_id AND m1.name = m2.name
-WHERE m1.entity_id = '1d6d5123-3fb8-4ab1-956f-c6f96847471d'::UUID AND m1.name = 'shape_method'
+FROM "service" m1
+         LEFT JOIN "service" m2 ON m1."from" = m2.entity_id AND m1.name = m2.name
+WHERE m1.entity_id = ?::UUID;
+
+SELECT
+    m1.entity_id, m1.name, m1."input", m1."output", m1."from",
+    CASE WHEN m1."from" IS NULL THEN m1."code" ELSE m2."code" END AS code
+FROM "service" m1
+         LEFT JOIN "service" m2 ON m1."from" = m2.entity_id AND m1.name = m2.name
+WHERE m1.entity_id = '1d6d5123-3fb8-4ab1-956f-c6f96847471d'::UUID AND m1.name = 'shape_method';
 

@@ -58,25 +58,23 @@ func migrateDB(db *sqlx.DB) (int, error) {
 			END IF;
 		END$$;`,
 		// language=postgresql
-		`DO $$BEGIN
-			IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'method_type') THEN
-				CREATE TYPE ENTITY_TYPE AS ENUM ('service', 'subscription');
-			END IF;
-		END$$;`,
-		// language=postgresql
-		`CREATE TABLE IF NOT EXISTS entity (
-			"id"          UUID,
-			"name"        VARCHAR(255),
-			"type"        ENTITY_TYPE,
-			"description" VARCHAR(500),
-			"project_id"  UUID,
+		`CREATE TABLE IF NOT EXISTS "entity" (
+			"id"            UUID NOT NULL,
+			"name"          VARCHAR(255) NOT NULL,
+			"type"          ENTITY_TYPE  NOT NULL,
+			"description"   VARCHAR(500),
+			"project_id"    UUID,
+			"base_template" UUID,
+			"base_shapes"   UUID[],
+			"create_ts" TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW(),
+			"update_ts" TIMESTAMP WITHOUT TIME ZONE DEFAULT NULL,
 			PRIMARY KEY (id)
 		);`,
 		// language=postgresql
 		`CREATE TABLE IF NOT EXISTS "attribute" (
-			"entity_id"    UUID,
-			"name"         VARCHAR(255),
-			"type"         VAR_TYPE,
+			"entity_id"    UUID NOT NULL,
+			"name"         VARCHAR(255) NOT NULL,
+			"type"         VAR_TYPE NOT NULL,
 			"from"         UUID,
 			"value_i32"    INT4,
 			"value_i64"    INT4,
@@ -86,21 +84,36 @@ func migrateDB(db *sqlx.DB) (int, error) {
 			"value_json"   JSONB,
 			"value_string" TEXT,
 			"value_binary" BYTEA,
+			"create_ts" TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW(),
+			"update_ts" TIMESTAMP WITHOUT TIME ZONE DEFAULT NULL,
 			PRIMARY KEY ("entity_id", "name"),
 			FOREIGN KEY ("entity_id") REFERENCES entity ("id"),
 			FOREIGN KEY ("from") REFERENCES entity ("id")
 		);`,
 		// language=postgresql
-		`CREATE TABLE IF NOT EXISTS "method" (
-			"entity_id" UUID,
-			"name"      VARCHAR(255),
-			"type"	    METHOD_TYPE,
+		`CREATE TABLE IF NOT EXISTS "service" (
+			"entity_id" UUID NOT NULL,
+			"name"      VARCHAR(255) NOT NULL,
 			"input"     JSONB,
 			"output"    VAR_TYPE,
 			"from"      UUID,
 			"code"      TEXT,
-			"create_ts" TIMESTAMP DEFAULT NOW(),
-			"update_ts" TIMESTAMP,
+			"create_ts" TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW(),
+			"update_ts" TIMESTAMP WITHOUT TIME ZONE DEFAULT NULL,
+			PRIMARY KEY ("entity_id", "name"),
+			FOREIGN KEY ("entity_id") REFERENCES entity ("id"),
+			FOREIGN KEY ("from") REFERENCES entity ("id")
+		);`,
+		// language=postgresql
+		`CREATE TABLE IF NOT EXISTS "subscription" (
+			"entity_id" UUID NOT NULL,
+			"name"      VARCHAR(255) NOT NULL,
+			"subs_on"   VARCHAR(50),
+			"event"     VARCHAR(50),
+			"from"      UUID,
+			"code"      TEXT,
+			"create_ts" TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW(),
+			"update_ts" TIMESTAMP WITHOUT TIME ZONE DEFAULT NULL,
 			PRIMARY KEY ("entity_id", "name"),
 			FOREIGN KEY ("entity_id") REFERENCES entity ("id"),
 			FOREIGN KEY ("from") REFERENCES entity ("id")

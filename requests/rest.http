@@ -2,41 +2,32 @@
 GET {{host}}/fe/thing/{{thing}}/service
 
 ###
+POST {{host}}/fe/thing/{{thing}}
+Content-Type: application/json
+
+{
+  "services": {
+    "test": {
+      "input": [
+        {"name": "s", "type": "string"},
+        {"name": "i", "type": "i32"}
+      ],
+      "output": "json",
+      "code": "return {sum: s + i}"
+    }
+  }
+}
+###
 GET {{host}}/fe/thing/{{thing}}/service/templ_method
 
 ###
-POST {{host}}/fe/exec
+POST {{host}}/fe/thing/{{thing}}/service/templ_method
 Content-Type: application/json
 Accept: application/json
 
 {
-  "attributes": [
-    {"name": "s", "type": "String", "value": "s_vl"},
-    {"name": "i", "type": "Int32", "value": 100}
-  ],
-  "function": {
-    "input": [
-      {"name": "s", "type": "String", "value": "hello"},
-      {"name": "i", "type": "Int32", "value": 123}
-    ],
-    "output": [
-      {"name": "s"}
-    ],
-    "code": "me.test({s,i});\nTable('a').Select({and:[{a:{$gt:10,$lt:20}}]});\nme.i=0;\nreturn {i:i+me.i, s:s+me.s}"
-  },
-  "referee": {
-    "test": {
-      "input": [
-        {"name": "str", "type": "String"},
-        {"name": "i32", "type": "Int32"}
-      ],
-      "output": [
-        {"name": "str"},
-        {"name": "i32"}
-      ],
-      "code": "return {i32: i32+1, str: str+'!'}"
-    }
-  }
+  "i": 100,
+  "s": "one long string"
 }
 
 ###

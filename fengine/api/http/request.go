@@ -4,8 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/duclmse/fengine/fengine"
+	"github.com/duclmse/fengine/fengine/db/sql"
 	"github.com/go-zoo/bone"
+	"github.com/google/uuid"
 	"io"
 	"net/http"
 )
@@ -24,11 +25,6 @@ type allServiceRequest struct {
 	thingId string
 }
 
-type serviceRequest struct {
-	thingId     string
-	serviceName string
-}
-
 func decodeAllServiceRequest(ctx context.Context, request *http.Request) (any, error) {
 	values := bone.GetAllValues(request)
 	thingId := values["id"]
@@ -37,9 +33,12 @@ func decodeAllServiceRequest(ctx context.Context, request *http.Request) (any, e
 
 func decodeServiceRequest(ctx context.Context, request *http.Request) (any, error) {
 	values := bone.GetAllValues(request)
-	thingId := values["id"]
+	thingId, err := uuid.Parse(values["id"])
+	if err != nil {
+		return nil, err
+	}
 	serviceName := values["service"]
-	return serviceRequest{thingId: thingId, serviceName: serviceName}, nil
+	return sql.ThingServiceId{EntityId: thingId, Name: serviceName}, nil
 }
 
 func decodeExecRequest(ctx context.Context, request *http.Request) (any, error) {
@@ -52,7 +51,7 @@ func decodeExecRequest(ctx context.Context, request *http.Request) (any, error) 
 		return nil, err
 	}
 
-	var execution fengine.JsonScript
+	var execution sql.ServiceRequest
 	err = json.Unmarshal(body, &execution)
 	if err != nil {
 		fmt.Printf("error in decode exec: %s\n", err)

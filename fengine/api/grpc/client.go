@@ -59,10 +59,10 @@ func (client grpcDataClient) Delete(ctx context.Context, in *pb.DeleteRequest, o
 	panic("implement me")
 }
 
-func encodeGetRequest(ctx context.Context, grpcReq interface{}) (request interface{}, err error) {
+func encodeGetRequest(ctx context.Context, grpcReq any) (request any, err error) {
 	return nil, nil
 }
 
-func decodeGetResponse(ctx context.Context, grpcRes interface{}) (response interface{}, err error) {
+func decodeGetResponse(ctx context.Context, grpcRes any) (response any, err error) {
 	return nil, nil
 }

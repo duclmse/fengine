@@ -91,11 +91,11 @@ func (client grpcExecutorClient) Execute(ctx context.Context, in *pb.Script, opt
 	return result, nil
 }
 
-func encodeExecuteRequest(ctx context.Context, grpcReq interface{}) (request interface{}, err error) {
+func encodeExecuteRequest(ctx context.Context, grpcReq any) (request any, err error) {
 	//script := grpcReq.(pb.Script)
 	return &pb.Script{}, nil
 }
 
-func decodeExecuteResponse(ctx context.Context, grpcRes interface{}) (response interface{}, err error) {
+func decodeExecuteResponse(ctx context.Context, grpcRes any) (response any, err error) {
 	return grpcRes, nil
 }

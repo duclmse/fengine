@@ -11,6 +11,7 @@ require (
 	github.com/go-zoo/bone v1.3.0
 	github.com/goccy/go-json v0.9.6
 	github.com/golang/protobuf v1.5.2
+	github.com/google/martian v2.1.0+incompatible
 	github.com/google/uuid v1.1.2
 	github.com/jmoiron/sqlx v1.3.4
 	github.com/lib/pq v1.10.4

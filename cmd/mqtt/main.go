@@ -330,7 +330,7 @@ package mqtt
 //	}
 //
 //	tracer, closer, err := jconfig.Configuration{
-//		ServiceName: svcName,
+//		Name: svcName,
 //		Sampler: &jconfig.SamplerConfig{
 //			Type:  "const",
 //			Param: 1,

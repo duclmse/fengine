@@ -19,7 +19,7 @@ type eventStore struct {
 }
 
 type Cache interface {
-	Get(ctx context.Context, id string) (interface{}, error)
+	Get(ctx context.Context, id string) (any, error)
 }
 
 func NewFEngineCache(client *redis.Client) Cache {
@@ -28,6 +28,6 @@ func NewFEngineCache(client *redis.Client) Cache {
 	}
 }
 
-func (fec fengineCache) Get(ctx context.Context, id string) (interface{}, error) {
+func (fec fengineCache) Get(ctx context.Context, id string) (any, error) {
 	return fec.client.Get(ctx, id), nil
 }

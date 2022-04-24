@@ -13,15 +13,17 @@ import (
 type Database interface {
 	Connection() *sqlx.DB
 
-	NamedExecContext(context.Context, string, interface{}) (sql.Result, error)
+	NamedExecContext(context.Context, string, any) (sql.Result, error)
 
-	QueryRowxContext(context.Context, string, ...interface{}) *sqlx.Row
+	QueryRowxContext(context.Context, string, ...any) *sqlx.Row
 
-	NamedQueryContext(context.Context, string, interface{}) (*sqlx.Rows, error)
+	NamedQueryContext(context.Context, string, any) (*sqlx.Rows, error)
 
-	GetContext(context.Context, interface{}, string, ...interface{}) error
+	GetContext(context.Context, any, string, ...any) error
 
-	QueryxContext(ctx context.Context, query string, args ...interface{}) (*sqlx.Rows, error)
+	QueryxContext(ctx context.Context, query string, args ...any) (*sqlx.Rows, error)
+
+	ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error)
 
 	BeginTxx(context.Context, *sql.TxOptions) (*sqlx.Tx, error)
 }
@@ -46,27 +48,32 @@ func (db database) Logger() logger.Logger {
 	return db.Log
 }
 
-func (db database) QueryxContext(ctx context.Context, query string, args ...interface{}) (*sqlx.Rows, error) {
+func (db database) ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error) {
+	addSpanTags(ctx, query)
+	return db.DB.ExecContext(ctx, query, args...)
+}
+
+func (db database) QueryxContext(ctx context.Context, query string, args ...any) (*sqlx.Rows, error) {
 	addSpanTags(ctx, query)
 	return db.DB.QueryxContext(ctx, query, args...)
 }
 
-func (db database) NamedExecContext(ctx context.Context, query string, args interface{}) (sql.Result, error) {
+func (db database) NamedExecContext(ctx context.Context, query string, args any) (sql.Result, error) {
 	addSpanTags(ctx, query)
 	return db.DB.NamedExecContext(ctx, query, args)
 }
 
-func (db database) QueryRowxContext(ctx context.Context, query string, args ...interface{}) *sqlx.Row {
+func (db database) QueryRowxContext(ctx context.Context, query string, args ...any) *sqlx.Row {
 	addSpanTags(ctx, query)
 	return db.DB.QueryRowxContext(ctx, query, args...)
 }
 
-func (db database) NamedQueryContext(ctx context.Context, query string, args interface{}) (*sqlx.Rows, error) {
+func (db database) NamedQueryContext(ctx context.Context, query string, args any) (*sqlx.Rows, error) {
 	addSpanTags(ctx, query)
 	return db.DB.NamedQueryContext(ctx, query, args)
 }
 
-func (db database) GetContext(ctx context.Context, dest interface{}, query string, args ...interface{}) error {
+func (db database) GetContext(ctx context.Context, dest any, query string, args ...any) error {
 	addSpanTags(ctx, query)
 	return db.DB.GetContext(ctx, dest, query, args...)
 }
