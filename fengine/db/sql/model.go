@@ -1,13 +1,15 @@
 package sql
 
 import (
+	"bytes"
 	"database/sql/driver"
 	"encoding/base64"
 	"errors"
 	"fmt"
 	pb "github.com/duclmse/fengine/pb"
-	. "github.com/google/uuid"
+	"github.com/google/uuid"
 	"strings"
+	"time"
 )
 
 type EntityType uint8
@@ -17,6 +19,7 @@ const (
 	Shape EntityType = iota
 	Template
 	Thing
+	invalid
 )
 
 const (
@@ -30,66 +33,84 @@ const (
 	Binary
 )
 
+func EntityTypeValue(s string) EntityType {
+	switch s {
+	case "shape":
+		return Shape
+	case "template":
+		return Template
+	case "thing":
+		return Thing
+	default:
+		return invalid
+	}
+}
+
 type JsonString string
 
 type Entity struct {
-	Id          *UUID      `sql:"id,type:uuid"`
+	Id          *uuid.UUID `sql:"id,type:uuid"`
 	Name        string     `sql:"name"`
 	Type        EntityType `sql:"type"`
 	Description *string    `sql:"description"`
-	ProjectId   *UUID      `sql:"project_id,type:uuid"`
+	ProjectId   *uuid.UUID `sql:"project_id,type:uuid"`
 }
 
 type Attribute struct {
-	EntityId    *UUID   `sql:"entity_id,type:uuid"`
-	Name        string  `sql:"name"`
-	Type        pb.Type `sql:"type"`
-	From        *UUID   `sql:"from,type:uuid"`
-	ValueI32    int32   `sql:"value_i32"`
-	ValueI64    int32   `sql:"value_i64"`
-	ValueF32    float32 `sql:"value_f32"`
-	ValueF64    float64 `sql:"value_f64"`
-	ValueBool   bool    `sql:"value_bool"`
-	ValueJson   *string `sql:"value_json"`
-	ValueString *string `sql:"value_string"`
-	ValueBinary []byte  `sql:"value_binary"`
+	EntityId    *uuid.UUID `sql:"entity_id,type:uuid"`
+	Name        string     `sql:"name"`
+	Type        pb.Type    `sql:"type"`
+	From        *uuid.UUID `sql:"from,type:uuid"`
+	ValueI32    int32      `sql:"value_i32"`
+	ValueI64    int32      `sql:"value_i64"`
+	ValueF32    float32    `sql:"value_f32"`
+	ValueF64    float64    `sql:"value_f64"`
+	ValueBool   bool       `sql:"value_bool"`
+	ValueJson   *string    `sql:"value_json"`
+	ValueString *string    `sql:"value_string"`
+	ValueBinary []byte     `sql:"value_binary"`
 }
 
 type EntityService struct {
-	Id          *UUID       `json:"id" sql:"id,type:uuid"`
+	Id          *uuid.UUID  `json:"id" sql:"id,type:uuid"`
 	Name        string      `json:"name" sql:"name"`
 	Type        EntityType  `json:"type" sql:"type"`
 	Description *string     `json:"description" sql:"description"`
-	ProjectId   *UUID       `json:"project_id" db:"project_id" sql:",type:uuid"`
+	ProjectId   *uuid.UUID  `json:"project_id" db:"project_id" sql:",type:uuid"`
 	Input       *JsonString `json:"input,omitempty" sql:"entity_type"`
 	Output      *string     `json:"output" sql:"output"`
-	From        *UUID       `json:"from,omitempty" sql:"from,type:uuid"`
+	From        *uuid.UUID  `json:"from,omitempty" sql:"from,type:uuid"`
 	Code        *string     `json:"code" sql:"code,type:uuid"`
-	CreateTs    Time        `json:"create_ts" sql:"create_ts"`
-	UpdateTs    Time        `json:"update_ts" sql:"update_ts"`
+	CreateTs    uuid.Time   `json:"create_ts" sql:"create_ts"`
+	UpdateTs    uuid.Time   `json:"update_ts" sql:"update_ts"`
 }
 
 type EntitySubscription struct {
-	Id          *UUID       `json:"id" sql:"id,type:uuid"`
+	Id          *uuid.UUID  `json:"id" sql:"id,type:uuid"`
 	Name        string      `json:"name" sql:"name"`
 	Type        EntityType  `json:"type" sql:"type"`
 	Description *string     `json:"description" sql:"description"`
-	ProjectId   *UUID       `json:"project_id" db:"project_id" sql:",type:uuid"`
+	ProjectId   *uuid.UUID  `json:"project_id" db:"project_id" sql:",type:uuid"`
 	Input       *JsonString `json:"input,omitempty" sql:"entity_type"`
 	Output      *string     `json:"output" sql:"output"`
-	From        *UUID       `json:"from,omitempty" sql:"from,type:uuid"`
+	From        *uuid.UUID  `json:"from,omitempty" sql:"from,type:uuid"`
 	Code        *string     `json:"code" sql:"code,type:uuid"`
-	CreateTs    Time        `json:"create_ts" sql:"create_ts"`
-	UpdateTs    Time        `json:"update_ts" sql:"update_ts"`
+	CreateTs    uuid.Time   `json:"create_ts" sql:"create_ts"`
+	UpdateTs    uuid.Time   `json:"update_ts" sql:"update_ts"`
 }
 
 func (et *EntityType) Scan(value any) error {
 	if i, ok := value.([]byte); ok {
-		*et = map[string]EntityType{
-			"shape":    Shape,
-			"template": Template,
-			"thing":    Thing,
-		}[string(i)]
+		switch string(i) {
+		case "shape", "Shape":
+			*et = Shape
+		case "template", "Template":
+			*et = Template
+		case "thing", "Thing":
+			*et = Thing
+		default:
+			return errors.New(fmt.Sprintf("scan source is not entity type, but %v", value))
+		}
 		return nil
 	}
 	return errors.New(fmt.Sprintf("scan source is not int, but %v", value))
@@ -99,18 +120,42 @@ func (et EntityType) Value() (driver.Value, error) {
 	return int(et), nil
 }
 
+func (et *EntityType) MarshalJSON() ([]byte, error) {
+	if et == nil {
+		return []byte(`"null"`), nil
+	}
+	switch *et {
+	case Shape:
+		return []byte(`"Shape"`), nil
+	case Template:
+		return []byte(`"Template"`), nil
+	case Thing:
+		return []byte(`"Thing"`), nil
+	}
+
+	return nil, errors.New("invalid entity type")
+}
+
 func (vt *VarType) Scan(value any) error {
 	if i, ok := value.([]byte); ok {
-		*vt = map[string]VarType{
-			"i32":    I32,
-			"i64":    I64,
-			"f32":    F32,
-			"f64":    F64,
-			"bool":   Bool,
-			"json":   Json,
-			"string": String,
-			"binary": Binary,
-		}[string(i)]
+		switch string(i) {
+		case "i32":
+			*vt = I32
+		case "i64":
+			*vt = I64
+		case "f32":
+			*vt = F32
+		case "f64":
+			*vt = F64
+		case "bool":
+			*vt = Bool
+		case "json":
+			*vt = Json
+		case "string":
+			*vt = String
+		case "binary":
+			*vt = Binary
+		}
 		return nil
 	}
 	return errors.New("scan source is not int")
@@ -127,15 +172,89 @@ func (js *JsonString) MarshalJSON() ([]byte, error) {
 	return []byte(*js), nil
 }
 
+type UuidArray []uuid.UUID
+
+type UuidString string
+
+func (us UuidString) ToUuidArray() (*UuidArray, error) {
+	l := len(us)
+	uuids := strings.Split(string(us)[1:l-1], ",")
+	var ids UuidArray
+	for _, sid := range uuids {
+		uid, e := uuid.Parse(sid)
+		if e != nil {
+			return nil, e
+		}
+		ids = append(ids, uid)
+	}
+	return &ids, nil
+}
+
+func (ua *UuidArray) MarshalJSON() ([]byte, error) {
+	if ua == nil || len(*ua) == 0 {
+		return []byte(`[]`), nil
+	}
+	bb := bytes.Buffer{}
+	bb.Write([]byte(`["`))
+	for i, v := range *ua {
+		if i > 0 {
+			bb.Write([]byte(`","`))
+		}
+		text, err := v.MarshalText()
+		if err != nil {
+			return nil, err
+		}
+		bb.Write(text)
+
+	}
+	bb.Write([]byte(`"]`))
+	return bb.Bytes(), nil
+}
+
 type EntityDefinition struct {
-	ProjectId     UUID           `json:"project_id"`
+	Id            uuid.UUID      `json:"id" db:"id,type:uuid"`
 	Name          string         `json:"name"`
 	Type          EntityType     `json:"type"`
-	BaseTemplate  UUID           `json:"base_template"`
-	BaseShapes    []UUID         `json:"base_shapes"`
-	Attributes    []Variable     `json:"attributes"`
-	Services      []Function     `json:"services"`
-	Subscriptions []Subscription `json:"subscriptions"`
+	Description   *string        `json:"description"`
+	ProjectId     *uuid.UUID     `json:"project_id" db:"project_id,type:uuid"`
+	BaseTemplate  *uuid.UUID     `json:"base_template" db:"base_template,type:uuid"`
+	BaseShapesStr *UuidString    `json:"-" db:"base_shapes"`
+	BaseShapes    *UuidArray     `json:"base_shapes"`
+	Attributes    []Variable     `json:"attributes,omitempty"`
+	Services      []Function     `json:"services,omitempty"`
+	Subscriptions []Subscription `json:"subscriptions,omitempty"`
+	CreateTs      *time.Time     `json:"create_ts" db:"create_ts"`
+	UpdateTs      *time.Time     `json:"update_ts" db:"update_ts"`
+}
+
+func (d EntityDefinition) ToThingServices() ([]ThingService, error) {
+	services := make([]ThingService, len(d.Services))
+	for _, svc := range d.Services {
+		services = append(services, ThingService{
+			EntityId: d.Id,
+			Name:     svc.Name,
+			Input:    svc.Input,
+			Output:   svc.Output,
+			Code:     svc.Code,
+		})
+	}
+
+	return services, nil
+}
+
+func (d EntityDefinition) ToThingSubscriptions() ([]ThingSubscription, error) {
+	subs := make([]ThingSubscription, len(d.Subscriptions))
+	for _, sub := range d.Subscriptions {
+		subs = append(subs, ThingSubscription{
+			EntityId:  d.Id,
+			Name:      sub.Name,
+			Enabled:   sub.Enabled,
+			Event:     sub.Event,
+			Attribute: sub.Attribute,
+		})
+	}
+
+	return subs, nil
 }
 
 type Args []Variable
@@ -154,16 +273,17 @@ type Parameter struct {
 }
 
 type ThingService struct {
-	EntityId UUID    `json:"entity_id"`
-	Name     string  `json:"name"`
-	Input    Params  `json:"input,omitempty"`
-	Output   pb.Type `json:"output,omitempty"`
-	Code     string  `json:"code,omitempty"`
+	EntityId uuid.UUID  `json:"entity_id"`
+	Name     string     `json:"name"`
+	Input    Params     `json:"input,omitempty"`
+	Output   pb.Type    `json:"output,omitempty"`
+	Code     string     `json:"code,omitempty"`
+	From     *uuid.UUID `json:"from"`
 }
 
 type ThingServiceId struct {
-	EntityId UUID   `json:"entity_id"`
-	Name     string `json:"name"`
+	EntityId uuid.UUID `json:"entity_id"`
+	Name     string    `json:"name"`
 }
 
 type Function struct {
@@ -174,16 +294,17 @@ type Function struct {
 }
 
 type ThingSubscription struct {
-	EntityId  UUID     `json:"entity_id"`
-	Name      string   `json:"name"`
-	Enabled   bool     `json:"enabled"`
-	Event     string   `json:"event"`
-	Attribute Variable `json:"attribute"`
+	EntityId  uuid.UUID  `json:"entity_id"`
+	Name      string     `json:"name"`
+	Enabled   bool       `json:"enabled"`
+	Event     string     `json:"event"`
+	Attribute Variable   `json:"attribute"`
+	From      *uuid.UUID `json:"from"`
 }
 
 type ThingSubscriptionId struct {
-	EntityId UUID   `json:"entity_id"`
-	Name     string `json:"name"`
+	EntityId uuid.UUID `json:"entity_id"`
+	Name     string    `json:"name"`
 }
 
 type Subscription struct {
@@ -194,9 +315,9 @@ type Subscription struct {
 }
 
 type ServiceRequest struct {
-	ThingId     UUID   `json:"thing_id"`
-	ServiceName string `json:"service_name"`
-	Input       Args   `json:"input"`
+	ThingId     uuid.UUID `json:"thing_id"`
+	ServiceName string    `json:"service_name"`
+	Input       Args      `json:"input"`
 }
 
 type TableDefinition struct {
@@ -343,8 +464,8 @@ func (td TableDefinition) ToSQL() (string, error) {
 	var sb strings.Builder
 	sb.WriteString(fmt.Sprintf("CREATE TABLE %s (", td.Name))
 	keys := []string{}
-	for k, v := range td.Fields {
-		s := fmt.Sprintf("%s %s,", k, v)
+	for i, v := range td.Fields {
+		s := fmt.Sprintf("%d %v,", i, v)
 		if v.IsPrimaryKey {
 			keys = append(keys, v.Name)
 		}

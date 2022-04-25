@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"github.com/duclmse/fengine/fengine/db/sql"
 	"time"
 
 	"github.com/duclmse/fengine/fengine"
@@ -24,49 +25,59 @@ type metricsMiddleware struct {
 	svc     fengine.Service
 }
 
-func (mm metricsMiddleware) CreateEntity(ctx context.Context, entityDef *fengine.EntityDefinition) (r *fengine.Result, e error) {
-	defer mm.count("UpsertEntity")(time.Now())
-	return mm.svc.CreateEntity(ctx, entityDef)
+func (mm metricsMiddleware) GetEntity(ctx context.Context, id string) (r fengine.Result, e error) {
+	defer mm.count("GetEntity")(time.Now())
+	return mm.svc.GetEntity(ctx, id)
 }
 
-func (mm metricsMiddleware) ExecuteService(ctx context.Context, script *fengine.ServiceRequest) (*fengine.Result, error) {
+func (mm metricsMiddleware) UpsertEntity(ctx context.Context, entityDef sql.EntityDefinition) (r fengine.Result, e error) {
+	defer mm.count("UpsertEntity")(time.Now())
+	return mm.svc.UpsertEntity(ctx, entityDef)
+}
+
+func (mm metricsMiddleware) DeleteEntity(ctx context.Context, id string) (r fengine.Result, e error) {
+	defer mm.count("DeleteEntity")(time.Now())
+	return mm.svc.DeleteEntity(ctx, id)
+}
+
+func (mm metricsMiddleware) ExecuteService(ctx context.Context, script sql.ServiceRequest) (fengine.Result, error) {
 	defer mm.count("ExecuteService")(time.Now())
 	return mm.svc.ExecuteService(ctx, script)
 }
 
-func (mm metricsMiddleware) CreateTable(ctx context.Context, definition *fengine.TableDefinition) (*fengine.Result, error) {
+func (mm metricsMiddleware) CreateTable(ctx context.Context, definition sql.TableDefinition) (fengine.Result, error) {
 	defer mm.count("CreateTable")(time.Now())
 	return mm.svc.CreateTable(ctx, definition)
 }
 
-func (mm metricsMiddleware) Select(ctx context.Context, request *fengine.SelectRequest) (*fengine.Result, error) {
+func (mm metricsMiddleware) Select(ctx context.Context, request sql.SelectRequest) (fengine.Result, error) {
 	defer mm.count("Select")(time.Now())
 	return mm.svc.Select(ctx, request)
 }
 
-func (mm metricsMiddleware) Insert(ctx context.Context, request *fengine.InsertRequest) (*fengine.Result, error) {
+func (mm metricsMiddleware) Insert(ctx context.Context, request sql.InsertRequest) (fengine.Result, error) {
 	defer mm.count("Insert")(time.Now())
 	return mm.svc.Insert(ctx, request)
 }
 
-func (mm metricsMiddleware) Update(ctx context.Context, request *fengine.UpdateRequest) (*fengine.Result, error) {
+func (mm metricsMiddleware) Update(ctx context.Context, request sql.UpdateRequest) (fengine.Result, error) {
 	defer mm.count("Update")(time.Now())
 	return mm.svc.Update(ctx, request)
 }
 
-func (mm metricsMiddleware) Delete(ctx context.Context, request *fengine.DeleteRequest) (*fengine.Result, error) {
+func (mm metricsMiddleware) Delete(ctx context.Context, request sql.DeleteRequest) (fengine.Result, error) {
 	defer mm.count("Delete")(time.Now())
 	return mm.svc.Delete(ctx, request)
 }
 
-func (mm metricsMiddleware) GetThingAllServices(ctx context.Context, uuid string) (*fengine.Result, error) {
+func (mm metricsMiddleware) GetThingAllServices(ctx context.Context, uuid string) (fengine.Result, error) {
 	defer mm.count("GetThingAllServices")(time.Now())
 	return mm.svc.GetThingAllServices(ctx, uuid)
 }
 
-func (mm metricsMiddleware) GetThingService(ctx context.Context, uuid string, s string) (*fengine.Result, error) {
+func (mm metricsMiddleware) GetThingService(ctx context.Context, id sql.ThingServiceId) (fengine.Result, error) {
 	defer mm.count("GetThingService")(time.Now())
-	return mm.svc.GetThingService(ctx, uuid, s)
+	return mm.svc.GetThingService(ctx, id)
 }
 
 func (mm metricsMiddleware) count(name string) func(begin time.Time) {

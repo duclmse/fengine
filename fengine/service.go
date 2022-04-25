@@ -28,7 +28,9 @@ type ServiceComponent struct {
 }
 
 type Service interface {
-	CreateEntity(ctx Context, entityDef EntityDefinition) (r Result, e error)
+	GetEntity(ctx Context, id string) (r Result, e error)
+	UpsertEntity(ctx Context, entityDef EntityDefinition) (r Result, e error)
+	DeleteEntity(ctx Context, id string) (r Result, e error)
 
 	GetThingAllServices(ctx Context, thing string) (r Result, e error)
 	GetThingService(ctx Context, req ThingServiceId) (r Result, e error)
@@ -52,10 +54,39 @@ type FengineService struct {
 	Log        logger.Logger
 }
 
-func (s FengineService) CreateEntity(ctx Context, entityDef EntityDefinition) (r Result, e error) {
-	upserted, err := s.Repository.UpsertEntity(ctx, entityDef)
+func (s FengineService) GetEntity(ctx Context, id string) (r Result, e error) {
+	uid, e := Parse(id)
+	if e != nil {
+		return Result{Code: 1, Msg: e.Error()}, e
+	}
 
+	entity, e := s.Repository.GetEntity(ctx, uid)
+	if e != nil {
+		return Result{Code: 1, Msg: e.Error()}, e
+	}
+
+	return Result{Data: entity}, e
+}
+func (s FengineService) UpsertEntity(ctx Context, entityDef EntityDefinition) (r Result, e error) {
+	upserted, err := s.Repository.UpsertEntity(ctx, entityDef)
+	if err != nil {
+		return Result{Code: 1, Msg: err.Error()}, err
+	}
 	return Result{Msg: fmt.Sprintf("upserted %d", upserted)}, err
+}
+
+func (s FengineService) DeleteEntity(ctx Context, id string) (r Result, e error) {
+	uid, e := Parse(id)
+	if e != nil {
+		return Result{Code: 1, Msg: e.Error()}, e
+	}
+
+	entity, e := s.Repository.DeleteEntity(ctx, uid)
+	if e != nil {
+		return Result{Code: 1, Msg: e.Error()}, e
+	}
+
+	return Result{Data: entity}, e
 }
 
 func (s FengineService) GetThingAllServices(ctx Context, thingId string) (Result, error) {

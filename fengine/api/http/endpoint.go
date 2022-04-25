@@ -9,9 +9,50 @@ import (
 	"github.com/duclmse/fengine/pkg/errors"
 )
 
+func getEntityEndpoint(svc fengine.Service, c fengine.ServiceComponent) endpoint.Endpoint {
+	return func(ctx context.Context, request any) (response any, err error) {
+		req, ok := request.(entityRequest)
+		if !ok {
+			return nil, errors.New("invalid input")
+		}
+		service, err := svc.GetEntity(ctx, req.thingId)
+		if err != nil {
+			return nil, err
+		}
+		return service, nil
+	}
+}
+
+func upsertEntityEndpoint(svc fengine.Service, c fengine.ServiceComponent) endpoint.Endpoint {
+	return func(ctx context.Context, request any) (response any, err error) {
+		req, ok := request.(sql.EntityDefinition)
+		if !ok {
+			return nil, errors.New("invalid input")
+		}
+		service, err := svc.UpsertEntity(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+		return service, nil
+	}
+}
+func deleteEntityEndpoint(svc fengine.Service, c fengine.ServiceComponent) endpoint.Endpoint {
+	return func(ctx context.Context, request any) (response any, err error) {
+		req, ok := request.(entityRequest)
+		if !ok {
+			return nil, errors.New("invalid input")
+		}
+		service, err := svc.DeleteEntity(ctx, req.thingId)
+		if err != nil {
+			return nil, err
+		}
+		return service, nil
+	}
+}
+
 func getAllServicesEndpoint(svc fengine.Service, c fengine.ServiceComponent) endpoint.Endpoint {
 	return func(ctx context.Context, request any) (response any, err error) {
-		req, ok := request.(allServiceRequest)
+		req, ok := request.(entityRequest)
 		if !ok {
 			return nil, errors.New("invalid input")
 		}

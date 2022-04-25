@@ -2,6 +2,12 @@
 GET {{host}}/fe/thing/{{thing}}/service
 
 ###
+GET {{host}}/fe/thing/{{thing}}/service/templ_method
+
+###
+GET {{host}}/fe/thing/{{thing}}/service/thing_method_
+
+###
 POST {{host}}/fe/thing/{{thing}}
 Content-Type: application/json
 
@@ -17,8 +23,6 @@ Content-Type: application/json
     }
   }
 }
-###
-GET {{host}}/fe/thing/{{thing}}/service/templ_method
 
 ###
 POST {{host}}/fe/thing/{{thing}}/service/templ_method

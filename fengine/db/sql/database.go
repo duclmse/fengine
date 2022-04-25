@@ -53,6 +53,10 @@ func (db database) ExecContext(ctx context.Context, query string, args ...any) (
 	return db.DB.ExecContext(ctx, query, args...)
 }
 
+func (db database) NamedExec(ctx context.Context, query string, args any) (sql.Result, error) {
+	return db.DB.NamedExecContext(ctx, query, args)
+}
+
 func (db database) QueryxContext(ctx context.Context, query string, args ...any) (*sqlx.Rows, error) {
 	addSpanTags(ctx, query)
 	return db.DB.QueryxContext(ctx, query, args...)

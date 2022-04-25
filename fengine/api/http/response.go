@@ -2,6 +2,7 @@ package http
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/goccy/go-json"
@@ -22,5 +23,9 @@ func encodeResponse(_ context.Context, w http.ResponseWriter, response any) erro
 		}
 	}
 
-	return json.NewEncoder(w).Encode(response)
+	err := json.NewEncoder(w).Encode(response)
+	if err != nil {
+		fmt.Printf("err respond %s\n", err)
+	}
+	return err
 }

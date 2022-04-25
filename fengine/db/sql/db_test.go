@@ -59,7 +59,10 @@ func TestUuid(t *testing.T) {
 func TestFengineRepository_GetThingService(t *testing.T) {
 	log, db := connect(t)
 	repository := NewFEngineRepository(db, log)
-	service, err := repository.GetThingService(context.Background(), uuid.MustParse("1d6d5123-3fb8-4ab1-956f-c6f96847471d"), "templ_method")
+	service, err := repository.GetThingService(context.Background(), ThingServiceId{
+		EntityId: uuid.MustParse("1d6d5123-3fb8-4ab1-956f-c6f96847471d"),
+		Name:     "templ_method",
+	})
 	if err != nil {
 		t.Errorf("err %s\n", err.Error())
 		return

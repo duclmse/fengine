@@ -139,11 +139,19 @@ BEGIN
         (templ_id, 'templ_method', s_i, 'json', null, 'return {s:i32+"!"+s}'),
         (thing_id, 'templ_method', s_i, 'json', templ_id, null),
 
-        (thing_id, 'thing_method', s_i, 'json', null, E'me.test({s,i});%nTable(''a'').Select({and:[{a:{$gt:10,$lt:20}}]});\nme.i=0;\nreturn {i:i+me.i, s:s+me.s}');
+        (thing_id, 'thing_method', s_i, 'json', null, E'me.test({s,i});\nTable(''a'').Select({and:[{a:{$gt:10,$lt:20}}]});\nme.i=0;\nreturn {i:i+me.i, s:s+me.s}');
 END $$ LANGUAGE plpgsql;
+
+-- @formatter:on
+
+UPDATE entity
+SET
+    base_shapes = ARRAY ['21d2f737-31ea-4fad-a5a9-5c2fbb3e01ab', '3c62e869-d806-4b7a-a770-b07c0d435452']::UUID[]
+WHERE id IN ('1d6d5123-3fb8-4ab1-956f-c6f96847471d'::UUID);
+
+
 -- endregion DML
 ------------------------------------------------------------------------------------------------------------------------
--- @formatter:on
 
 SELECT
     m1.entity_id, m1.name, m1."input", m1."output", m1."from",

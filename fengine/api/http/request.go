@@ -8,27 +8,38 @@ import (
 	"github.com/go-zoo/bone"
 	"github.com/google/uuid"
 	"io"
+	"io/ioutil"
 	"net/http"
 )
 
 //region Data structure
-
-// contextKeyType is a private struct that is used for storing bone values in net.Context
-type contextKeyType struct{}
-
-// contextKey is the key that is used to store bone values in the net.Context for each request
-var contextKey = contextKeyType{}
-
-//endregion Data structure
-
-type allServiceRequest struct {
+type entityRequest struct {
 	thingId string
 }
 
-func decodeAllServiceRequest(ctx context.Context, request *http.Request) (any, error) {
-	values := bone.GetAllValues(request)
-	thingId := values["id"]
-	return allServiceRequest{thingId: thingId}, nil
+//endregion Data structure
+
+func decodeEntityRequest(ctx context.Context, request *http.Request) (any, error) {
+	thingId := bone.GetValue(request, "id")
+	return entityRequest{thingId: thingId}, nil
+}
+
+func decodeUpsertEntityRequest(ctx context.Context, request *http.Request) (any, error) {
+	uid, err := uuid.Parse(bone.GetValue(request, "id"))
+	if err != nil {
+		return nil, err
+	}
+	body, err := ioutil.ReadAll(request.Body)
+	if err != nil {
+		return nil, err
+	}
+	def := &sql.EntityDefinition{}
+	err = json.Unmarshal(body, def)
+	if err != nil {
+		return nil, err
+	}
+	def.Id = uid
+	return def, nil
 }
 
 func decodeServiceRequest(ctx context.Context, request *http.Request) (any, error) {
