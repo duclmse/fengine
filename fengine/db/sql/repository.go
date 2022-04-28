@@ -71,7 +71,7 @@ func (fer fengineRepository) GetEntity(ctx Context, thingId UUID) (*EntityDefini
 func (fer fengineRepository) UpsertEntity(ctx Context, def EntityDefinition) (int, error) {
 	// language=sql
 	query := `INSERT INTO entity("id", "name", "type", "description", "project_id", "base_template", "base_shapes"
- 		) VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT DO UPDATE SET base_template = $6, base_shapes = $7  RETURNING id`
+ 		) VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT DO UPDATE SET base_template = $6, base_shapes = $7`
 	res, err := fer.db.ExecContext(ctx, query, def.Id, def.Name, def.Type, def.Description, def.ProjectId,
 		def.BaseTemplate, def.BaseShapes)
 	if err != nil {
@@ -83,11 +83,11 @@ func (fer fengineRepository) UpsertEntity(ctx Context, def EntityDefinition) (in
 	}
 	ts, err := def.ToThingServices()
 	if err != nil {
-
+		return 0, err
 	}
 	subs, err := def.ToThingSubscriptions()
 	if err != nil {
-
+		return 0, err
 	}
 	_, err = fer.UpsertThingService(ctx, ts...)
 	if err != nil {

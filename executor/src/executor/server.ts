@@ -8,8 +8,7 @@ export function getServer() {
   const server = new Server();
   server.addService(FEngineExecutorService, {
     execute,
-    addService,
-    updateService,
+    upsertService,
     deleteService
   });
   return server;
@@ -22,14 +21,10 @@ function execute(call: ServerUnaryCall<Script, Result>, callback: sendUnaryData<
   callback(null, executor.exec(call.request));
 }
 
-function addService(call: ServerUnaryCall<Script, Result>, callback: sendUnaryData<Result>) {
-  callback(null, executor.exec(call.request));
-}
-
-function updateService(call: ServerUnaryCall<Script, Result>, callback: sendUnaryData<Result>) {
-  callback(null, executor.exec(call.request));
+function upsertService(call: ServerUnaryCall<Script, Result>, callback: sendUnaryData<Result>) {
+  callback(null, executor.upsertService(call.request));
 }
 
 function deleteService(call: ServerUnaryCall<Script, Result>, callback: sendUnaryData<Result>) {
-  callback(null, executor.exec(call.request));
+  callback(null, executor.deleteService(call.request));
 }

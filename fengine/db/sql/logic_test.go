@@ -1,11 +1,11 @@
-package fengine_test
+package sql_test
 
 import (
 	"encoding/json"
+	. "github.com/duclmse/fengine/fengine/db/sql"
 	"log"
 	"testing"
 
-	. "github.com/duclmse/fengine/fengine/db/sql"
 	pb "github.com/duclmse/fengine/pb"
 )
 
@@ -75,7 +75,7 @@ func TestTableDefinition_ToSQL(t *testing.T) {
 			{
 				Name:         "name",
 				Type:         pb.Type_string,
-				IsPrimaryKey: true,
+				IsPrimaryKey: false,
 				IsLogged:     false,
 			},
 		},

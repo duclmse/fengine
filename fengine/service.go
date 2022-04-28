@@ -57,12 +57,12 @@ type FengineService struct {
 func (s FengineService) GetEntity(ctx Context, id string) (r Result, e error) {
 	uid, e := Parse(id)
 	if e != nil {
-		return Result{Code: 1, Msg: e.Error()}, e
+		return result(e)
 	}
 
 	entity, e := s.Repository.GetEntity(ctx, uid)
 	if e != nil {
-		return Result{Code: 1, Msg: e.Error()}, e
+		return result(e)
 	}
 
 	return Result{Data: entity}, e
@@ -78,12 +78,12 @@ func (s FengineService) UpsertEntity(ctx Context, entityDef EntityDefinition) (r
 func (s FengineService) DeleteEntity(ctx Context, id string) (r Result, e error) {
 	uid, e := Parse(id)
 	if e != nil {
-		return Result{Code: 1, Msg: e.Error()}, e
+		return result(e)
 	}
 
 	entity, e := s.Repository.DeleteEntity(ctx, uid)
 	if e != nil {
-		return Result{Code: 1, Msg: e.Error()}, e
+		return result(e)
 	}
 
 	return Result{Data: entity}, e
@@ -118,11 +118,31 @@ func (s FengineService) CreateTable(ctx Context, table TableDefinition) (Result,
 }
 
 func (s FengineService) Select(ctx Context, req SelectRequest) (Result, error) {
-	return Result{}, nil
+	sql, err := req.ToSQL()
+	if err != nil {
+		return result(err)
+	}
+
+	rs, err := s.Repository.Select(ctx, sql)
+	if err != nil {
+		return result(err)
+	}
+
+	return Result{Data: rs}, nil
 }
 
 func (s FengineService) Insert(ctx Context, req InsertRequest) (Result, error) {
-	return Result{}, nil
+	sql, err := req.ToSQL()
+	if err != nil {
+		return result(err)
+	}
+
+	rs, err := s.Repository.Insert(ctx, sql)
+	if err != nil {
+		return result(err)
+	}
+
+	return Result{Data: rs}, nil
 }
 
 func (s FengineService) Update(ctx Context, req UpdateRequest) (Result, error) {
@@ -131,4 +151,8 @@ func (s FengineService) Update(ctx Context, req UpdateRequest) (Result, error) {
 
 func (s FengineService) Delete(ctx Context, req DeleteRequest) (Result, error) {
 	return Result{}, nil
+}
+
+func result(e error) (Result, error) {
+	return Result{Code: 1, Msg: e.Error()}, e
 }

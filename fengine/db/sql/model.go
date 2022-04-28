@@ -342,13 +342,16 @@ type SelectRequest struct {
 	OrderBy []string `json:"order_by"`
 }
 
-type AttributeHistoryRequest struct {
-}
-
 func (sr SelectRequest) ToSQL() (string, error) {
-	fields := defaultValue(strings.Join(sr.Fields, ", "), "*", "")
-	groupBy := defaultValue(strings.Join(sr.GroupBy, ", "), "", " GROUP BY ")
-	orderBy := defaultValue(strings.Join(sr.OrderBy, ", "), "", " ORDER BY ")
+	defaultValue := func(prefix, a, b string) string {
+		if a == "" {
+			return b
+		}
+		return prefix + a
+	}
+	fields := defaultValue("", strings.Join(sr.Fields, ", "), "*")
+	groupBy := defaultValue(" GROUP BY ", strings.Join(sr.GroupBy, ", "), "")
+	orderBy := defaultValue(" ORDER BY ", strings.Join(sr.OrderBy, ", "), "")
 	logic, err := sr.Filter.BuildLogic()
 	if err != nil {
 		fmt.Printf("err %s\n", err.Error())
@@ -365,16 +368,18 @@ func (sr SelectRequest) ToSQL() (string, error) {
 		fields, sr.Table, groupBy, orderBy, sr.Limit, sr.Offset), nil
 }
 
-func defaultValue(a, b, prefix string) string {
-	if a == "" {
-		return b
-	}
-	return prefix + a
+type InsertRequest struct {
+	Table  string           `json:"table"`
+	Values []map[string]any `json:"values"`
 }
 
-type InsertRequest struct {
-	Table  string                 `json:"table"`
-	Values map[string]interface{} `json:"values"`
+func (r InsertRequest) ToSQL() (sql string, e error) {
+	var sb strings.Builder
+	sb.WriteString(fmt.Sprintf(`INSERT INTO %s (`, r.Table))
+	sb.WriteString(` (`)
+	sb.WriteString(`) VALUES (`)
+
+	return sb.String(), nil
 }
 
 type UpdateRequest struct {
@@ -387,6 +392,9 @@ type DeleteRequest struct {
 	Table  string        `json:"table"`
 	Values []pb.Variable `json:"values"`
 	Filter Filter        `json:"filter"`
+}
+
+type AttributeHistoryRequest struct {
 }
 
 func (f Function) ToFunction() *pb.Function {
@@ -460,21 +468,60 @@ func ReadMethods(referee map[string]Function) map[string]*pb.Function {
 	return m
 }
 
+func SqlType(t pb.Type) (string, error) {
+	switch t {
+	case pb.Type_i32:
+		return "INT", nil
+	case pb.Type_i64:
+		return "INT", nil
+	case pb.Type_f32:
+		return "BIGINT", nil
+	case pb.Type_f64:
+		return "FLOAT(4)", nil
+	case pb.Type_bool:
+		return "FLOAT(8)", nil
+	case pb.Type_json:
+		return "JSONB", nil
+	case pb.Type_string:
+		return "VARCHAR(5000)", nil
+	case pb.Type_binary:
+		return "BYTEA", nil
+	default:
+		return "", errors.New("invalid db type")
+	}
+}
+
 func (td TableDefinition) ToSQL() (string, error) {
 	var sb strings.Builder
 	sb.WriteString(fmt.Sprintf("CREATE TABLE %s (", td.Name))
 	keys := []string{}
 	for i, v := range td.Fields {
-		s := fmt.Sprintf("%d %v,", i, v)
+		if i > 0 {
+			sb.WriteString(", ")
+		}
+		t, err := SqlType(v.Type)
+		if err != nil {
+			return "", err
+		}
+		s := fmt.Sprintf("%s %s", v.Name, t)
 		if v.IsPrimaryKey {
 			keys = append(keys, v.Name)
 		}
 		sb.WriteString(s)
 	}
-	if len(keys) > 0 {
-
+	if len(keys) == 0 {
+		sb.WriteString(");")
+		return sb.String(), nil
 	}
-	sb.WriteString(");")
+
+	sb.WriteString(", PRIMARY KEY (")
+	for i, v := range keys {
+		if i > 0 {
+			sb.WriteString(",")
+		}
+		sb.WriteString(v)
+	}
+	sb.WriteString("));")
 	return sb.String(), nil
 }
 

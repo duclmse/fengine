@@ -1,4 +1,4 @@
-import {Function, Parameter, Result, Script, Type, Variable} from "../pb/fengine_pb";
+import {Function, Parameter, Result, Script, Type, Variable, MethodId} from "../pb/fengine_pb";
 import {Cache} from "./cache";
 import * as library from "../sdk/db";
 import {VM} from "vm2";
@@ -140,29 +140,20 @@ class E {
   }
 
   exec(script: Script): Result {
-    try {
-      const fn = script.getFunction()!;
-      if (!fn) {
-        let json = new Variable().setJson(JSON.stringify({error: "Function is not defined"}));
-        return new Result().setOutput(json);
-      }
 
-      const {sandbox, code: sandboxCode, attributes} = E.buildSandbox(script);
-      const {args, params} = E.parseArguments(fn.getInputList());
-      const code = `((${params})=>{try{${fn.getCode()}}catch(_e_){return _e_}})(${args.join()})`;
-      console.debug(`${JSON.stringify(sandbox)}>---\n${sandboxCode}\n${code}\n---<`);
+  }
 
-      const vm = new VM({sandbox});
-      const label = new Date().getTime();
-      console.time(`${label}`);
-      let output = E.wrap(vm.run(sandboxCode + code), fn.getOutput()!);
-      console.timeEnd(`${label}`);
-      E.compareAttributes(sandbox.me, attributes);
+  upsertService(request: Script): Result {
+    this.cache.set(new MethodId(), new Function());
+    const json = JSON.stringify({});
+    let variable = new Variable().setType(Type.JSON).setJson(json);
+    return new Result().setOutput(variable);
+  }
 
-      return new Result().setOutput(output);
-    } catch (e: any) {
-      return new Result().setOutput(new Variable().setString(e.message));
-    }
+  deleteService(request: Script): Result {
+    const json = JSON.stringify({});
+    let variable = new Variable().setType(Type.JSON).setJson(json);
+    return new Result().setOutput(variable);
   }
 }
 

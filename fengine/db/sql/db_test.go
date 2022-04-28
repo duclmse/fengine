@@ -5,6 +5,7 @@ import (
 	"fmt"
 	. "github.com/duclmse/fengine/fengine/db/sql"
 	"github.com/jmoiron/sqlx"
+	l "log"
 	"os"
 	"testing"
 
@@ -81,5 +82,16 @@ func TestFengineRepository_GetAllThingService(t *testing.T) {
 	fmt.Printf("%+v\n", service)
 }
 
-func TestJsonString_Scan(t *testing.T) {
+func TestPanic(t *testing.T) {
+	a := func(msg string) {
+		defer func() {
+			if err := recover(); err != nil {
+				l.Printf("err %s\n", err)
+			}
+		}()
+		panic(msg)
+	}
+	a("1")
+	a("2")
+	a("3")
 }
