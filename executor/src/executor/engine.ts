@@ -1,7 +1,6 @@
-import {Function, Parameter, Result, Script, Type, Variable, MethodId} from "../pb/fengine_pb";
+import {Function, MethodId, Parameter, Result, Script, Type, Variable} from "../pb/fengine_pb";
 import {Cache} from "./cache";
 import * as library from "../sdk/db";
-import {VM} from "vm2";
 import _ from "lodash";
 
 type MsgType = void | number | string | boolean | Uint8Array;
@@ -17,7 +16,7 @@ class E {
     this.cache = cache;
   }
 
-  private static buildSandbox(script: Script) {
+  static buildSandbox(script: Script) {
     let code = "";
     const me: ThingReference = {};
     const attributes: ThingReference = {};
@@ -44,7 +43,7 @@ class E {
     return {sandbox: {me, ...library}, code, attributes};
   }
 
-  private static parseArguments(input: Variable[]) {
+  static parseArguments(input: Variable[]) {
     const args: MsgType[] = [];
     const params: string[] = [];
     input.forEach(inp => {
@@ -54,7 +53,7 @@ class E {
     return {args, params};
   }
 
-  private static parseParameters(input: Parameter[]): string[] {
+  static parseParameters(input: Parameter[]): string[] {
     const params: string[] = [];
     input.forEach(inp => {
       params.push(inp.getName());
@@ -62,32 +61,33 @@ class E {
     return params;
   }
 
-  private static wrap(output: any, type: Type) {
+  static wrap(output: any, type: Type) {
     const variable = new Variable();
     switch (typeof output) {
       case "object":
         if (type === Type.JSON) {
-          variable.setJson(JSON.stringify(output instanceof Error ? {error: output.message} : output));
+          variable.setType(Type.JSON).setJson(
+            JSON.stringify(output instanceof Error ? {error: output.message} : output));
         } else {
           throw new Error("");
         }
         break;
       case "boolean":
-        variable.setBool(output);
+        variable.setType(Type.BOOL).setBool(output);
         break;
       case "number":
         if (Number.isInteger(output)) {
           if (output < 4294967296) {
-            variable.setI32(output);
+            variable.setType(Type.I32).setI32(output);
           } else {
-            variable.setI64(output);
+            variable.setType(Type.I64).setI64(output);
           }
           break;
         }
-        variable.setF64(output);
+        variable.setType(Type.F64).setF64(output);
         break;
       case "string":
-        variable.setString(output);
+        variable.setType(Type.STRING).setString(output);
         break;
     }
 
@@ -95,7 +95,7 @@ class E {
   }
 
   // @ts-ignore
-  private static readParams(input: Parameter) {
+  static readParams(input: Parameter) {
     switch (input.getType()) {
       case Type.I32:
       case Type.I64:
@@ -108,7 +108,7 @@ class E {
     }
   }
 
-  private static readVarValue(input: Variable): MsgType {
+  static readVarValue(input: Variable): MsgType {
     // prettier-ignore
     switch (true) {
       case input.hasI32():
@@ -130,7 +130,7 @@ class E {
     }
   }
 
-  private static compareAttributes(me: ThingReference, attributes: ThingReference) {
+  static compareAttributes(me: ThingReference, attributes: ThingReference) {
     for (let i in attributes) {
       if (!_.isEqual(attributes[i], me[i])) {
         // if (attributes[i] !== me[i]) {
@@ -140,7 +140,7 @@ class E {
   }
 
   exec(script: Script): Result {
-
+    return new Result();
   }
 
   upsertService(request: Script): Result {

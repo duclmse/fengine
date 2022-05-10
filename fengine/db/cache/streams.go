@@ -6,7 +6,7 @@ import (
 )
 
 var (
-	//_ fengine.Service = (*eventStore)(nil)
+	//_ resolver.Service = (*eventStore)(nil)
 	_ Cache = (*fengineCache)(nil)
 )
 

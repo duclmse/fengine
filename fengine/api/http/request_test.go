@@ -3,7 +3,6 @@ package http_test
 import (
 	"encoding/json"
 	"fmt"
-	. "github.com/duclmse/fengine/fengine"
 	pb "github.com/duclmse/fengine/pb"
 	"testing"
 )
