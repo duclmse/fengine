@@ -111,3 +111,4 @@ go.sum
 **/dist/
 **/.cache
 **/.parcel-cache
+**/vendor

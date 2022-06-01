@@ -17,22 +17,27 @@ CGO_ENABLED ?= 0
 GOARCH ?= amd64
 GOOS ?= linux
 
+.PHONY: $(SERVICES)
 $(SERVICES):
 	@echo "> Compiling '$(SERVICES)'..."
-	$(call compile_service,$(@))
+	$(call compile_service,$(@),vendor)
 
+.PHONY: $(TEST)
 $(TEST):
 	@echo "> Testing '$(TEST)'..."
 	$(call test_service,$(@))
 
+.PHONY: $(DOCKERS)
 $(DOCKERS):
 	@echo "> Building docker '$(DOCKERS)'..."
 	$(call make_docker,$(@),$(GOARCH))
 
+.PHONY: $(DOCKERS_DEV)
 $(DOCKERS_DEV):
 	@echo "> Building dev docker '$(DOCKERS_DEV)'..."
 	$(call make_docker_dev,$(@))
 
+.PHONY: $(RELEASE)
 $(RELEASE):
 	@echo "> Releasing '$(RELEASE)'..."
 	$(call make_release_svc,$(@))
@@ -40,6 +45,7 @@ $(RELEASE):
 all: $(SERVICES)
 
 clean:
+	@echo "> Cleaning..."
 	rm -rf ${BUILD_DIR}
 
 clean_docker:
@@ -118,7 +124,7 @@ endef
 
 define compile_service
 	CGO_ENABLED=$(CGO_ENABLED) GOOS=$(GOOS) GOARCH=$(GOARCH) GOARM=$(GOARM) \
-		go build -mod=vendor -ldflags "-s -w" -o ${BUILD_DIR}/viot-$(1) cmd/$(1)/main.go
+		go build -mod=$(2) -ldflags "-s -w" -o ${BUILD_DIR}/viot-$(1) cmd/$(1)/main.go
 endef
 
 define test_service
@@ -128,9 +134,11 @@ endef
 
 define make_docker
 	$(eval svc=$(subst docker_,,$(1)))
+	$(eval TZ=$(timedatectl | grep 'Time zone' | awk '{print $3}'))
 
 	docker build \
 		--no-cache \
+		--build-arg TZ=$(GOARM) \
 		--build-arg SVC=$(svc) \
 		--build-arg GOARCH=$(GOARCH) \
 		--build-arg GOARM=$(GOARM) \

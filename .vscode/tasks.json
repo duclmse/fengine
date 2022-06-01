@@ -1,0 +1,16 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Run JS File",
+      "type": "shell",
+      "windows": {
+        "command": "C:\\Program Files\\nodejs\\node.exe"
+      },
+      "linux": {
+        "command": "/usr/bin/node"
+      },
+      "args": ["${file}"]
+    }
+  ]
+}
