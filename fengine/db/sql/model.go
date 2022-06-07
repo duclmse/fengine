@@ -6,10 +6,11 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	pb "github.com/duclmse/fengine/pb"
-	"github.com/google/uuid"
 	"strings"
 	"time"
+
+	pb "github.com/duclmse/fengine/pb"
+	"github.com/google/uuid"
 )
 
 type EntityType uint8
@@ -109,11 +110,11 @@ func (et *EntityType) Scan(value any) error {
 		case "thing", "Thing":
 			*et = Thing
 		default:
-			return errors.New(fmt.Sprintf("scan source is not entity type, but %v", value))
+			return fmt.Errorf("scan source is not entity type, but %v", value)
 		}
 		return nil
 	}
-	return errors.New(fmt.Sprintf("scan source is not int, but %v", value))
+	return fmt.Errorf("scan source is not int, but %v", value)
 }
 
 func (et EntityType) Value() (driver.Value, error) {
@@ -343,6 +344,12 @@ type SelectRequest struct {
 }
 
 func (sr SelectRequest) ToSQL() (string, error) {
+	logic, err := sr.Filter.BuildLogic()
+	if err != nil {
+		fmt.Printf("err %s\n", err.Error())
+		return "", err
+	}
+
 	defaultValue := func(prefix, a, b string) string {
 		if a == "" {
 			return b
@@ -352,11 +359,7 @@ func (sr SelectRequest) ToSQL() (string, error) {
 	fields := defaultValue("", strings.Join(sr.Fields, ", "), "*")
 	groupBy := defaultValue(" GROUP BY ", strings.Join(sr.GroupBy, ", "), "")
 	orderBy := defaultValue(" ORDER BY ", strings.Join(sr.OrderBy, ", "), "")
-	logic, err := sr.Filter.BuildLogic()
-	if err != nil {
-		fmt.Printf("err %s\n", err.Error())
-		return "", err
-	}
+
 	if sr.Limit == 0 || sr.Limit > 10000 {
 		sr.Limit = 10000
 	}
@@ -530,14 +533,25 @@ var LogicOperator = map[string]string{
 	"$or":  "or",
 }
 
-var ComparisonOperator = map[string]string{
-	"$gt": ">",
-	"$ge": ">=",
-	"$eq": "=",
-	"$ne": "!=",
-	"$le": "<=",
-	"$lt": "<",
-	"$in": "in",
+func comparisonOperator(op string) string {
+	switch op {
+	case "$gt":
+		return ">"
+	case "$ge":
+		return ">="
+	case "$eq":
+		return "="
+	case "$ne":
+		return "!="
+	case "$le":
+		return "<="
+	case "$lt":
+		return "<"
+	case "$in":
+		return "IN"
+	default:
+		return ""
+	}
 }
 
 type Filter map[string]interface{}
@@ -557,12 +571,15 @@ func (logic Filter) BuildLogic() (*strings.Builder, error) {
 			fmt.Printf("error building condition %s\n", err.Error())
 			return nil, err
 		}
-
 	}
 	return sb, nil
 }
 
 func buildRelations(op string, relations interface{}, sb *strings.Builder) error {
+	opr := LogicOperator[op]
+	if opr == "" {
+		return fmt.Errorf("invalid logic operator '%s'", op)
+	}
 	switch r := relations.(type) {
 	case map[string]interface{}:
 		//fmt.Printf("map %v\n", r)
@@ -570,7 +587,9 @@ func buildRelations(op string, relations interface{}, sb *strings.Builder) error
 		sb.WriteString("(")
 		for i, v := range r {
 			if i > 0 {
-				sb.WriteString(fmt.Sprintf(" %s ", LogicOperator[op]))
+				sb.WriteString(" ")
+				sb.WriteString(strings.ToUpper(opr))
+				sb.WriteString(" ")
 			}
 			if err := buildCondition(v, sb); err != nil {
 				return err
@@ -597,10 +616,10 @@ func buildCondition(condition interface{}, sb *strings.Builder) error {
 				return err
 			}
 		}
+		return nil
 	default:
-		fmt.Printf("build cond with %v\n", c)
+		return fmt.Errorf("build condition with %v", c)
 	}
-	return nil
 }
 
 // build expression fragment (a < b) from {$lt: b}
@@ -614,9 +633,12 @@ func buildComparison(field string, comparison interface{}, sb *strings.Builder) 
 				return errors.New("expect comparison operator (start with '$')")
 			}
 			if i > 0 {
-				sb.WriteString(fmt.Sprintf(" and "))
+				sb.WriteString(" AND ")
 			}
-			sb.WriteString(fmt.Sprintf("%s %s ", field, ComparisonOperator[k]))
+			sb.WriteString(field)
+			sb.WriteString(" ")
+			sb.WriteString(comparisonOperator(k))
+			sb.WriteString(" ")
 			checkLogicOperand(v, sb)
 			i++
 		}

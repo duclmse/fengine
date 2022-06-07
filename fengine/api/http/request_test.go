@@ -5,9 +5,10 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/goccy/go-json"
+
 	pb "github.com/duclmse/fengine/pb"
 	. "github.com/duclmse/fengine/fengine/db/sql"
-	"github.com/goccy/go-json"
 )
 
 func Test_Unmarshall(t *testing.T) {

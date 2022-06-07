@@ -3,11 +3,13 @@ package sql_test
 import (
 	"context"
 	"fmt"
-	. "github.com/duclmse/fengine/fengine/db/sql"
-	"github.com/jmoiron/sqlx"
 	l "log"
 	"os"
 	"testing"
+
+	. "github.com/duclmse/fengine/fengine/db/sql"
+	"github.com/goccy/go-json"
+	"github.com/jmoiron/sqlx"
 
 	"github.com/google/uuid"
 
@@ -94,4 +96,50 @@ func TestPanic(t *testing.T) {
 	a("1")
 	a("2")
 	a("3")
+}
+
+func TestGeneratedQuery(t *testing.T) {
+	// language=json
+	jsonb := []byte(`{
+		"table":   "tbl_test",
+		"fields":  ["id", "name as n", "description", "a", "b", "c"],
+		"filter":  {
+			"$and": [
+				{"a": {"$gt": 10, "$lt": 20}},
+				{"$or": [{"b": {"$gt": 50}}, {"b": {"$lt": 20}}, {"c": {"$in": [123, 234]}}]}
+			]
+		},
+		"limit":   1000,
+		"offset":  1,
+		"order_by": ["name"]
+	}`)
+	req := SelectRequest{}
+	if err := json.Unmarshal(jsonb, &req); err != nil {
+		t.Logf("error unmarshalling req: %s", err.Error())
+		t.FailNow()
+	}
+
+	sql, err := req.ToSQL()
+	if err != nil {
+		t.FailNow()
+		return
+	}
+	t.Logf("%s\n", sql)
+
+	log, db := connect(t)
+	rows, err := db.QueryxContext(context.Background(), sql)
+	if err != nil {
+		log.Info("err=%v", err)
+	}
+	cols, err := rows.Columns()
+	if err != nil {
+		log.Info("err=%v", err)
+	}
+
+	t.Logf("%v", cols)
+	for rows.Next() {
+		rowMap := make(map[string]interface{})
+		rows.MapScan(rowMap)
+		t.Logf("%v\n", rowMap)
+	}
 }

@@ -14,7 +14,7 @@ service FEngineThing {
 }
 
 service FEngineData {
-  rpc Select(SelectRequest) returns (Result) {}
+  rpc Select(SelectRequest) returns (ResultSet) {}
   rpc Insert(InsertRequest) returns (Result) {}
   rpc Update(UpdateRequest) returns (Result) {}
   rpc Delete(DeleteRequest) returns (Result) {}
@@ -62,21 +62,25 @@ message UpdateScript {
 
 message Parameter {
   string name = 1;
-  Type type = 2;
+  Type   type = 2;
 }
 
 message Variable {
   string name = 1;
-  Type type = 2;
+  Type   type = 2;
+  Value  value = 3;
+}
+
+message Value {
   oneof value {
-    int32  i32 = 3;
-    int64  i64 = 4;
-    float  f32 = 5;
-    double f64 = 6;
-    bool   bool = 7;
-    string json = 8;
-    string string = 9;
-    bytes  binary = 10;
+    int32  i32 = 1;
+    int64  i64 = 2;
+    float  f32 = 3;
+    double f64 = 4;
+    bool   bool = 5;
+    string json = 6;
+    string string = 7;
+    bytes  binary = 8;
   }
 }
 
@@ -110,6 +114,16 @@ message SelectRequest {
   string filter = 3;
   int32 limit = 4;
   int32 offset = 5;
+}
+
+message ResultSet {
+
+  repeated string columnNames = 1;
+  repeated ResultRow rows = 2;
+}
+
+message ResultRow {
+  repeated Value values = 1;
 }
 
 message InsertRequest {
