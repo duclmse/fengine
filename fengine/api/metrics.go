@@ -2,11 +2,12 @@ package api
 
 import (
 	"context"
-	"github.com/duclmse/fengine/fengine/db/sql"
 	"time"
 
-	"github.com/duclmse/fengine/fengine"
 	"github.com/go-kit/kit/metrics"
+
+	"github.com/duclmse/fengine/fengine"
+	"github.com/duclmse/fengine/fengine/db/sql"
 )
 
 var _ fengine.Service = (*metricsMiddleware)(nil)

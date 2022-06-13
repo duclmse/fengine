@@ -39,7 +39,7 @@ func NewClient(conn *grpc.ClientConn, tracer opentracing.Tracer, timeout time.Du
 	}
 }
 
-func (client grpcDataClient) Select(ctx context.Context, in *pb.SelectRequest, opts ...grpc.CallOption) (*pb.Result, error) {
+func (client grpcDataClient) Select(ctx context.Context, in *pb.SelectRequest, opts ...grpc.CallOption) (*pb.ResultSet, error) {
 	//TODO implement me
 	panic("implement me")
 }

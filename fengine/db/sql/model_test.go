@@ -2,11 +2,11 @@ package sql_test
 
 import (
 	"encoding/json"
-	. "github.com/duclmse/fengine/fengine/db/sql"
 	"log"
 	"testing"
+	"text/template"
 
-	pb "github.com/duclmse/fengine/pb"
+	. "github.com/duclmse/fengine/fengine/db/sql"
 )
 
 func Test_DynamicUnmarshall(t *testing.T) {
@@ -27,9 +27,29 @@ func checkUnmarshall(t *testing.T, s string) {
 		return
 	}
 
-	if sb, err := filter.BuildLogic(); err == nil {
-		t.Logf("%s\n", sb.String())
+	if logic, err := filter.ToSQL(); err == nil {
+		t.Logf("%s\n", logic)
 	}
+}
+
+func TestTableDefinition_ToSQL(t *testing.T) {
+	// language=json
+	jsonb := []byte(`{
+		"name": "test",
+		"fields": [
+			{"name": "id", "type": "i32", "is_primary_key": true, "is_logged": false},
+			{"name": "name", "type": "string", "is_primary_key": false, "is_logged": false}
+		]
+	}`)
+
+	def := TableDefinition{}
+	err := json.Unmarshal(jsonb, &def)
+	sql, err := def.ToSQL()
+	if err != nil {
+		log.Printf("%s\n", err)
+		return
+	}
+	t.Logf("%s\n", sql)
 }
 
 func TestSelectRequest_ToSQL(t *testing.T) {
@@ -66,18 +86,25 @@ func TestSelectRequest_ToSQL(t *testing.T) {
 	t.Logf("%s\n", sql)
 }
 
-func TestTableDefinition_ToSQL(t *testing.T) {
-	def := TableDefinition{
-		Name: "test",
-		Fields: []Field{
-			{Name: "id", Type: pb.Type_i32, IsPrimaryKey: true, IsLogged: false},
-			{Name: "name", Type: pb.Type_string, IsPrimaryKey: false, IsLogged: false},
-		},
+func TestUpdateRequest_ToSQL(t *testing.T) {
+	// language=json
+	jsonb := []byte(`{
+		"table": "tbl_test",
+		"values": {"b": 25, "c": 1},
+		"filter": {"c": {"$eq": 3}}
+	}`)
+	req := UpdateRequest{}
+	if err := json.Unmarshal(jsonb, &req); err != nil {
+		log.Printf("error unmarshalling req: %s", err.Error())
+		t.FailNow()
 	}
-	sql, err := def.ToSQL()
+
+	sql, values, err := req.ToSQL()
 	if err != nil {
-		log.Printf("%s\n", err)
+		t.Logf("error = %v", err)
+		t.FailNow()
 		return
 	}
 	t.Logf("%s\n", sql)
+	t.Logf("%v\n", values)
 }

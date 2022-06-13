@@ -14,7 +14,6 @@ import (
 )
 
 type EntityType uint8
-type VarType uint8
 
 const (
 	Shape EntityType = iota
@@ -22,6 +21,8 @@ const (
 	Thing
 	invalid
 )
+
+type VarType uint8
 
 const (
 	I32 VarType = iota
@@ -287,13 +288,6 @@ type ThingServiceId struct {
 	Name     string    `json:"name"`
 }
 
-type Function struct {
-	Name   string  `json:"name"`
-	Input  Params  `json:"input,omitempty"`
-	Output pb.Type `json:"output,omitempty"`
-	Code   string  `json:"code,omitempty"`
-}
-
 type ThingSubscription struct {
 	EntityId  uuid.UUID  `json:"entity_id"`
 	Name      string     `json:"name"`
@@ -333,6 +327,7 @@ type Field struct {
 	IsLogged     bool    `json:"is_logged" json:"is_logged"`
 }
 
+//#region SelectRequest
 type SelectRequest struct {
 	Table   string   `json:"table"`
 	Fields  []string `json:"fields"`
@@ -344,7 +339,7 @@ type SelectRequest struct {
 }
 
 func (sr SelectRequest) ToSQL() (string, error) {
-	logic, err := sr.Filter.BuildLogic()
+	logic, err := sr.Filter.ToSQL()
 	if err != nil {
 		fmt.Printf("err %s\n", err.Error())
 		return "", err
@@ -363,13 +358,17 @@ func (sr SelectRequest) ToSQL() (string, error) {
 	if sr.Limit == 0 || sr.Limit > 10000 {
 		sr.Limit = 10000
 	}
-	if filter := logic.String(); filter != "" {
+	if logic != "" {
 		return fmt.Sprintf("SELECT %s FROM %s WHERE %s%s%s LIMIT %d OFFSET %d",
-			fields, sr.Table, filter, groupBy, orderBy, sr.Limit, sr.Offset), nil
+			fields, sr.Table, logic, groupBy, orderBy, sr.Limit, sr.Offset), nil
 	}
 	return fmt.Sprintf("SELECT %s FROM %s%s%s LIMIT %d OFFSET %d",
 		fields, sr.Table, groupBy, orderBy, sr.Limit, sr.Offset), nil
 }
+
+//#endregion SelectRequest
+
+//#region InsertRequest
 
 type InsertRequest struct {
 	Table  string           `json:"table"`
@@ -385,19 +384,61 @@ func (r InsertRequest) ToSQL() (sql string, e error) {
 	return sb.String(), nil
 }
 
+//#endregion InsertRequest
+
+//#region UpdateRequest
+
 type UpdateRequest struct {
-	Table  string        `json:"table"`
-	Values []pb.Variable `json:"values"`
-	Filter Filter        `json:"filter"`
+	Table  string         `json:"table"`
+	Values map[string]any `json:"values"`
+	Filter Filter         `json:"filter"`
 }
+
+func (r UpdateRequest) ToSQL() (sql string, values []any, e error) {
+	logic, e := r.Filter.ToSQL()
+	if e != nil {
+		fmt.Printf("logic = %v\n", logic)
+		return
+	}
+
+	var sb strings.Builder
+	sb.WriteString(fmt.Sprintf(`UPDATE %s SET `, r.Table))
+	after := false
+	for k, v := range r.Values {
+		if after {
+			sb.WriteString(", ")
+		} else {
+			after = true
+		}
+		sb.WriteString(fmt.Sprintf("%s = %v", k, v))
+	}
+
+	if logic != "" {
+		sb.WriteString(fmt.Sprintf(" WHERE %s", logic))
+	}
+	return sb.String(), values, nil
+}
+
+//#endregion UpdateRequest
+
+//#region DeleteRequest
 
 type DeleteRequest struct {
-	Table  string        `json:"table"`
-	Values []pb.Variable `json:"values"`
-	Filter Filter        `json:"filter"`
+	Table  string `json:"table"`
+	Filter Filter `json:"filter"`
 }
 
+//#endregion DeleteRequest
+
 type AttributeHistoryRequest struct {
+}
+
+//#region Function
+type Function struct {
+	Name   string  `json:"name"`
+	Input  Params  `json:"input,omitempty"`
+	Output pb.Type `json:"output,omitempty"`
+	Code   string  `json:"code,omitempty"`
 }
 
 func (f Function) ToFunction() *pb.Function {
@@ -471,6 +512,8 @@ func ReadMethods(referee map[string]Function) map[string]*pb.Function {
 	return m
 }
 
+//#endregion Function
+
 func SqlType(t pb.Type) (string, error) {
 	switch t {
 	case pb.Type_i32:
@@ -528,11 +571,6 @@ func (td TableDefinition) ToSQL() (string, error) {
 	return sb.String(), nil
 }
 
-var LogicOperator = map[string]string{
-	"$and": "and",
-	"$or":  "or",
-}
-
 func comparisonOperator(op string) string {
 	switch op {
 	case "$gt":
@@ -556,27 +594,37 @@ func comparisonOperator(op string) string {
 
 type Filter map[string]interface{}
 
-func (logic Filter) BuildLogic() (*strings.Builder, error) {
-	if len(logic) > 1 {
-		return nil, errors.New("cannot have more than one relation")
-	}
+func (logic Filter) ToSQL() (string, error) {
+	fmt.Printf("%v\n", logic)
+	logicLength := len(logic)
 	sb := new(strings.Builder)
 	for k, v := range logic {
 		if strings.HasPrefix(k, "$") {
+			if logicLength > 1 {
+				return "", errors.New("cannot have more than one relation")
+			}
 			if err := buildRelations(k, v, sb); err != nil {
 				fmt.Printf("error building logic %s\n", err.Error())
-				return nil, err
+				return "", err
 			}
 		} else if err := buildComparison(k, v, sb); err != nil {
 			fmt.Printf("error building condition %s\n", err.Error())
-			return nil, err
+			return "", err
 		}
+		fmt.Printf("%v %v\n", k, v)
 	}
-	return sb, nil
+	fmt.Printf("%s\n", sb.String())
+	return sb.String(), nil
 }
 
 func buildRelations(op string, relations interface{}, sb *strings.Builder) error {
-	opr := LogicOperator[op]
+	var opr string
+	switch op {
+	case "$and":
+		opr = "AND"
+	case "$or":
+		opr = "OR"
+	}
 	if opr == "" {
 		return fmt.Errorf("invalid logic operator '%s'", op)
 	}
@@ -635,15 +683,15 @@ func buildComparison(field string, comparison interface{}, sb *strings.Builder) 
 			if i > 0 {
 				sb.WriteString(" AND ")
 			}
-			sb.WriteString(field)
-			sb.WriteString(" ")
-			sb.WriteString(comparisonOperator(k))
-			sb.WriteString(" ")
+			sb.WriteString(fmt.Sprintf("%s %s ", field, comparisonOperator(k)))
 			checkLogicOperand(v, sb)
 			i++
 		}
+	case int, int8, int16, int32, int64, float32, float64, string:
+		sb.WriteString(fmt.Sprintf("%s = ", field))
+		checkLogicOperand(comparison, sb)
 	default:
-		//fmt.Printf("build comp with %v\n", c)
+		fmt.Printf("build comp with %v\n", c)
 	}
 	return nil
 }

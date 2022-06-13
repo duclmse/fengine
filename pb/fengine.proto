@@ -68,7 +68,16 @@ message Parameter {
 message Variable {
   string name = 1;
   Type   type = 2;
-  Value  value = 3;
+  oneof value {
+    int32  i32 = 3;
+    int64  i64 = 4;
+    float  f32 = 5;
+    double f64 = 6;
+    bool   bool = 7;
+    string json = 8;
+    string string = 9;
+    bytes  binary = 10;
+  }
 }
 
 message Value {
@@ -117,7 +126,6 @@ message SelectRequest {
 }
 
 message ResultSet {
-
   repeated string columnNames = 1;
   repeated ResultRow rows = 2;
 }

@@ -2,10 +2,13 @@ package sql
 
 import (
 	"fmt"
-	"github.com/duclmse/fengine/pkg/logger"
+
+	_ "github.com/jackc/pgx"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 	migrate "github.com/rubenv/sql-migrate"
+
+	"github.com/duclmse/fengine/pkg/logger"
 )
 
 // Config define the options that are used when connecting to a Postgres instance

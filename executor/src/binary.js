@@ -218,6 +218,7 @@ module.exports =  class Binary {
   }
 
   isDone() {
+    console.log(`pointer - length = ${this.pointer - this.bytes.length}`);
     return this.pointer - this.bytes.length;
   }
 }

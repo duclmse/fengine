@@ -2,10 +2,11 @@ package api
 
 import (
 	"context"
+	"time"
+
 	"github.com/duclmse/fengine/fengine"
 	"github.com/duclmse/fengine/fengine/db/sql"
 	"github.com/duclmse/fengine/pkg/logger"
-	"time"
 )
 
 var _ fengine.Service = (*loggingMiddleware)(nil)
