@@ -1,11 +1,12 @@
 package sql
 
 import (
+	"context"
 	"fmt"
-
-	_ "github.com/jackc/pgx"
 	"github.com/jmoiron/sqlx"
-	_ "github.com/lib/pq"
+
+	_ "github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v4/pgxpool"
 	migrate "github.com/rubenv/sql-migrate"
 
 	"github.com/duclmse/fengine/pkg/logger"
@@ -13,6 +14,7 @@ import (
 
 // Config define the options that are used when connecting to a Postgres instance
 type Config struct {
+	Url         string
 	Host        string
 	Port        string
 	User        string
@@ -26,24 +28,37 @@ type Config struct {
 
 // Connect method is used to create a connection to the Postgres instance and applies any unapply database migrations.
 // A non-nil error is return to indicate failure
-func Connect(cfg Config, log logger.Logger) (*sqlx.DB, error) {
-	url := fmt.Sprintf("host=%s port=%s user=%s dbname=%s password=%s sslmode=%s sslcert=%s sslkey=%s sslrootcert=%s",
-		cfg.Host, cfg.Port, cfg.User, cfg.Name, cfg.Pass, cfg.SSLMode, cfg.SSLCert, cfg.SSLKey, cfg.SSLRootCert)
-	log.Info("db info: %s", url)
-
-	db, err := sqlx.Open("postgres", url)
-	if err != nil {
-		return nil, err
-	}
-
-	applied, err := migrateDB(db)
-	if err == nil {
-		log.Info("Applied %d migrations!", applied)
-		return db, nil
+func Connect(cfg Config, log logger.Logger) (db *pgxpool.Pool, err error) {
+	var poolCfg *pgxpool.Config
+	if cfg.Url != "" {
+		poolCfg = getPoolConfig(cfg.Url, cfg.User, cfg.Pass)
 	} else {
-		log.Info("Error applying migrations: %s", err.Error())
-		return nil, err
+		url := fmt.Sprintf("postgres://%s:%s/%s", cfg.Host, cfg.Port, cfg.Name)
+		poolCfg = getPoolConfig(url, cfg.User, cfg.Pass)
 	}
+
+	bg := context.Background()
+	return pgxpool.ConnectConfig(bg, poolCfg)
+
+	//applied, err := migrateDB(db)
+	//if err == nil {
+	//	log.Info("Applied %d migrations!", applied)
+	//	return db, nil
+	//} else {
+	//	log.Info("Error applying migrations: %s", err.Error())
+	//	return nil, err
+	//}
+}
+
+func getPoolConfig(url, username, password string) (config *pgxpool.Config) {
+	config, err := pgxpool.ParseConfig(url)
+	if err != nil {
+		panic(err)
+	}
+	connConfig := config.ConnConfig
+	connConfig.User = "postgres"
+	connConfig.Password = "1"
+	return
 }
 
 func migrateDB(db *sqlx.DB) (int, error) {
@@ -122,8 +137,10 @@ func migrateDB(db *sqlx.DB) (int, error) {
 			FOREIGN KEY ("from") REFERENCES entity ("id")
 		);`,
 	}
+	// language=postgresql
 	down := []string{
-		`DROP TABLE "method";`,
+		`DROP TABLE "service";`,
+		`DROP TABLE "subscription";`,
 		`DROP TABLE "attribute";`,
 		`DROP TABLE "entity";`,
 		`DROP TYPE  "var_type";`,

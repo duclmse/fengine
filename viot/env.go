@@ -1,6 +1,7 @@
 package viot
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -57,6 +58,19 @@ func Close(log logger.Logger, name string) func(io.Closer) {
 			} else {
 				log.Error("cannot close %s: %s", name, err.Error())
 			}
+		}
+	}
+}
+
+func CloseCtx(
+	closer interface {
+		Close(ctx context.Context) error
+	},
+	ctx context.Context,
+) func() {
+	return func() {
+		if err := closer.Close(ctx); err != nil {
+			fmt.Printf("cannot close %s\n", err.Error())
 		}
 	}
 }

@@ -2,10 +2,12 @@ package http
 
 import (
 	"context"
-	"github.com/duclmse/fengine/fengine/db/sql"
+
 	"github.com/go-kit/kit/endpoint"
+	"github.com/google/uuid"
 
 	"github.com/duclmse/fengine/fengine"
+	"github.com/duclmse/fengine/fengine/db/sql"
 	"github.com/duclmse/fengine/pkg/errors"
 )
 
@@ -36,6 +38,7 @@ func upsertEntityEndpoint(svc fengine.Service, c fengine.ServiceComponent) endpo
 		return service, nil
 	}
 }
+
 func deleteEntityEndpoint(svc fengine.Service, c fengine.ServiceComponent) endpoint.Endpoint {
 	return func(ctx context.Context, request any) (response any, err error) {
 		req, ok := request.(entityRequest)
@@ -56,7 +59,11 @@ func getAllServicesEndpoint(svc fengine.Service, c fengine.ServiceComponent) end
 		if !ok {
 			return nil, errors.New("invalid input")
 		}
-		service, err := svc.GetThingAllServices(ctx, req.thingId)
+		id, err := uuid.Parse(req.thingId)
+		if err != nil {
+			return nil, errors.New("thing id is not a valid uuid")
+		}
+		service, err := svc.GetThingAllServices(ctx, id)
 		if err != nil {
 			return nil, err
 		}

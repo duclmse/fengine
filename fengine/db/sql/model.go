@@ -595,7 +595,7 @@ func comparisonOperator(op string) string {
 type Filter map[string]interface{}
 
 func (logic Filter) ToSQL() (string, error) {
-	fmt.Printf("%v\n", logic)
+	//fmt.Printf("filter to sql %v\n", logic)
 	logicLength := len(logic)
 	sb := new(strings.Builder)
 	for k, v := range logic {

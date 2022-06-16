@@ -1,17 +1,16 @@
 package fengine
 
 import (
-	. "context"
-	"errors"
+	ctx "context"
 	"fmt"
-	. "github.com/google/uuid"
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v4/pgxpool"
 
 	"github.com/go-redis/redis/v8"
-	"github.com/jmoiron/sqlx"
 	"github.com/opentracing/opentracing-go"
 
 	"github.com/duclmse/fengine/fengine/db/cache"
-	. "github.com/duclmse/fengine/fengine/db/sql"
+	"github.com/duclmse/fengine/fengine/db/sql"
 	pb "github.com/duclmse/fengine/pb"
 	"github.com/duclmse/fengine/pkg/logger"
 )
@@ -22,25 +21,25 @@ type ServiceComponent struct {
 	Tracer      opentracing.Tracer
 	Cache       *redis.Client
 	CacheTracer opentracing.Tracer
-	DB          *sqlx.DB
+	DB          *pgxpool.Pool
 	Log         logger.Logger
 	ExeClient   pb.FEngineExecutorClient
 }
 
 type Service interface {
-	GetEntity(ctx Context, id string) (r Result, e error)
-	UpsertEntity(ctx Context, entityDef EntityDefinition) (r Result, e error)
-	DeleteEntity(ctx Context, id string) (r Result, e error)
+	GetEntity(ctx ctx.Context, id string) (r Result, e error)
+	UpsertEntity(ctx ctx.Context, entityDef sql.EntityDefinition) (r Result, e error)
+	DeleteEntity(ctx ctx.Context, id string) (r Result, e error)
 
-	GetThingAllServices(ctx Context, thing string) (r Result, e error)
-	GetThingService(ctx Context, req ThingServiceId) (r Result, e error)
-	ExecuteService(ctx Context, req ServiceRequest) (r Result, e error)
+	GetThingAllServices(ctx ctx.Context, thing uuid.UUID) (r Result, e error)
+	GetThingService(ctx ctx.Context, req sql.ThingServiceId) (r Result, e error)
+	ExecuteService(ctx ctx.Context, req sql.ServiceRequest) (r Result, e error)
 
-	CreateTable(ctx Context, req TableDefinition) (r Result, e error)
-	Select(ctx Context, req SelectRequest) (r Result, e error)
-	Insert(ctx Context, req InsertRequest) (r Result, e error)
-	Update(ctx Context, req UpdateRequest) (r Result, e error)
-	Delete(ctx Context, req DeleteRequest) (r Result, e error)
+	CreateTable(ctx ctx.Context, req sql.TableDefinition) (r Result, e error)
+	Select(ctx ctx.Context, req sql.SelectRequest) (r Result, e error)
+	Insert(ctx ctx.Context, req sql.InsertRequest) (r Result, e error)
+	Update(ctx ctx.Context, req sql.UpdateRequest) (r Result, e error)
+	Delete(ctx ctx.Context, req sql.DeleteRequest) (r Result, e error)
 }
 
 func (s FengineService) New() Service {
@@ -48,14 +47,14 @@ func (s FengineService) New() Service {
 }
 
 type FengineService struct {
-	Repository Repository
+	Repository sql.Repository
 	Cache      cache.Cache
 	ExecClient pb.FEngineExecutorClient
 	Log        logger.Logger
 }
 
-func (s FengineService) GetEntity(ctx Context, id string) (r Result, e error) {
-	uid, e := Parse(id)
+func (s FengineService) GetEntity(ctx ctx.Context, id string) (r Result, e error) {
+	uid, e := uuid.Parse(id)
 	if e != nil {
 		return result(e)
 	}
@@ -67,16 +66,17 @@ func (s FengineService) GetEntity(ctx Context, id string) (r Result, e error) {
 
 	return Result{Data: entity}, e
 }
-func (s FengineService) UpsertEntity(ctx Context, entityDef EntityDefinition) (r Result, e error) {
+
+func (s FengineService) UpsertEntity(ctx ctx.Context, entityDef sql.EntityDefinition) (r Result, err error) {
 	upserted, err := s.Repository.UpsertEntity(ctx, entityDef)
 	if err != nil {
-		return Result{Code: 1, Msg: err.Error()}, err
+		return result(err)
 	}
-	return Result{Msg: fmt.Sprintf("upserted %d", upserted)}, err
+	return Result{Msg: fmt.Sprintf("upserted %d", upserted)}, nil
 }
 
-func (s FengineService) DeleteEntity(ctx Context, id string) (r Result, e error) {
-	uid, e := Parse(id)
+func (s FengineService) DeleteEntity(ctx ctx.Context, id string) (r Result, e error) {
+	uid, e := uuid.Parse(id)
 	if e != nil {
 		return result(e)
 	}
@@ -89,19 +89,15 @@ func (s FengineService) DeleteEntity(ctx Context, id string) (r Result, e error)
 	return Result{Data: entity}, e
 }
 
-func (s FengineService) GetThingAllServices(ctx Context, thingId string) (Result, error) {
-	id, err := Parse(thingId)
+func (s FengineService) GetThingAllServices(ctx ctx.Context, thingId uuid.UUID) (r Result, err error) {
+	services, err := s.Repository.GetThingAllServices(ctx, thingId)
 	if err != nil {
-		return Result{Code: 1}, errors.New("thing id is not a valid uuid")
-	}
-	services, err := s.Repository.GetThingAllServices(ctx, id)
-	if err != nil {
-		return Result{Code: 1, Msg: err.Error()}, err
+		return result(err)
 	}
 	return Result{Data: services}, nil
 }
 
-func (s FengineService) GetThingService(ctx Context, id ThingServiceId) (Result, error) {
+func (s FengineService) GetThingService(ctx ctx.Context, id sql.ThingServiceId) (Result, error) {
 	services, err := s.Repository.GetThingService(ctx, id)
 	if err != nil {
 		return Result{Code: 1, Msg: err.Error()}, err
@@ -109,15 +105,15 @@ func (s FengineService) GetThingService(ctx Context, id ThingServiceId) (Result,
 	return Result{Data: services}, nil
 }
 
-func (s FengineService) ExecuteService(ctx Context, script ServiceRequest) (Result, error) {
+func (s FengineService) ExecuteService(ctx ctx.Context, script sql.ServiceRequest) (Result, error) {
 	return Result{}, nil
 }
 
-func (s FengineService) CreateTable(ctx Context, table TableDefinition) (Result, error) {
+func (s FengineService) CreateTable(ctx ctx.Context, table sql.TableDefinition) (Result, error) {
 	return Result{}, nil
 }
 
-func (s FengineService) Select(ctx Context, req SelectRequest) (Result, error) {
+func (s FengineService) Select(ctx ctx.Context, req sql.SelectRequest) (Result, error) {
 	sql, err := req.ToSQL()
 	if err != nil {
 		return result(err)
@@ -131,7 +127,7 @@ func (s FengineService) Select(ctx Context, req SelectRequest) (Result, error) {
 	return Result{Data: rs}, nil
 }
 
-func (s FengineService) Insert(ctx Context, req InsertRequest) (Result, error) {
+func (s FengineService) Insert(ctx ctx.Context, req sql.InsertRequest) (Result, error) {
 	sql, err := req.ToSQL()
 	if err != nil {
 		return result(err)
@@ -145,11 +141,11 @@ func (s FengineService) Insert(ctx Context, req InsertRequest) (Result, error) {
 	return Result{Data: rs}, nil
 }
 
-func (s FengineService) Update(ctx Context, req UpdateRequest) (Result, error) {
+func (s FengineService) Update(ctx ctx.Context, req sql.UpdateRequest) (Result, error) {
 	return Result{}, nil
 }
 
-func (s FengineService) Delete(ctx Context, req DeleteRequest) (Result, error) {
+func (s FengineService) Delete(ctx ctx.Context, req sql.DeleteRequest) (Result, error) {
 	return Result{}, nil
 }
 

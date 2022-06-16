@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"github.com/google/uuid"
 	"time"
 
 	"github.com/duclmse/fengine/fengine"
@@ -65,7 +66,7 @@ func (l loggingMiddleware) Delete(ctx context.Context, request sql.DeleteRequest
 	return l.svc.Delete(ctx, request)
 }
 
-func (l loggingMiddleware) GetThingAllServices(ctx context.Context, thingId string) (r fengine.Result, e error) {
+func (l loggingMiddleware) GetThingAllServices(ctx context.Context, thingId uuid.UUID) (r fengine.Result, e error) {
 	defer l.log.Elapse("Get all service of thing (%v)", thingId)(time.Now(), &e)
 	return l.svc.GetThingAllServices(ctx, thingId)
 }

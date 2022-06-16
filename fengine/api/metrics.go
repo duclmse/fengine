@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"github.com/google/uuid"
 	"time"
 
 	"github.com/go-kit/kit/metrics"
@@ -71,7 +72,7 @@ func (mm metricsMiddleware) Delete(ctx context.Context, request sql.DeleteReques
 	return mm.svc.Delete(ctx, request)
 }
 
-func (mm metricsMiddleware) GetThingAllServices(ctx context.Context, uuid string) (fengine.Result, error) {
+func (mm metricsMiddleware) GetThingAllServices(ctx context.Context, uuid uuid.UUID) (fengine.Result, error) {
 	defer mm.count("GetThingAllServices")(time.Now())
 	return mm.svc.GetThingAllServices(ctx, uuid)
 }

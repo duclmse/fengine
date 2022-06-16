@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"log"
 	"testing"
-	"text/template"
 
 	. "github.com/duclmse/fengine/fengine/db/sql"
 )
