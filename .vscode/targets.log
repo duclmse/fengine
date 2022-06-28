@@ -1,0 +1,604 @@
+make all --print-data-base --no-builtin-variables --no-builtin-rules --question
+# GNU Make 4.3
+# Built for x86_64-pc-linux-gnu
+# Copyright (C) 1988-2020 Free Software Foundation, Inc.
+# License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+# This is free software: you are free to change and redistribute it.
+# There is NO WARRANTY, to the extent permitted by law.
+
+# Make data base, printed on Tue Jun 28 13:34:12 2022
+
+# Variables
+
+# environment
+GDK_BACKEND = x11
+# environment
+LC_ALL = C
+# environment
+GTK_RC_FILES = /etc/gtk/gtkrc:/home/vht/.gtkrc:/home/vht/.config/gtkrc
+# environment
+SNAP_INSTANCE_KEY = 
+# environment
+VSCODE_IPC_HOOK_EXTHOST = /run/user/1000/vscode-ipc-7580335d-aef5-44e2-97e7-ce52421b0fac.sock
+# makefile (from 'Makefile', line 18)
+GOOS = linux
+# environment
+LC_NAME = vi_VN
+# environment
+LC_NUMERIC = vi_VN
+# environment
+VSCODE_CWD = /home/vht
+# environment
+LC_ADDRESS = vi_VN
+# default
+MAKE_COMMAND := make
+# environment
+QT_ACCESSIBILITY = 1
+# environment
+GOPATH = /home/vht/go
+# automatic
+@D = $(patsubst %/,%,$(dir $@))
+# environment
+SNAP_INSTANCE_NAME = code
+# environment
+GDK_PIXBUF_MODULEDIR = /snap/code/97/usr/lib/x86_64-linux-gnu/gdk-pixbuf-2.0/2.10.0/loaders
+# environment
+VSCODE_HANDLES_UNCAUGHT_ERRORS = true
+# default
+.VARIABLES := 
+# environment
+PWD = /home/vht/fengine
+# automatic
+%D = $(patsubst %/,%,$(dir $%))
+# environment
+XDG_DATA_DIRS = /usr/share/plasma:/usr/local/share:/usr/share:/var/lib/snapd/desktop
+# automatic
+^D = $(patsubst %/,%,$(dir $^))
+# environment
+VSCODE_LOG_STACK = false
+# automatic
+%F = $(notdir $%)
+# environment
+VSCODE_CODE_CACHE_PATH = /home/vht/.config/Code/CachedData/c3511e6c69bb39013c4a4b7b9566ec1ca73fc4d5
+# environment
+XDG_SESSION_PATH = /org/freedesktop/DisplayManager/Session2
+# environment
+LANG = C
+# environment
+XAUTHORITY = /home/vht/.Xauthority
+# default
+.LOADED := 
+# default
+.INCLUDE_DIRS = /usr/local/include /usr/include /usr/include
+# makefile
+MAKEFLAGS = pqrR
+# makefile
+CURDIR := /home/vht/fengine
+# environment
+VSCODE_PIPE_LOGGING = true
+# environment
+APPLICATION_INSIGHTS_NO_DIAGNOSTIC_CHANNEL = 1
+# environment
+LESSOPEN = | /usr/bin/lesspipe %s
+# makefile (from 'Makefile', line 119)
+docker_push = 	@for svc in $(SERVICES); do docker push $(REPOSITORY)/$(PLATFORM)/$$svc; done
+# automatic
+*D = $(patsubst %/,%,$(dir $*))
+# environment
+PAM_KWALLET5_LOGIN = /run/user/1000/kwallet5.socket
+# environment
+MFLAGS = -pqrR
+# environment
+SSH_AUTH_SOCK = /tmp/ssh-LLh6UQBI36vR/agent.2092
+# default
+.SHELLFLAGS := -c
+# environment
+XDG_CONFIG_DIRS = /home/vht/.config/kdedefaults:/etc/xdg/xdg-plasma:/etc/xdg:/usr/share/kubuntu-default-settings/kf5-settings
+# automatic
++D = $(patsubst %/,%,$(dir $+))
+# environment
+XCURSOR_THEME = breeze_cursors
+# environment
+XDG_SESSION_DESKTOP = KDE
+# makefile (from 'Makefile', line 1)
+MAKEFILE_LIST := Makefile
+# environment
+SNAP_REEXEC = 
+# automatic
+@F = $(notdir $@)
+# environment
+VSCODE_VERBOSE_LOGGING = true
+# environment
+VSCODE_PID = 2680
+# environment
+XDG_SESSION_TYPE = x11
+# automatic
+?D = $(patsubst %/,%,$(dir $?))
+# environment
+BAMF_DESKTOP_FILE_HINT = /var/lib/snapd/desktop/applications/code_code.desktop
+# environment
+SESSION_MANAGER = local/viettel:@/tmp/.ICE-unix/2373,unix/viettel:/tmp/.ICE-unix/2373
+# automatic
+*F = $(notdir $*)
+# makefile (from 'Makefile', line 15)
+REPOSITORY = 172.20.1.22
+# makefile (from 'Makefile', line 156)
+define make_release_svc
+	$(eval svc=$(subst release_,,$(1)))
+	$(call make_docker, docker_$(svc))
+	docker tag  $(REPOSITORY)/$(PLATFORM)/$(svc) $(REPOSITORY)/$(PLATFORM)/$(svc):$(version)
+	docker push $(REPOSITORY)/$(PLATFORM)/$(svc):$(version)
+	docker rmi  $(REPOSITORY)/$(PLATFORM)/$(svc)
+	docker rmi  $(REPOSITORY)/$(PLATFORM)/$(svc):$(version)
+endef
+# environment
+CHROME_DESKTOP = code-url-handler.desktop
+# environment
+DBUS_SESSION_BUS_ADDRESS = unix:path=/run/user/1000/bus
+# makefile (from 'Makefile', line 125)
+compile_service = 	CGO_ENABLED=$(CGO_ENABLED) GOOS=$(GOOS) GOARCH=$(GOARCH) GOARM=$(GOARM) go build -mod=$(2) -ldflags "-s -w" -o ${BUILD_DIR}/viot-$(1) cmd/$(1)/main.go
+# automatic
+<D = $(patsubst %/,%,$(dir $<))
+# makefile (from 'Makefile', line 14)
+PLATFORM = vht-iot-platform
+# environment
+VSCODE_NLS_CONFIG = {"locale":"en-us","availableLanguages":{},"_languagePackSupport":true}
+# default
+MAKE_HOST := x86_64-pc-linux-gnu
+# makefile
+SHELL = /bin/sh
+# default
+MAKECMDGOALS := all
+# environment
+XMODIFIERS = @im=ibus
+# environment
+SHLVL = 0
+# makefile (from 'Makefile', line 150)
+define make_docker_dev
+	$(eval svc=$(subst docker_dev_,,$(1)))
+
+	docker build --no-cache --build-arg SVC=$(svc) --tag=$(PLATFORM)/$(svc) -f docker/Dockerfile.dev ./build
+endef
+# environment
+MAKELEVEL := 0
+# default
+MAKE = $(MAKE_COMMAND)
+# environment
+SNAP_COOKIE = RLKLRNHjd7MxZ-qgMPwzPlOGEDAwRhKHJTLT7Te_UB_dtP1MUBWh
+# environment
+PATH = /home/vht/.local/bin:/home/vht/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/usr/local/go/bin:/home/vht/.local/bin
+# default
+MAKEFILES := 
+# environment
+LC_MONETARY = vi_VN
+# automatic
+^F = $(notdir $^)
+# makefile (from 'Makefile', line 13)
+RELEASE = $(addprefix release_,$(SERVICES))
+# environment
+SNAP_USER_COMMON = /home/vht/snap/code/common
+# environment
+LC_TIME = vi_VN
+# environment
+SNAP = /snap/code/97
+# environment
+SNAP_REVISION = 97
+# environment
+SNAP_REAL_HOME = /home/vht
+# environment
+VSCODE_LOG_NATIVE = false
+# environment
+LC_TELEPHONE = vi_VN
+# environment
+LESSCLOSE = /usr/bin/lesspipe %s %s
+# automatic
+?F = $(notdir $?)
+# environment
+KDE_APPLICATIONS_AS_SCOPE = 1
+# environment
+XDG_SEAT = seat0
+# environment
+GTK_IM_MODULE = ibus
+# environment
+XDG_CURRENT_DESKTOP = KDE
+# environment
+LS_COLORS = 
+# automatic
++F = $(notdir $+)
+# environment
+XDG_SEAT_PATH = /org/freedesktop/DisplayManager/Seat0
+# environment
+DESKTOP_SESSION = plasma
+# environment
+ORIGINAL_XDG_CURRENT_DESKTOP = KDE
+# makefile (from 'Makefile', line 12)
+TEST = $(addprefix test_,$(SERVICES))
+# 'override' directive
+GNUMAKEFLAGS := 
+# environment
+CLUTTER_IM_MODULE = ibus
+# environment
+LOGNAME = vht
+# environment
+SNAP_ARCH = amd64
+# environment
+XDG_VTNR = 1
+# makefile
+.DEFAULT_GOAL := fengine
+# environment
+SYSTEMD_EXEC_PID = 2073
+# makefile (from 'Makefile', line 10)
+DOCKERS = $(addprefix docker_,$(SERVICES))
+# environment
+DISPLAY = :0
+# environment
+USER = vht
+# default
+MAKE_VERSION := 4.3
+# environment
+KDE_SESSION_UID = 1000
+# environment
+DISABLE_WAYLAND = 1
+# environment
+SNAP_DATA = /var/snap/code/97
+# environment
+SNAP_CONTEXT = RLKLRNHjd7MxZ-qgMPwzPlOGEDAwRhKHJTLT7Te_UB_dtP1MUBWh
+# makefile (from 'Makefile', line 16)
+CGO_ENABLED = 0
+# environment
+LC_MEASUREMENT = vi_VN
+# environment
+SSH_AGENT_PID = 2219
+# makefile (from 'Makefile', line 17)
+GOARCH = amd64
+# makefile (from 'Makefile', line 130)
+define test_service
+	$(eval svc=$(subst test_,,$(1)))
+	go test -mod=vendor -v -race -count 1 -tags test $(shell go list ./$(svc))
+endef
+# environment
+_ = /snap/code/97/usr/share/code/code
+# environment
+LC_PAPER = vi_VN
+# environment
+XDG_RUNTIME_DIR = /run/user/1000
+# environment
+GPG_AGENT_INFO = /run/user/1000/gnupg/S.gpg-agent:0:1
+# environment
+GDK_PIXBUF_MODULE_FILE = /home/vht/snap/code/common/.cache/gdk-pixbuf-loaders.cache
+# environment
+GOMODCACHE = /home/vht/go/pkg/mod
+# environment
+XDG_SESSION_CLASS = user
+# environment
+VSCODE_AMD_ENTRYPOINT = vs/workbench/api/node/extensionHostProcess
+# makefile (from 'Makefile', line 5)
+SERVICES = fengine
+# makefile (from 'Makefile', line 3)
+BUILD_DIR = build
+# environment
+GTK2_RC_FILES = /etc/gtk-2.0/gtkrc:/home/vht/.gtkrc-2.0:/home/vht/.config/gtkrc-2.0
+# environment
+HOME = /home/vht
+# environment
+QT_IM_MODULE = ibus
+# environment
+ELECTRON_RUN_AS_NODE = 1
+# environment
+VSCODE_IPC_HOOK = /run/user/1000/vscode-cf9dd3ae-1.67.2-main.sock
+# environment
+SNAP_NAME = code
+ 
+# environment
+GSETTINGS_SCHEMA_DIR = /snap/code/97/usr/share/glib-2.0/schemas
+# environment
+XDG_SESSION_ID = 3
+# makefile (from 'Makefile', line 135)
+define make_docker
+	$(eval svc=$(subst docker_,,$(1)))
+	$(eval TZ=$(timedatectl | grep 'Time zone' | awk '{print $3}'))
+
+	docker build --no-cache --build-arg TZ=$(GOARM) --build-arg SVC=$(svc) --build-arg GOARCH=$(GOARCH) --build-arg GOARM=$(GOARM) --tag=$(REPOSITORY)/$(PLATFORM)/$(svc) -f docker/Dockerfile .
+	docker image prune -f --filter label=stage=builder
+endef
+# environment
+XCURSOR_SIZE = 24
+# environment
+IM_CONFIG_PHASE = 1
+# environment
+GOPROXY = https://proxy.golang.org,direct
+# default
+.RECIPEPREFIX := 
+# automatic
+<F = $(notdir $<)
+# environment
+SNAP_VERSION = c3511e6c
+# default
+SUFFIXES := 
+# environment
+QT_AUTO_SCREEN_SCALE_FACTOR = 0
+# environment
+VSCODE_CLI = 1
+# environment
+ELECTRON_NO_ATTACH_CONSOLE = 1
+# environment
+SNAP_COMMON = /var/snap/code/common
+# environment
+KDE_SESSION_VERSION = 5
+# default
+.FEATURES := target-specific order-only second-expansion else-if shortest-stem undefine oneshell nocomment grouped-target extra-prereqs archives jobserver output-sync check-symlink load
+# makefile (from 'Makefile', line 11)
+DOCKERS_DEV = $(addprefix docker_dev_,$(SERVICES))
+# environment
+KDE_FULL_SESSION = true
+# environment
+SNAP_USER_DATA = /home/vht/snap/code/97
+# environment
+LC_IDENTIFICATION = vi_VN
+# environment
+SNAP_LIBRARY_PATH = /var/lib/snapd/lib/gl:/var/lib/snapd/lib/gl32:/var/lib/snapd/void
+# variable set hash-table stats:
+# Load=153/1024=15%, Rehash=0, Collisions=23/222=10%
+
+# Pattern-specific Variable Values
+
+# No pattern-specific variable values.
+
+# Directories
+
+# . (device 2051, inode 25165836): 26 files, no impossibilities.
+
+# 26 files, no impossibilities in 1 directories.
+
+# Implicit Rules
+
+# No implicit rules.
+
+# Files
+
+proto:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 72):
+	@protoc --gofast_out=plugins=grpc:. pb/*.proto
+	@echo "Done generating"
+
+clean_docker:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 52):
+	docker-compose -f docker/docker-compose.yml stop
+	docker ps -f name=$(PLATFORM) -aq | xargs -r docker rm
+	docker ps -f name=$(PLATFORM) -f status=dead -f status=exited -aq | xargs -r docker rm -v
+	docker images "$(PLATFORM)\/*" -f dangling=true -q | xargs -r docker rmi
+	docker images -q $(PLATFORM)\/* | xargs -r docker rmi
+
+# Not a target:
+Makefile:
+#  Implicit rule search has been done.
+#  Last modified 2022-06-02 18:00:02.482864511
+#  File has been updated.
+#  Successfully updated.
+
+latest: dockers
+#  Phony target (prerequisite of .PHONY).
+#  Implicit rule search has not been done.
+#  File does not exist.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 91):
+	$(call docker_push,latest)
+
+clean:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 48):
+	@echo "> Cleaning..."
+	rm -rf ${BUILD_DIR}
+
+ 
+docker_dev_fengine:
+#  Phony target (prerequisite of .PHONY).
+#  Implicit rule search has not been done.
+#  File does not exist.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 37):
+	@echo "> Building dev docker '$(DOCKERS_DEV)'..."
+	$(call make_docker_dev,$(@))
+
+docker_fengine:
+#  Phony target (prerequisite of .PHONY).
+#  Implicit rule search has not been done.
+#  File does not exist.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 32):
+	@echo "> Building docker '$(DOCKERS)'..."
+	$(call make_docker,$(@),$(GOARCH))
+
+changelog:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 88):
+	git log $(shell git describe --tags --abbrev=0)..HEAD --pretty=format:"- %s"
+
+jspb:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 77):
+	@grpc_tools_node_protoc --js_out=import_style=commonjs,binary:executor/src/ --ts_out=executor/src/ \
+		--grpc_out=grpc_js:executor/src/ --plugin=protoc-gen-ts=./node_modules/.bin/protoc-gen-ts pb/*.proto
+	@awk '{sub(/import \* as grpc from "grpc";/, "import * as grpc from \"@grpc/grpc-js\";"); print}' \
+		./executor/src/pb/fengine_grpc_pb.d.ts > t && mv t ./executor/src/pb/fengine_grpc_pb.d.ts
+	@echo "Done generating"
+
+rungw:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 114):
+	MF_JAEGER_URL= docker-compose -f docker/docker-compose.yml up --scale jaeger=0
+
+dockers_dev: docker_dev_fengine
+#  Phony target (prerequisite of .PHONY).
+#  Implicit rule search has not been done.
+#  File does not exist.
+#  File has not been updated.
+
+test_fengine:
+#  Phony target (prerequisite of .PHONY).
+#  Implicit rule search has not been done.
+#  File does not exist.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 27):
+	@echo "> Testing '$(TEST)'..."
+	$(call test_service,$(@))
+
+push:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 117):
+	${call docker_push}
+
+# Not a target:
+.DEFAULT:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+all: fengine
+#  Phony target (prerequisite of .PHONY).
+#  Command line target.
+#  Implicit rule search has not been done.
+#  File does not exist.
+#  File has been updated.
+#  Needs to be updated (-q is set).
+# variable set hash-table stats:
+# Load=0/32=0%, Rehash=0, Collisions=0/11=0%
+
+run:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+ 
+#  recipe to execute (from 'Makefile', line 110):
+	docker-compose -f docker/docker-compose.yml up
+
+release_fengine:
+#  Phony target (prerequisite of .PHONY).
+#  Implicit rule search has not been done.
+#  File does not exist.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 42):
+	@echo "> Releasing '$(RELEASE)'..."
+	$(call make_release_svc,$(@))
+
+test:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 65):
+	#go test -mod=vendor -v -race -count 1 -tags test $(shell go list ./... | grep -v 'vendor\|cmd')
+	go test -mod=vendor -v -race -count 1 -coverprofile .coverage.txt \
+		-tags test $(shell go list ./... | grep -v 'vendor\|cmd')
+	go tool cover -func .coverage.txt
+
+install:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 62):
+	cp $(BUILD_DIR)/* $(GOBIN)
+
+fengine:
+#  Phony target (prerequisite of .PHONY).
+#  Implicit rule search has not been done.
+#  Implicit/static pattern stem: ''
+#  File does not exist.
+#  File has been updated.
+#  Needs to be updated (-q is set).
+# automatic
+# @ := fengine
+# automatic
+# * := 
+# automatic
+# < := 
+# automatic
+# + := 
+# automatic
+# % := 
+# automatic
+# ^ := 
+# automatic
+# ? := 
+# automatic
+# | := 
+# variable set hash-table stats:
+# Load=8/32=25%, Rehash=0, Collisions=16/20=80%
+#  recipe to execute (from 'Makefile', line 22):
+	@echo "> Compiling '$(SERVICES)'..."
+	$(call compile_service,$(@),vendor)
+
+rundev:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 107):
+	cd scripts && ./run.sh
+
+release:
+#  Phony target (prerequisite of .PHONY).
+#  Implicit rule search has not been done.
+#  File does not exist.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 94):
+	$(eval VERSION=$(shell git describe --abbrev=0 --tags | cut -d '_' -f1))
+	@echo $(VERSION)
+	$(MAKE) dockers
+	for svc in $(SERVICES); do \
+		docker tag $(REPOSITORY)/$(PLATFORM)/$$svc $(REPOSITORY)/$(PLATFORM)/$$svc:$(VERSION); \
+	done
+	$(call docker_push,$(VERSION))
+	for svc in $(SERVICES); do \
+		docker rmi $(REPOSITORY)/$(PLATFORM)/$$svc ; \
+		docker rmi $(REPOSITORY)/$(PLATFORM)/$$svc:$(VERSION) ; \
+	done
+
+# Not a target:
+.SUFFIXES:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+.PHONY: all dockers dockers_dev latest release fengine test_fengine docker_fengine docker_dev_fengine release_fengine
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+dockers: docker_fengine
+#  Phony target (prerequisite of .PHONY).
+#  Implicit rule search has not been done.
+#  File does not exist.
+#  File has not been updated.
+
+# files hash-table stats:
+# Load=25/1024=2%, Rehash=0, Collisions=0/65=0%
+# VPATH Search Paths
+
+# No 'vpath' search paths.
+
+# No general ('VPATH' variable) search path.
+
+# strcache buffers: 1 (0) / strings = 51 / storage = 414 B / avg = 8 B
+# current buf: size = 8162 B / used = 414 B / count = 51 / avg = 8 B
+
+# strcache performance: lookups = 104 / hit rate = 50%
+# hash-table stats:
+# Load=51/8192=1%, Rehash=0, Collisions=0/104=0%
+# Finished Make data base on Tue Jun 28 13:34:12 2022
+
+ 

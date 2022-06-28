@@ -5,8 +5,9 @@ import (
 	"strings"
 	"testing"
 
-	pb "github.com/duclmse/fengine/pb"
 	. "github.com/duclmse/fengine/fengine/db/sql"
+	pb "github.com/duclmse/fengine/pb"
+	// "github.com/go-logfmt/logfmt"
 	"github.com/goccy/go-json"
 )
 
@@ -97,7 +98,7 @@ type SqlTable struct {
 	Fields []SqlField `json:"fields"`
 	PrimaryKey []string `json:"primary_key"`
 } 
-
+// CREATE TABLE
 func Test_GenCreateTable(t*testing.T) {
 	schema := `{
 		"name": "test",
@@ -227,30 +228,29 @@ func Test_Gendropcolumn(t*testing.T){
 			}
 		]
 		}`
-		var columndrop Sqldroplocation
-		err := json.Unmarshal([]byte(datas), &columndrop )
+		var dropcolumn Sqldroplocation
+		err := json.Unmarshal([]byte(datas), &dropcolumn )
 	if err != nil {
 		fmt.Printf("err parsing json %v\n", err)
 		return
 	}
-	fmt.Printf("%v\n",columndrop )
-	t.Logf("%v\n", Gencolumndrop (columndrop))
+	fmt.Printf("%v\n",dropcolumn )
+	t.Logf("%v\n", Gendropcolumn (dropcolumn))
 }
 
-func Gencolumndrop (columndrop  Sqldroplocation) string{
+func Gendropcolumn (dropcolumn  Sqldroplocation) string{
 	var sb strings.Builder
 	sb.WriteString("ALTER_TABLE ")
-	sb.WriteString(columndrop.Name)
+	sb.WriteString(dropcolumn.Name)
 	sb.WriteString(" ADD \n")
-	for _ ,column := range columndrop.Column{
+	for _ ,column := range dropcolumn.Location{
 		
 		sb.WriteString(column.Name)
 		sb.WriteString(" = ")
-		sb.WriteString(column.Type)
-		sb.WriteString("\n")
+	
 	}
 	// sb.WriteString("PRIMARY KEY (")
-	// for i, f := range columndrop.PrimaryKey{
+	// for i, f := range dropcolumn.PrimaryKey{
 	// 	if i > 0 {
 	// 		sb.WriteString(", ")
 	// 	}
@@ -265,49 +265,337 @@ func Gencolumndrop (columndrop  Sqldroplocation) string{
 /// DROP TABLE
 
 
-type SqlColumn struct{
+type SqlCo struct{
 	Name string `json:"name"`
-	Type string `json:"type"`
 }
-type SqlColumadd struct{
+type Sqldropcolumn struct{
 	Name string `json:"name"`
-	Column []SqlColumn `json:"column"`
-	//PrimaryKey []string `json:"primary_key"`
+	Table []SqlCo `json:"table"`
+	
 }
-func Test_Genaddcolumn(t*testing.T){
+func Test_dropcolumn(t*testing.T){
 	datas := `{
 		"name": "SQL",
-		"column": [
+		"table": [
 			{
-				"name": "column_name1",				
-				"type": "varchar(20)"
+				"name": "table_name_1"		
+	
 			},
 			{ 
-				"name": "column_name2",				
-				"type": "serial"
+				"name": "table_name_2"
+				
 			}
 		]
 		}`
-		var columndrop SqlColumadd
-		err := json.Unmarshal([]byte(datas), &columndrop )
+		var dropcolumn Sqldropcolumn 
+		err := json.Unmarshal([]byte(datas), &dropcolumn )
 	if err != nil {
 		fmt.Printf("err parsing json %v\n", err)
 		return
 	}
-	fmt.Printf("%v\n",columndrop )
-	t.Logf("%v\n", Gencolumndrop (columndrop))
+	fmt.Printf("%v\n",dropcolumn )
+	t.Logf("%v\n", Gendrop(dropcolumn))
 }
 
-func Gencolumndrop (columndrop  SqlColumadd) string{
+func Gendrop (dropcolumn  Sqldropcolumn) string{
 	var sb strings.Builder
-	sb.WriteString("ALTER_TABLE ")
-	sb.WriteString(columndrop.Name)
-	sb.WriteString(" ADD \n")
-	for _ ,column := range columndrop.Column{
+	sb.WriteString("DROP ")
+	sb.WriteString(dropcolumn.Name)
+	sb.WriteString(" DROP \n")
+	for _ ,table := range dropcolumn.Table{
 		
-		sb.WriteString(column.Name)
-		sb.WriteString(" = ")
-		sb.WriteString(column.Type)
+		sb.WriteString(table.Name)
+		sb.WriteString("\n")
+	}
+	return sb.String()
+}
+
+//ALTER DROP COLUM
+type Columndata struct{
+	Name string `json:"name"`
+}
+type SqlDropcolumn struct{
+	Name string `json:"name"`
+	Column []Columndata `json:"column"`
+	
+}
+func Test_Dropcolum(t *testing.T){
+	data :=`{
+		"name": "SQL",
+		"column":[
+			{
+				"name": "column_name"
+			}
+			]
+		}`
+
+var dropcolumn SqlDropcolumn
+		err := json.Unmarshal([]byte(data), &dropcolumn )
+	if err != nil {
+		fmt.Printf("err parsing json %v\n", err)
+		return
+	}
+	fmt.Printf("%v\n",dropcolumn )
+	t.Logf("%v\n", GenDropcolumn(dropcolumn))
+}
+
+
+func GenDropcolumn (dropcolumn  SqlDropcolumn) string{
+	var sb strings.Builder
+	sb.WriteString("ALTER_TABLE  ")
+	sb.WriteString(dropcolumn.Name)
+	sb.WriteString("\n DROP COLUMN")
+	for _ ,table := range dropcolumn.Column{
+		sb.WriteString("   ")
+		sb.WriteString(table.Name)
+		sb.WriteString("\n")
+	}
+	return sb.String()
+}
+
+
+// ALTER SET COMPRESSION
+type comp struct{
+	Name string `json : "name"`
+}
+type Altercom struct{
+	Name string `json : "name"`
+	Method []comp `json:"method"`
+}
+func Test_Setcp(t *testing.T){
+	com:=`{
+		"name": "column_name",
+		"method": [
+			{
+				"name": "compression_method"
+			}
+		]
+	}`
+	var cpn Altercom
+	err:=json.Unmarshal([]byte(com),&cpn)
+	if err!=nil {
+		fmt.Printf("err passing json %v\n",err)
+		return
+	}
+	fmt.Printf("%v\n",cpn)
+	t.Logf("%v\n",GenCom(cpn))
+}
+
+func GenCom (cpn Altercom) string{
+	var sb strings.Builder
+	sb.WriteString(" ALTER  ")
+	sb.WriteString(cpn.Name)
+	sb.WriteString("\n SET COMPRESSION")
+	for _,method := range cpn.Method{
+       sb.WriteString("  ")
+	   sb.WriteString( method.Name)
+	}
+	return sb.String()
+}
+
+// ALTER SET STATISTICS
+type Static struct{
+	Number string `json: "number"`
+}
+ type Clstt struct{
+	 Name string `json: "name"`
+	 Stts []Static `json: "stts"`
+ }
+func Test_Statistics(t *testing.T){
+	dtas:=`{
+		"name": "column_name",
+		"stts":[
+			{
+				"number": "iteger_"
+			}
+		]
+	}`
+var cstt Clstt
+	err:=json.Unmarshal([]byte(dtas),&cstt)
+	 if err != nil {
+		 fmt.Printf("err passing json %v\n",err)
+		 return
+	 }
+	 fmt.Printf("%v\n",cstt)
+	 t.Logf("%v\n",Genstt(cstt))
+}
+func Genstt(cstt Clstt) string{
+	var sb strings.Builder
+	sb.WriteString(" ALTER")
+	sb.WriteString(cstt.Name)
+	sb.WriteString(" \n SET STATISTICS ")
+	for _ ,Stts := range cstt.Stts{
+		sb.WriteString("  ")
+		sb.WriteString(Stts.Number)
+	}
+	return sb.String()
+}
+
+// RENAME TABLE
+
+type Re struct{
+	Name string `json:"name"`
+}
+type SqlRetb struct{
+	Name string `json:"name"`
+	Tbname []Re `json:"tbname"`
+	
+}
+func Test_Rename(t *testing.T){
+	data :=`{
+		"name": "SQL",
+		"tbname":[
+			{
+				"name": "new_table_name"
+			}
+			]
+		}`
+
+var retb SqlRetb
+		err := json.Unmarshal([]byte(data), &retb )
+	if err != nil {
+		fmt.Printf("err parsing json %v\n", err)
+		return
+	}
+	fmt.Printf("%v\n",retb )
+	t.Logf("%v\n", GenRname(retb))
+}
+
+
+func GenRname(retb  SqlRetb) string{
+	var sb strings.Builder
+	sb.WriteString("ALTER_TABLE  ")
+	sb.WriteString(retb.Name)
+	sb.WriteString("\n RENAME TO")
+	for _ ,tbname := range retb.Tbname{
+		sb.WriteString("   ")
+		sb.WriteString(tbname.Name)
+		sb.WriteString("\n")
+	}
+	return sb.String()
+}
+
+// SET SCHEMA
+
+
+type Sch struct{
+	Name string `json: "name"`
+}
+
+type SqlRes struct{
+	Name string `json: "name"`
+	Tbname []Sch `json: "tbname"`
+}
+func Test_Setschema(t *testing.T){
+	dts :=`{
+		"name": "name",
+		"tbname": [
+			{
+				"name": "new_schema"
+			}
+		]
+		}`
+		var  resch SqlRes
+		err:= json.Unmarshal([]byte(dts), &resch)
+		if err!=nil {
+			fmt.Printf("err passing json %v\n",err)
+			return
+			}
+			fmt.Printf("%v\n",resch)
+			t.Logf("%v\n",GenSCH(resch))
+}
+func GenSCH (resch SqlRes) string {
+	var sb strings.Builder
+	sb.WriteString("ALTER_TABLE  ")
+	sb.WriteString(resch.Name)
+	sb.WriteString("\n SET SCHEMA  ")
+	for _,tbname :=range resch.Tbname{
+		sb.WriteString("  ")
+		sb.WriteString(tbname.Name)
+		sb.WriteString("\n")
+	}
+	return sb.String()
+
+}
+
+// SET TABLESPACE
+
+
+type Space struct{
+	Name string `json: "name"`
+}
+
+type Tbspace struct{
+	Name string `json: "name"`
+	Tbname []Space `json: ""tbname`
+}
+func Test_TbSpace(t *testing.T){
+	tbs:=`{
+		"name": "name",
+		"tbname" :[
+			{
+				"name": "new_tablespace"
+			}
+
+		]
+	}`
+ var tbsp Tbspace
+ err:=json.Unmarshal([]byte(tbs), &tbsp)
+ if err!=nil {
+	 fmt.Printf("err passing json %v\n", err)
+	 return
+ }
+ fmt.Printf( "%v\n",tbsp)
+ t.Logf("%v\n",GenTbsp(tbsp))
+}
+func GenTbsp( tbsp Tbspace) string{
+	var sb strings.Builder
+	sb.WriteString(" ALTER_TABLE ALL IN TABLE SPACE ")
+	sb.WriteString(tbsp.Name)
+	sb.WriteString("\n SET TABLE SPACE  ")
+
+	for _,tbname := range tbsp.Tbname{
+     sb.WriteString("  ")
+	 sb.WriteString(tbname.Name)
+	}
+	return sb.String()
+}
+ 
+// DETACH PARTITION
+
+type Par struct{
+	Iname string `json : "iname"`
+}
+type Tbpar struct{
+	Id string `json : "id"`
+	Partition []Par `json: "partition"`
+}
+func Test_Detach(t *testing.T){
+	describe:= `{
+		"id" : "name",
+		"partition": [
+			{
+				"iname" : "partition_name"
+			}
+		]
+	}`
+	var depar Tbpar
+	err:=json.Unmarshal([]byte(describe), &depar)
+	if err!=nil {
+		fmt.Printf("err passing json %v\n",err)
+		return
+	}
+	fmt.Printf("%v\n",depar)
+	t.Logf("%v\n",GenDpar(depar))
+}
+func GenDpar (depar Tbpar) string{
+	var sb strings.Builder
+	sb.WriteString(" ALTER TABLE  ")
+	sb.WriteString(depar.Id)
+	sb.WriteString("\n DETACH PARTITION ")
+	for _,partition := range depar.Partition{
+		sb.WriteString("  ")
+		sb.WriteString(partition.Iname)
 		sb.WriteString("\n")
 	}
 	return sb.String()

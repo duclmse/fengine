@@ -1,0 +1,1 @@
+{"buildTargets":["all","changelog","clean","clean_docker","docker_dev_fengine","docker_fengine","dockers","dockers_dev","fengine","install","jspb","latest","proto","push","release","release_fengine","run","rundev","rungw","test","test_fengine"],"launchTargets":[],"customConfigurationProvider":{"workspaceBrowse":{"browsePath":[],"compilerArgs":[]},"fileIndex":[]}}

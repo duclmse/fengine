@@ -1,0 +1,6 @@
+make --dry-run --always-make --keep-going --print-directory
+make: Entering directory '/home/vht/fengine'
+echo "> Compiling 'fengine'..."
+CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GOARM= go build -mod=vendor -ldflags "-s -w" -o build/viot-fengine cmd/fengine/main.go
+make: Leaving directory '/home/vht/fengine'
+ 
