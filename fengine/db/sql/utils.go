@@ -16,7 +16,7 @@ type RowCache struct {
 	values  []interface{}
 }
 
-func InitScan() {
+func InitScan(p reflect.Type) {
 
 }
 

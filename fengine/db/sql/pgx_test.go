@@ -116,3 +116,19 @@ func TestErrorHandling(t *testing.T) {
 		errorHandling(err)
 	}
 }
+
+func TestQueryFunc(t *testing.T) {
+	conn := getPgxConnection(bg)
+	defer viot.CloseCtx(conn, bg)
+
+	var n int
+	// language=postgresql
+	tags, err := conn.QueryFunc(bg, `SELECT * FROM tbl_test WHERE a > $1`, []any{0}, []any{&n}, func(row pgx.QueryFuncRow) error {
+		row.RawValues()
+		return nil
+	})
+	if err != nil {
+		log.Panicf("QueryRow failed: %v\n", err)
+	}
+	fmt.Printf("%v\n", tags)
+}

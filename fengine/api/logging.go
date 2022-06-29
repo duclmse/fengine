@@ -46,9 +46,9 @@ func (l loggingMiddleware) CreateTable(ctx context.Context, definition sql.Table
 	return l.svc.CreateTable(ctx, definition)
 }
 
-func (l loggingMiddleware) Select(ctx context.Context, request sql.SelectRequest) (r fengine.Result, e error) {
+func (l loggingMiddleware) Select(ctx context.Context, req sql.SelectRequest) (r []map[string]sql.Variable, e error) {
 	defer l.log.Elapse("Select")(time.Now(), &e)
-	return l.svc.Select(ctx, request)
+	return l.svc.Select(ctx, req)
 }
 
 func (l loggingMiddleware) Insert(ctx context.Context, request sql.InsertRequest) (r fengine.Result, e error) {

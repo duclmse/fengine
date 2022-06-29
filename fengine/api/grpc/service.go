@@ -2,6 +2,7 @@ package grpc
 
 import (
 	"context"
+	"fmt"
 	pb "github.com/duclmse/fengine/pb"
 )
 
@@ -10,6 +11,7 @@ func (g grpcDataServer) Select(ctx context.Context, request *pb.SelectRequest) (
 	if err != nil {
 		return nil, err
 	}
+	fmt.Printf("grpc service Select %t\n", resp)
 	return resp.(*pb.ResultSet), nil
 }
 

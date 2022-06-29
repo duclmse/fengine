@@ -1,0 +1,10 @@
+###
+GRPC localhost:8081/viot.FEngineData/Select
+
+{
+  "table": "tbl_test",
+  "fieldNames": ["id", "name", "description", "a", "b", "c"],
+  "filter": "{}",
+  "limit": 100,
+  "offset": 0
+}

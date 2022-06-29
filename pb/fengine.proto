@@ -23,20 +23,26 @@ service FEngineData {
 
 //#endregion FEngineExecutor
 message Script {
-  MethodId methodId = 1;
+  MethodInfo method = 1;
   repeated Variable attributes = 2;
   map<string, Function> services = 3;
   map<string, Function> subscription = 4;
 }
 
-message MethodId {
+message MethodInfo {
   bytes thingID = 1;
-  string methodName = 2;
+  string name = 2;
   MethodType type = 3;
+  repeated Variable input = 4;
+}
+
+enum MethodType {
+  service = 0;
+  subscription = 1;
 }
 
 message ThingMethod {
-  MethodId methodId = 1;
+  MethodInfo methodId = 1;
   map<string, Function> services = 2;
   map<string, Function> subscription = 3;
 }
@@ -93,11 +99,6 @@ message Value {
   }
 }
 
-enum MethodType {
-  service = 0;
-  subscription = 1;
-}
-
 enum Type {
   i32 = 0;
   i64 = 1;
@@ -123,6 +124,8 @@ message SelectRequest {
   string filter = 3;
   int32 limit = 4;
   int32 offset = 5;
+  repeated string groupBy = 6;
+  repeated string orderBy = 7;
 }
 
 message ResultSet {

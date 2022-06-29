@@ -36,7 +36,7 @@ type Service interface {
 	ExecuteService(ctx ctx.Context, req sql.ServiceRequest) (r Result, e error)
 
 	CreateTable(ctx ctx.Context, req sql.TableDefinition) (r Result, e error)
-	Select(ctx ctx.Context, req sql.SelectRequest) (r Result, e error)
+	Select(ctx ctx.Context, req sql.SelectRequest) ([]map[string]sql.Variable, error)
 	Insert(ctx ctx.Context, req sql.InsertRequest) (r Result, e error)
 	Update(ctx ctx.Context, req sql.UpdateRequest) (r Result, e error)
 	Delete(ctx ctx.Context, req sql.DeleteRequest) (r Result, e error)
@@ -113,18 +113,18 @@ func (s FengineService) CreateTable(ctx ctx.Context, table sql.TableDefinition) 
 	return Result{}, nil
 }
 
-func (s FengineService) Select(ctx ctx.Context, req sql.SelectRequest) (Result, error) {
-	sql, err := req.ToSQL()
+func (s FengineService) Select(ctx ctx.Context, req sql.SelectRequest) (res []map[string]sql.Variable, err error) {
+	_sql, err := req.ToSQL()
 	if err != nil {
-		return result(err)
+		return
 	}
 
-	rs, err := s.Repository.Select(ctx, sql)
+	m, err := s.Repository.Select(ctx, _sql)
 	if err != nil {
-		return result(err)
+		return nil, err
 	}
-
-	return Result{Data: rs}, nil
+	//fmt.Printf("fengine service Select %t\n", m)
+	return m, nil
 }
 
 func (s FengineService) Insert(ctx ctx.Context, req sql.InsertRequest) (Result, error) {

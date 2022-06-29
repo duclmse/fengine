@@ -333,8 +333,8 @@ type SelectRequest struct {
 	Fields  []string `json:"fields"`
 	Filter  Filter   `json:"filter"`
 	GroupBy []string `json:"group_by"`
-	Limit   int      `json:"limit"`
-	Offset  int      `json:"offset"`
+	Limit   int32    `json:"limit"`
+	Offset  int32    `json:"offset"`
 	OrderBy []string `json:"order_by"`
 }
 
@@ -597,7 +597,7 @@ type Filter map[string]interface{}
 func (logic Filter) ToSQL() (string, error) {
 	//fmt.Printf("filter to sql %v\n", logic)
 	logicLength := len(logic)
-	sb := new(strings.Builder)
+	sb := &strings.Builder{}
 	for k, v := range logic {
 		if strings.HasPrefix(k, "$") {
 			if logicLength > 1 {

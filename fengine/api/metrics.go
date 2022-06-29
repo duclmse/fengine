@@ -52,9 +52,9 @@ func (mm metricsMiddleware) CreateTable(ctx context.Context, definition sql.Tabl
 	return mm.svc.CreateTable(ctx, definition)
 }
 
-func (mm metricsMiddleware) Select(ctx context.Context, request sql.SelectRequest) (fengine.Result, error) {
+func (mm metricsMiddleware) Select(ctx context.Context, req sql.SelectRequest) ([]map[string]sql.Variable, error) {
 	defer mm.count("Select")(time.Now())
-	return mm.svc.Select(ctx, request)
+	return mm.svc.Select(ctx, req)
 }
 
 func (mm metricsMiddleware) Insert(ctx context.Context, request sql.InsertRequest) (fengine.Result, error) {
