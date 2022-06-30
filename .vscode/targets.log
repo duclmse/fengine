@@ -5,8 +5,9 @@ make all --print-data-base --no-builtin-variables --no-builtin-rules --question
 # License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
 # This is free software: you are free to change and redistribute it.
 # There is NO WARRANTY, to the extent permitted by law.
+ 
 
-# Make data base, printed on Tue Jun 28 13:34:12 2022
+# Make data base, printed on Thu Jun 30 09:15:04 2022
 
 # Variables
 
@@ -19,7 +20,7 @@ GTK_RC_FILES = /etc/gtk/gtkrc:/home/vht/.gtkrc:/home/vht/.config/gtkrc
 # environment
 SNAP_INSTANCE_KEY = 
 # environment
-VSCODE_IPC_HOOK_EXTHOST = /run/user/1000/vscode-ipc-7580335d-aef5-44e2-97e7-ce52421b0fac.sock
+VSCODE_IPC_HOOK_EXTHOST = /run/user/1000/vscode-ipc-b8eda6ce-1c7b-414e-9e7a-d334df528332.sock
 # makefile (from 'Makefile', line 18)
 GOOS = linux
 # environment
@@ -41,7 +42,7 @@ GOPATH = /home/vht/go
 # environment
 SNAP_INSTANCE_NAME = code
 # environment
-GDK_PIXBUF_MODULEDIR = /snap/code/97/usr/lib/x86_64-linux-gnu/gdk-pixbuf-2.0/2.10.0/loaders
+GDK_PIXBUF_MODULEDIR = /snap/code/99/usr/lib/x86_64-linux-gnu/gdk-pixbuf-2.0/2.10.0/loaders
 # environment
 VSCODE_HANDLES_UNCAUGHT_ERRORS = true
 # default
@@ -59,9 +60,9 @@ VSCODE_LOG_STACK = false
 # automatic
 %F = $(notdir $%)
 # environment
-VSCODE_CODE_CACHE_PATH = /home/vht/.config/Code/CachedData/c3511e6c69bb39013c4a4b7b9566ec1ca73fc4d5
+VSCODE_CODE_CACHE_PATH = /home/vht/.config/Code/CachedData/30d9c6cd9483b2cc586687151bcbcd635f373630
 # environment
-XDG_SESSION_PATH = /org/freedesktop/DisplayManager/Session2
+XDG_SESSION_PATH = /org/freedesktop/DisplayManager/Session1
 # environment
 LANG = C
 # environment
@@ -89,7 +90,7 @@ PAM_KWALLET5_LOGIN = /run/user/1000/kwallet5.socket
 # environment
 MFLAGS = -pqrR
 # environment
-SSH_AUTH_SOCK = /tmp/ssh-LLh6UQBI36vR/agent.2092
+SSH_AUTH_SOCK = /tmp/ssh-QIaD0C04zzBM/agent.1780
 # default
 .SHELLFLAGS := -c
 # environment
@@ -109,7 +110,7 @@ SNAP_REEXEC =
 # environment
 VSCODE_VERBOSE_LOGGING = true
 # environment
-VSCODE_PID = 2680
+VSCODE_PID = 42365
 # environment
 XDG_SESSION_TYPE = x11
 # automatic
@@ -117,7 +118,7 @@ XDG_SESSION_TYPE = x11
 # environment
 BAMF_DESKTOP_FILE_HINT = /var/lib/snapd/desktop/applications/code_code.desktop
 # environment
-SESSION_MANAGER = local/viettel:@/tmp/.ICE-unix/2373,unix/viettel:/tmp/.ICE-unix/2373
+SESSION_MANAGER = local/viettel:@/tmp/.ICE-unix/2013,unix/viettel:/tmp/.ICE-unix/2013
 # automatic
 *F = $(notdir $*)
 # makefile (from 'Makefile', line 15)
@@ -180,9 +181,9 @@ SNAP_USER_COMMON = /home/vht/snap/code/common
 # environment
 LC_TIME = vi_VN
 # environment
-SNAP = /snap/code/97
+SNAP = /snap/code/99
 # environment
-SNAP_REVISION = 97
+SNAP_REVISION = 99
 # environment
 SNAP_REAL_HOME = /home/vht
 # environment
@@ -208,6 +209,7 @@ LS_COLORS =
 # environment
 XDG_SEAT_PATH = /org/freedesktop/DisplayManager/Seat0
 # environment
+ 
 DESKTOP_SESSION = plasma
 # environment
 ORIGINAL_XDG_CURRENT_DESKTOP = KDE
@@ -226,7 +228,7 @@ XDG_VTNR = 1
 # makefile
 .DEFAULT_GOAL := fengine
 # environment
-SYSTEMD_EXEC_PID = 2073
+SYSTEMD_EXEC_PID = 1759
 # makefile (from 'Makefile', line 10)
 DOCKERS = $(addprefix docker_,$(SERVICES))
 # environment
@@ -240,7 +242,7 @@ KDE_SESSION_UID = 1000
 # environment
 DISABLE_WAYLAND = 1
 # environment
-SNAP_DATA = /var/snap/code/97
+SNAP_DATA = /var/snap/code/99
 # environment
 SNAP_CONTEXT = RLKLRNHjd7MxZ-qgMPwzPlOGEDAwRhKHJTLT7Te_UB_dtP1MUBWh
 # makefile (from 'Makefile', line 16)
@@ -248,7 +250,7 @@ CGO_ENABLED = 0
 # environment
 LC_MEASUREMENT = vi_VN
 # environment
-SSH_AGENT_PID = 2219
+SSH_AGENT_PID = 1850
 # makefile (from 'Makefile', line 17)
 GOARCH = amd64
 # makefile (from 'Makefile', line 130)
@@ -257,7 +259,7 @@ define test_service
 	go test -mod=vendor -v -race -count 1 -tags test $(shell go list ./$(svc))
 endef
 # environment
-_ = /snap/code/97/usr/share/code/code
+_ = /snap/code/99/usr/share/code/code
 # environment
 LC_PAPER = vi_VN
 # environment
@@ -266,8 +268,6 @@ XDG_RUNTIME_DIR = /run/user/1000
 GPG_AGENT_INFO = /run/user/1000/gnupg/S.gpg-agent:0:1
 # environment
 GDK_PIXBUF_MODULE_FILE = /home/vht/snap/code/common/.cache/gdk-pixbuf-loaders.cache
-# environment
-GOMODCACHE = /home/vht/go/pkg/mod
 # environment
 XDG_SESSION_CLASS = user
 # environment
@@ -285,12 +285,11 @@ QT_IM_MODULE = ibus
 # environment
 ELECTRON_RUN_AS_NODE = 1
 # environment
-VSCODE_IPC_HOOK = /run/user/1000/vscode-cf9dd3ae-1.67.2-main.sock
+VSCODE_IPC_HOOK = /run/user/1000/vscode-cf9dd3ae-1.68.1-main.sock
 # environment
 SNAP_NAME = code
- 
 # environment
-GSETTINGS_SCHEMA_DIR = /snap/code/97/usr/share/glib-2.0/schemas
+GSETTINGS_SCHEMA_DIR = /snap/code/99/usr/share/glib-2.0/schemas
 # environment
 XDG_SESSION_ID = 3
 # makefile (from 'Makefile', line 135)
@@ -305,14 +304,12 @@ endef
 XCURSOR_SIZE = 24
 # environment
 IM_CONFIG_PHASE = 1
-# environment
-GOPROXY = https://proxy.golang.org,direct
 # default
 .RECIPEPREFIX := 
 # automatic
 <F = $(notdir $<)
 # environment
-SNAP_VERSION = c3511e6c
+SNAP_VERSION = 30d9c6cd
 # default
 SUFFIXES := 
 # environment
@@ -332,13 +329,13 @@ DOCKERS_DEV = $(addprefix docker_dev_,$(SERVICES))
 # environment
 KDE_FULL_SESSION = true
 # environment
-SNAP_USER_DATA = /home/vht/snap/code/97
+SNAP_USER_DATA = /home/vht/snap/code/99
 # environment
 LC_IDENTIFICATION = vi_VN
 # environment
 SNAP_LIBRARY_PATH = /var/lib/snapd/lib/gl:/var/lib/snapd/lib/gl32:/var/lib/snapd/void
 # variable set hash-table stats:
-# Load=153/1024=15%, Rehash=0, Collisions=23/222=10%
+# Load=151/1024=15%, Rehash=0, Collisions=23/220=10%
 
 # Pattern-specific Variable Values
 
@@ -374,6 +371,7 @@ clean_docker:
 	docker ps -f name=$(PLATFORM) -f status=dead -f status=exited -aq | xargs -r docker rm -v
 	docker images "$(PLATFORM)\/*" -f dangling=true -q | xargs -r docker rmi
 	docker images -q $(PLATFORM)\/* | xargs -r docker rmi
+ 
 
 # Not a target:
 Makefile:
@@ -398,7 +396,6 @@ clean:
 	@echo "> Cleaning..."
 	rm -rf ${BUILD_DIR}
 
- 
 docker_dev_fengine:
 #  Phony target (prerequisite of .PHONY).
 #  Implicit rule search has not been done.
@@ -484,7 +481,6 @@ run:
 #  Implicit rule search has not been done.
 #  Modification time never checked.
 #  File has not been updated.
- 
 #  recipe to execute (from 'Makefile', line 110):
 	docker-compose -f docker/docker-compose.yml up
 
@@ -534,6 +530,7 @@ fengine:
 # automatic
 # ^ := 
 # automatic
+ 
 # ? := 
 # automatic
 # | := 
@@ -599,6 +596,6 @@ dockers: docker_fengine
 # strcache performance: lookups = 104 / hit rate = 50%
 # hash-table stats:
 # Load=51/8192=1%, Rehash=0, Collisions=0/104=0%
-# Finished Make data base on Tue Jun 28 13:34:12 2022
+# Finished Make data base on Thu Jun 30 09:15:04 2022
 
  
