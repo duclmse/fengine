@@ -2,8 +2,6 @@ package tracing
 
 import (
 	"context"
-	"database/sql"
-
 	. "github.com/google/uuid"
 	. "github.com/opentracing/opentracing-go"
 
@@ -36,13 +34,13 @@ func (frm fengineRepositoryMiddleware) GetEntity(ctx context.Context, id UUID) (
 	return frm.repo.GetEntity(ContextWithSpan(ctx, span), id)
 }
 
-func (frm fengineRepositoryMiddleware) UpsertEntity(ctx context.Context, def db.EntityDefinition) (int, error) {
+func (frm fengineRepositoryMiddleware) UpsertEntity(ctx context.Context, def db.EntityDefinition) (int64, error) {
 	span := createSpan(ctx, frm.tracer, "UpsertEntity")
 	defer span.Finish()
 	return frm.repo.UpsertEntity(ContextWithSpan(ctx, span), def)
 }
 
-func (frm fengineRepositoryMiddleware) DeleteEntity(ctx context.Context, thingId UUID) (int, error) {
+func (frm fengineRepositoryMiddleware) DeleteEntity(ctx context.Context, thingId UUID) (int64, error) {
 	span := createSpan(ctx, frm.tracer, "DeleteEntity")
 	defer span.Finish()
 	return frm.repo.DeleteEntity(ContextWithSpan(ctx, span), thingId)
@@ -54,13 +52,13 @@ func (frm fengineRepositoryMiddleware) GetThingAllServices(ctx context.Context, 
 	return frm.repo.GetThingAllServices(ContextWithSpan(ctx, span), thingId)
 }
 
-func (frm fengineRepositoryMiddleware) UpsertThingSubscription(ctx context.Context, sub ...db.ThingSubscription) (int, error) {
+func (frm fengineRepositoryMiddleware) UpsertThingSubscription(ctx context.Context, sub ...db.ThingSubscription) (int64, error) {
 	span := createSpan(ctx, frm.tracer, "UpsertThingSubscription")
 	defer span.Finish()
 	return frm.repo.UpsertThingSubscription(ContextWithSpan(ctx, span), sub...)
 }
 
-func (frm fengineRepositoryMiddleware) DeleteThingSubscription(ctx context.Context, id db.ThingSubscriptionId) (int, error) {
+func (frm fengineRepositoryMiddleware) DeleteThingSubscription(ctx context.Context, id db.ThingSubscriptionId) (int64, error) {
 	span := createSpan(ctx, frm.tracer, "DeleteThingSubscription")
 	defer span.Finish()
 	return frm.repo.DeleteThingSubscription(ContextWithSpan(ctx, span), id)
@@ -72,7 +70,7 @@ func (frm fengineRepositoryMiddleware) GetThingAttributes(ctx context.Context, a
 	return frm.repo.GetThingAttributes(ContextWithSpan(ctx, span), attrs...)
 }
 
-func (frm fengineRepositoryMiddleware) SetThingAttributes(ctx context.Context, attrs []db.Variable) (int, error) {
+func (frm fengineRepositoryMiddleware) SetThingAttributes(ctx context.Context, attrs []db.Variable) (int64, error) {
 	span := createSpan(ctx, frm.tracer, "SetThingAttributes")
 	defer span.Finish()
 	return frm.repo.SetThingAttributes(ContextWithSpan(ctx, span), attrs)
@@ -114,28 +112,28 @@ func (frm fengineRepositoryMiddleware) GetAttributeHistory(ctx context.Context, 
 	return frm.repo.GetAttributeHistory(ContextWithSpan(ctx, span), attrs)
 }
 
-func (frm fengineRepositoryMiddleware) Select(ctx context.Context, sql string) (r []map[string]db.Variable, e error) {
+func (frm fengineRepositoryMiddleware) Select(ctx context.Context, sql string, params ...any) (r []map[string]db.Variable, e error) {
 	span := createSpan(ctx, frm.tracer, "Select")
 	defer span.Finish()
-	return frm.repo.Select(ContextWithSpan(ctx, span), sql)
+	return frm.repo.Select(ContextWithSpan(ctx, span), sql, params...)
 }
 
-func (frm fengineRepositoryMiddleware) Insert(ctx context.Context, sql string) (r *sql.Result, e error) {
+func (frm fengineRepositoryMiddleware) Insert(ctx context.Context, sql string, params ...any) (r int64, e error) {
 	span := createSpan(ctx, frm.tracer, "Insert")
 	defer span.Finish()
-	return frm.repo.Insert(ContextWithSpan(ctx, span), sql)
+	return frm.repo.Insert(ContextWithSpan(ctx, span), sql, params)
 }
 
-func (frm fengineRepositoryMiddleware) Update(ctx context.Context, sql string) (r *sql.Result, e error) {
+func (frm fengineRepositoryMiddleware) Update(ctx context.Context, sql string, params ...any) (r int64, e error) {
 	span := createSpan(ctx, frm.tracer, "Update")
 	defer span.Finish()
-	return frm.repo.Update(ContextWithSpan(ctx, span), sql)
+	return frm.repo.Update(ContextWithSpan(ctx, span), sql, params)
 }
 
-func (frm fengineRepositoryMiddleware) Delete(ctx context.Context, sql string) (r *sql.Result, e error) {
+func (frm fengineRepositoryMiddleware) Delete(ctx context.Context, sql string, params ...any) (r int64, e error) {
 	span := createSpan(ctx, frm.tracer, "Update")
 	defer span.Finish()
-	return frm.repo.Update(ContextWithSpan(ctx, span), sql)
+	return frm.repo.Update(ContextWithSpan(ctx, span), sql, params)
 }
 
 //#endregion FEngineRepositoryMiddleware

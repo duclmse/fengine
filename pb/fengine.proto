@@ -14,7 +14,7 @@ service FEngineThing {
 }
 
 service FEngineData {
-  rpc Select(SelectRequest) returns (Result) {}
+  rpc Select(SelectRequest) returns (ResultSet) {}
   rpc Insert(InsertRequest) returns (Result) {}
   rpc Update(UpdateRequest) returns (Result) {}
   rpc Delete(DeleteRequest) returns (Result) {}
@@ -23,20 +23,26 @@ service FEngineData {
 
 //#endregion FEngineExecutor
 message Script {
-  MethodId methodId = 1;
+  MethodInfo method = 1;
   repeated Variable attributes = 2;
   map<string, Function> services = 3;
   map<string, Function> subscription = 4;
 }
 
-message MethodId {
+message MethodInfo {
   bytes thingID = 1;
-  string methodName = 2;
+  string name = 2;
   MethodType type = 3;
+  repeated Variable input = 4;
+}
+
+enum MethodType {
+  service = 0;
+  subscription = 1;
 }
 
 message ThingMethod {
-  MethodId methodId = 1;
+  MethodInfo methodId = 1;
   map<string, Function> services = 2;
   map<string, Function> subscription = 3;
 }
@@ -62,12 +68,12 @@ message UpdateScript {
 
 message Parameter {
   string name = 1;
-  Type type = 2;
+  Type   type = 2;
 }
 
 message Variable {
   string name = 1;
-  Type type = 2;
+  Type   type = 2;
   oneof value {
     int32  i32 = 3;
     int64  i64 = 4;
@@ -80,9 +86,17 @@ message Variable {
   }
 }
 
-enum MethodType {
-  service = 0;
-  subscription = 1;
+message Value {
+  oneof value {
+    int32  i32 = 1;
+    int64  i64 = 2;
+    float  f32 = 3;
+    double f64 = 4;
+    bool   bool = 5;
+    string json = 6;
+    string string = 7;
+    bytes  binary = 8;
+  }
 }
 
 enum Type {
@@ -110,6 +124,17 @@ message SelectRequest {
   string filter = 3;
   int32 limit = 4;
   int32 offset = 5;
+  repeated string groupBy = 6;
+  repeated string orderBy = 7;
+}
+
+message ResultSet {
+  repeated string columnNames = 1;
+  repeated ResultRow rows = 2;
+}
+
+message ResultRow {
+  repeated Value values = 1;
 }
 
 message InsertRequest {

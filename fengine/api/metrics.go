@@ -2,11 +2,13 @@ package api
 
 import (
 	"context"
-	"github.com/duclmse/fengine/fengine/db/sql"
+	"github.com/google/uuid"
 	"time"
 
-	"github.com/duclmse/fengine/fengine"
 	"github.com/go-kit/kit/metrics"
+
+	"github.com/duclmse/fengine/fengine"
+	"github.com/duclmse/fengine/fengine/db/sql"
 )
 
 var _ fengine.Service = (*metricsMiddleware)(nil)
@@ -50,9 +52,9 @@ func (mm metricsMiddleware) CreateTable(ctx context.Context, definition sql.Tabl
 	return mm.svc.CreateTable(ctx, definition)
 }
 
-func (mm metricsMiddleware) Select(ctx context.Context, request sql.SelectRequest) (fengine.Result, error) {
+func (mm metricsMiddleware) Select(ctx context.Context, req sql.SelectRequest) ([]map[string]sql.Variable, error) {
 	defer mm.count("Select")(time.Now())
-	return mm.svc.Select(ctx, request)
+	return mm.svc.Select(ctx, req)
 }
 
 func (mm metricsMiddleware) Insert(ctx context.Context, request sql.InsertRequest) (fengine.Result, error) {
@@ -70,7 +72,7 @@ func (mm metricsMiddleware) Delete(ctx context.Context, request sql.DeleteReques
 	return mm.svc.Delete(ctx, request)
 }
 
-func (mm metricsMiddleware) GetThingAllServices(ctx context.Context, uuid string) (fengine.Result, error) {
+func (mm metricsMiddleware) GetThingAllServices(ctx context.Context, uuid uuid.UUID) (fengine.Result, error) {
 	defer mm.count("GetThingAllServices")(time.Now())
 	return mm.svc.GetThingAllServices(ctx, uuid)
 }

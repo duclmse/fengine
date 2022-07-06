@@ -2,10 +2,12 @@ package api
 
 import (
 	"context"
+	"github.com/google/uuid"
+	"time"
+
 	"github.com/duclmse/fengine/fengine"
 	"github.com/duclmse/fengine/fengine/db/sql"
 	"github.com/duclmse/fengine/pkg/logger"
-	"time"
 )
 
 var _ fengine.Service = (*loggingMiddleware)(nil)
@@ -44,9 +46,9 @@ func (l loggingMiddleware) CreateTable(ctx context.Context, definition sql.Table
 	return l.svc.CreateTable(ctx, definition)
 }
 
-func (l loggingMiddleware) Select(ctx context.Context, request sql.SelectRequest) (r fengine.Result, e error) {
+func (l loggingMiddleware) Select(ctx context.Context, req sql.SelectRequest) (r []map[string]sql.Variable, e error) {
 	defer l.log.Elapse("Select")(time.Now(), &e)
-	return l.svc.Select(ctx, request)
+	return l.svc.Select(ctx, req)
 }
 
 func (l loggingMiddleware) Insert(ctx context.Context, request sql.InsertRequest) (r fengine.Result, e error) {
@@ -64,7 +66,7 @@ func (l loggingMiddleware) Delete(ctx context.Context, request sql.DeleteRequest
 	return l.svc.Delete(ctx, request)
 }
 
-func (l loggingMiddleware) GetThingAllServices(ctx context.Context, thingId string) (r fengine.Result, e error) {
+func (l loggingMiddleware) GetThingAllServices(ctx context.Context, thingId uuid.UUID) (r fengine.Result, e error) {
 	defer l.log.Elapse("Get all service of thing (%v)", thingId)(time.Now(), &e)
 	return l.svc.GetThingAllServices(ctx, thingId)
 }

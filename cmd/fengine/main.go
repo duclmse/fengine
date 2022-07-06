@@ -20,16 +20,15 @@ import (
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
 	"github.com/subosito/gotenv"
 	jconfig "github.com/uber/jaeger-client-go/config"
-	"google.golang.org/grpc"
+	ggrpc "google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
 
 	service "github.com/duclmse/fengine/fengine"
 	"github.com/duclmse/fengine/fengine/api"
-	grpc_api "github.com/duclmse/fengine/fengine/api/grpc"
+	"github.com/duclmse/fengine/fengine/api/grpc"
 	http_api "github.com/duclmse/fengine/fengine/api/http"
 	"github.com/duclmse/fengine/fengine/db/cache"
-	. "github.com/duclmse/fengine/fengine/api/grpc"
 	"github.com/duclmse/fengine/fengine/db/sql"
 	"github.com/duclmse/fengine/fengine/tracing"
 	pb "github.com/duclmse/fengine/pb"
@@ -39,6 +38,7 @@ import (
 
 const (
 	envLogLevel      = "VT_FENGINE_LOG_LEVEL"
+	envDBUrl         = "VT_FENGINE_DB_URL"
 	envDBHost        = "VT_FENGINE_DB_HOST"
 	envDBPort        = "VT_FENGINE_DB_PORT"
 	envDBUser        = "VT_FENGINE_DB_USER"
@@ -63,6 +63,7 @@ const (
 
 const (
 	defLogLevel      = "debug"
+	defDBUrl         = ""
 	defDBHost        = ""
 	defDBPort        = ""
 	defDBUser        = ""
@@ -97,7 +98,7 @@ type Config struct {
 	ServerCert   string
 	ServerKey    string
 	JaegerURL    string
-	GrpcServices map[string]GrpcService
+	GrpcServices map[string]grpc.GrpcService
 }
 
 type CacheConfig struct {
@@ -125,7 +126,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to connect to postgres: %s", err)
 	}
-	defer Close(log, "db")(db)
+	defer db.Close()
 
 	// Connect to User service
 	executorConn := ConnectToGrpcService("executor", cfg, log)
@@ -133,7 +134,7 @@ func main() {
 
 	executorTracer, executorCloser := InitJaeger("executor", cfg.JaegerURL, log)
 	defer Close(log, "executor")(executorCloser)
-	exeClient := grpc_api.NewExecutorClient(executorConn, executorTracer, cfg.GrpcServices["executor"])
+	exeClient := grpc.NewExecutorClient(executorConn, executorTracer, cfg.GrpcServices["executor"])
 
 	// Create FEngine Service
 	components := service.ServiceComponent{
@@ -180,23 +181,24 @@ func LoadConfig(envFile string, grpcServices ...string) Config {
 	}
 }
 
-func getGrpcConfig(services ...string) map[string]GrpcService {
-	config := make(map[string]GrpcService, len(services))
-	for _, service := range services {
-		svc := strings.ToUpper(service)
+func getGrpcConfig(services ...string) map[string]grpc.GrpcService {
+	config := make(map[string]grpc.GrpcService, len(services))
+	for _, svc := range services {
+		svc := strings.ToUpper(svc)
 		url := Env(fmt.Sprintf(envGrpcUrl, svc), defGrpcURL)
 		timeoutCfg := fmt.Sprintf(envGrpcTimeout, svc)
 		timeout, err := strconv.ParseInt(Env(timeoutCfg, defGrpcTimeout), 10, 32)
 		if err != nil {
 			log.Fatalf("Invalid %s value: %s", timeoutCfg, err.Error())
 		}
-		config[service] = GrpcService{URL: url, Timeout: int(timeout)}
+		config[svc] = grpc.GrpcService{URL: url, Timeout: int(timeout)}
 	}
 	return config
 }
 
 func getDbConfig() sql.Config {
 	return sql.Config{
+		Url:         Env(envDBUrl, defDBUrl),
 		Host:        Env(envDBHost, defDBHost),
 		Port:        Env(envDBPort, defDBPort),
 		User:        Env(envDBUser, defDBUser),
@@ -248,22 +250,22 @@ func ConnectToCache(cache CacheConfig, log logger.Logger) *redis.Client {
 	})
 }
 
-func ConnectToGrpcService(name string, cfg Config, log logger.Logger) *grpc.ClientConn {
-	var opts grpc.DialOption
+func ConnectToGrpcService(name string, cfg Config, log logger.Logger) *ggrpc.ClientConn {
+	var opts ggrpc.DialOption
 	if cfg.CaCerts != "" {
 		tpc, err := credentials.NewClientTLSFromFile(cfg.CaCerts, "")
 		if err != nil {
 			log.Error("Failed to create tls credentials: %s", err)
 			os.Exit(1)
 		}
-		opts = grpc.WithTransportCredentials(tpc)
+		opts = ggrpc.WithTransportCredentials(tpc)
 	} else {
 		log.Info("gRPC communication is not encrypted")
-		opts = grpc.WithTransportCredentials(insecure.NewCredentials())
+		opts = ggrpc.WithTransportCredentials(insecure.NewCredentials())
 	}
 
 	url := cfg.GrpcServices[name].URL
-	conn, err := grpc.Dial(url, opts)
+	conn, err := ggrpc.Dial(url, opts)
 	if err != nil {
 		log.Fatalf("Failed to connect to %s service %s", name, err)
 	}
@@ -327,7 +329,7 @@ func startGRPCServer(svc service.Service, tracer opentracing.Tracer, cfg Config,
 		os.Exit(1)
 	}
 
-	var server *grpc.Server
+	var server *ggrpc.Server
 	if cfg.ServerCert != "" || cfg.ServerKey != "" {
 		credential, err := credentials.NewServerTLSFromFile(cfg.ServerCert, cfg.ServerKey)
 		if err != nil {
@@ -335,12 +337,12 @@ func startGRPCServer(svc service.Service, tracer opentracing.Tracer, cfg Config,
 			os.Exit(1)
 		}
 		log.Info("FEngine gRPC service started on port %s (cert: %s; key %s)", port, cfg.ServerCert, cfg.ServerKey)
-		server = grpc.NewServer(grpc.Creds(credential))
+		server = ggrpc.NewServer(ggrpc.Creds(credential))
 	} else {
 		log.Info("FEngine gRPC service started on port %s", port)
-		server = grpc.NewServer()
+		server = ggrpc.NewServer()
 	}
-	pb.RegisterFEngineDataServer(server, grpc_api.NewDataServer(tracer, svc))
-	pb.RegisterFEngineThingServer(server, grpc_api.NewThingServer(tracer, svc))
+	pb.RegisterFEngineDataServer(server, grpc.NewDataServer(tracer, svc))
+	pb.RegisterFEngineThingServer(server, grpc.NewThingServer(tracer, svc))
 	errs <- server.Serve(listener)
 }

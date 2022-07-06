@@ -4,18 +4,20 @@ import {Result, Script} from "../pb/fengine_pb";
 import {Executor} from "./engine";
 import {Cache} from "./cache";
 
+const cache = new Cache();
+const executor = new Executor(cache);
+
+const server = new Server();
+server.addService(FEngineExecutorService, {
+  execute,
+  upsertService,
+  deleteService
+});
+
 export function getServer() {
-  const server = new Server();
-  server.addService(FEngineExecutorService, {
-    execute,
-    upsertService,
-    deleteService
-  });
   return server;
 }
 
-const cache = new Cache();
-const executor = new Executor(cache);
 
 function execute(call: ServerUnaryCall<Script, Result>, callback: sendUnaryData<Result>) {
   callback(null, executor.exec(call.request));

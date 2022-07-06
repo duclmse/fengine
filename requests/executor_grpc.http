@@ -1,0 +1,58 @@
+###
+GRPC localhost:1234/viot.FEngineExecutor/Execute
+
+{
+  "method": {
+    "name": "main",
+    "type": "service",
+    "input": [
+      {"name": "s", "type": "string", "value": "asdasd"}
+    ]
+  },
+  "attributes": [
+    {"name": "i", "type": "i32"},
+    {"name": "s", "type": "string"}
+  ],
+  "services": {
+    "main": {
+      "input": [
+        {"name": "s", "type": "string"},
+        {"name": "i", "type": "i32"}
+      ],
+      "output": "json",
+      "code": "me.test({s,i});\nTable('tbl_test').Select({and:[{a:{$gt:10,$lt:20}}]});\nme.i=0;\nreturn {i:i+me.i, s:s+me.s}"
+    },
+    "test": {
+      "input": [
+        {"name": "str", "type": "string"},
+        {"name": "i32", "type": "i32"}
+      ],
+      "output": "json",
+      "code": "return {i32: i32+1, str: str+'!'}"
+    }
+  }
+}
+
+###
+GRPC localhost:1234/viot.FEngineExecutor/UpdateService
+
+{
+  "services": {
+    "main": {
+      "input": [
+        {"name": "s", "type": "string"},
+        {"name": "i", "type": "i32"}
+      ],
+      "output": "json",
+      "code": "me.test({s,i});\nTable('a').Select({and:[{a:{$gt:10,$lt:20}}]});\nme.i=0;\nreturn {i:i+me.i, s:s+me.s}"
+    },
+    "test": {
+      "input": [
+        {"name": "str", "type": "string"},
+        {"name": "i32", "type": "i32"}
+      ],
+      "output": "json",
+      "code": "return {i32: i32+1, str: str+'!'}"
+    }
+  }
+}

@@ -28,4 +28,19 @@ WHERE time > NOW() - (12 * INTERVAL '1 month')
 GROUP BY bucket, city_name
 ORDER BY bucket DESC;
 
+CREATE TABLE tbl_test (
+    id          SERIAL,
+    name        VARCHAR(50),
+    description TEXT,
+    a           INT,
+    b           INT,
+    c           INT
+);
 
+INSERT INTO tbl_test (name, description, a, b, c)
+VALUES 
+('name 1', 'desc 1', 17, 12, 3),
+('name 2', 'desc 2', 18, 21, 3),
+('name 3', 'desc 3', 19, 52, 123),
+('name 4', 'desc 4', 20, 12, 3),
+('name 5', 'desc 5', 21, 72, 3);

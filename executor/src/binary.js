@@ -157,23 +157,23 @@ module.exports =  class Binary {
     return array;
   }
 
-  readField(type) {
+  readField(type, le) {
     switch (type) {
       case "byte":
       case "int8":
-        return this.readByte();
+        return this.readByte(le);
       case "int16":
-        return this.readInt16();
+        return this.readInt16(le);
       case "int32":
-        return this.readInt32();
+        return this.readInt32(le);
       case "int64":
-        return this.readInt64();
+        return this.readInt64(le);
       case "float32":
-        return this.readFloat32();
+        return this.readFloat32(le);
       case "float64":
-        return this.readFloat64();
+        return this.readFloat64(le);
       case "string":
-        return this.readString();
+        return this.readString(le);
     }
   }
 
@@ -218,6 +218,7 @@ module.exports =  class Binary {
   }
 
   isDone() {
+    console.log(`pointer - length = ${this.pointer - this.bytes.length}`);
     return this.pointer - this.bytes.length;
   }
 }

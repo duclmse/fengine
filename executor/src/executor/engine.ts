@@ -1,7 +1,8 @@
-import {Function, MethodId, Parameter, Result, Script, Type, Variable} from "../pb/fengine_pb";
+import {Function, MethodInfo, Parameter, Result, Script, Type, Variable} from "../pb/fengine_pb";
 import {Cache} from "./cache";
 import * as library from "../sdk/db";
 import _ from "lodash";
+import {VM} from "vm2";
 
 type MsgType = void | number | string | boolean | Uint8Array;
 type Func = (input: any) => MsgType;
@@ -21,12 +22,12 @@ class E {
     const me: ThingReference = {};
     const attributes: ThingReference = {};
 
-    // script.getAttributesList().forEach(attr => {
-    //   let name = attr.getName();
-    //   let value: MsgType = E.readVarValue(attr);
-    //   me[name] = value;
-    //   attributes[name] = value;
-    // });
+    script.getAttributesList().forEach(attr => {
+      let name = attr.getName();
+      let value: MsgType = E.readVarValue(attr);
+      me[name] = value;
+      attributes[name] = value;
+    });
 
     script.getServicesMap().forEach((fn: Function, name: string) => {
       let _code = fn.getCode();
@@ -40,7 +41,7 @@ class E {
       }
     });
 
-    return {sandbox: {me, ...library}, code, attributes};
+    return {sandbox: {me, ...Object.freeze(library)}, code, attributes};
   }
 
   static parseArguments(input: Variable[]) {
@@ -140,11 +141,33 @@ class E {
   }
 
   exec(script: Script): Result {
-    return new Result();
+    try {
+      const fn = script.getMethod()!;
+      if (!fn) {
+        let json = new Variable().setJson(JSON.stringify({error: "Function is not defined"}));
+        return new Result().setOutput(json);
+      }
+
+      const {sandbox, code: sandboxCode, attributes} = E.buildSandbox(script);
+      const {args, params} = E.parseArguments(fn.getInputList());
+      const code = `((${params})=>{try{me.${fn.getName()}}catch(_e_){return _e_}})(${args.join()})`;
+      console.debug(`${JSON.stringify(sandbox)}>---\n${sandboxCode}\n${code}\n---<`);
+
+      const vm = new VM({sandbox});
+      const label = new Date().getTime();
+      console.time(`${label}`);
+      let output = E.wrap(vm.run(sandboxCode + code), Type.JSON);
+      console.timeEnd(`${label}`);
+      E.compareAttributes(sandbox.me, attributes);
+
+      return new Result().setOutput(output);
+    } catch (e: any) {
+      return new Result().setOutput(new Variable().setString(e.message));
+    }
   }
 
   upsertService(request: Script): Result {
-    this.cache.set(new MethodId(), new Function());
+    this.cache.set(new MethodInfo(), new Function());
     const json = JSON.stringify({});
     let variable = new Variable().setType(Type.JSON).setJson(json);
     return new Result().setOutput(variable);

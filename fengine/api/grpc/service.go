@@ -2,45 +2,47 @@ package grpc
 
 import (
 	"context"
-	. "github.com/duclmse/fengine/pb"
+	"fmt"
+	pb "github.com/duclmse/fengine/pb"
 )
 
-func (g grpcDataServer) Select(ctx context.Context, request *SelectRequest) (*Result, error) {
+func (g grpcDataServer) Select(ctx context.Context, request *pb.SelectRequest) (*pb.ResultSet, error) {
 	_, resp, err := g.selectEndpoint.ServeGRPC(ctx, request)
 	if err != nil {
 		return nil, err
 	}
-	return resp.(*Result), nil
+	fmt.Printf("grpc service Select %t\n", resp)
+	return resp.(*pb.ResultSet), nil
 }
 
-func (g grpcDataServer) Insert(ctx context.Context, request *InsertRequest) (*Result, error) {
+func (g grpcDataServer) Insert(ctx context.Context, request *pb.InsertRequest) (*pb.Result, error) {
 	_, resp, err := g.insertEndpoint.ServeGRPC(ctx, request)
 	if err != nil {
 		return nil, err
 	}
-	return resp.(*Result), nil
+	return resp.(*pb.Result), nil
 }
 
-func (g grpcDataServer) Update(ctx context.Context, request *UpdateRequest) (*Result, error) {
+func (g grpcDataServer) Update(ctx context.Context, request *pb.UpdateRequest) (*pb.Result, error) {
 	_, resp, err := g.updateEndpoint.ServeGRPC(ctx, request)
 	if err != nil {
 		return nil, err
 	}
-	return resp.(*Result), nil
+	return resp.(*pb.Result), nil
 }
 
-func (g grpcDataServer) Delete(ctx context.Context, request *DeleteRequest) (*Result, error) {
+func (g grpcDataServer) Delete(ctx context.Context, request *pb.DeleteRequest) (*pb.Result, error) {
 	_, resp, err := g.deleteEndpoint.ServeGRPC(ctx, request)
 	if err != nil {
 		return nil, err
 	}
-	return resp.(*Result), nil
+	return resp.(*pb.Result), nil
 }
 
-func (g grpcThingServer) ResolveService(ctx context.Context, request *ScriptRequest) (*Result, error) {
+func (g grpcThingServer) ResolveService(ctx context.Context, request *pb.ScriptRequest) (*pb.Result, error) {
 	_, resp, err := g.resolveEndpoint.ServeGRPC(ctx, request)
 	if err != nil {
 		return nil, err
 	}
-	return resp.(*Result), nil
+	return resp.(*pb.Result), nil
 }
