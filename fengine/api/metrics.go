@@ -52,7 +52,7 @@ func (mm metricsMiddleware) CreateTable(ctx context.Context, definition sql.Tabl
 	return mm.svc.CreateTable(ctx, definition)
 }
 
-func (mm metricsMiddleware) Select(ctx context.Context, req sql.SelectRequest) ([]map[string]sql.Variable, error) {
+func (mm metricsMiddleware) Select(ctx context.Context, req sql.SelectRequest) (*sql.ResultSet, error) {
 	defer mm.count("Select")(time.Now())
 	return mm.svc.Select(ctx, req)
 }

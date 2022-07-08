@@ -8,7 +8,7 @@ if (require.main === module) {
   const {ADDRESS, RESOLVER_ADDRESS} = process.env;
   const server = getServer();
   server.bindAsync(ADDRESS, ServerCredentials.createInsecure(), () => {
-    console.log(`Server started at: ${ADDRESS}`);
+    console.log(`Server started at ${ADDRESS}`);
     server.start();
   });
   initClient(RESOLVER_ADDRESS, credentials.createInsecure());

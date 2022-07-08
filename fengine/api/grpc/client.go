@@ -29,32 +29,32 @@ func NewClient(conn *grpc.ClientConn, tracer opentracing.Tracer, timeout time.Du
 	return &grpcDataClient{
 		timeout: timeout,
 		grpcSelect: kitot.TraceClient(tracer, "fengine_select")(kitgrpc.NewClient(
-			conn, svcName, "grpcSelect", encodeGetRequest, decodeGetResponse, pb.Result{}).Endpoint()),
+			conn, svcName, "grpcSelect", encodeGetRequest, decodeGetResponse, pb.SelectResult{}).Endpoint()),
 		grpcInsert: kitot.TraceClient(tracer, "fengine_insert")(kitgrpc.NewClient(
-			conn, svcName, "grpcInsert", encodeGetRequest, decodeGetResponse, pb.Result{}).Endpoint()),
+			conn, svcName, "grpcInsert", encodeGetRequest, decodeGetResponse, pb.InsertResult{}).Endpoint()),
 		grpcUpdate: kitot.TraceClient(tracer, "fengine_update")(kitgrpc.NewClient(
-			conn, svcName, "grpcUpdate", encodeGetRequest, decodeGetResponse, pb.Result{}).Endpoint()),
+			conn, svcName, "grpcUpdate", encodeGetRequest, decodeGetResponse, pb.UpdateResult{}).Endpoint()),
 		grpcDelete: kitot.TraceClient(tracer, "fengine_delete")(kitgrpc.NewClient(
-			conn, svcName, "grpcDelete", encodeGetRequest, decodeGetResponse, pb.Result{}).Endpoint()),
+			conn, svcName, "grpcDelete", encodeGetRequest, decodeGetResponse, pb.DeleteResult{}).Endpoint()),
 	}
 }
 
-func (client grpcDataClient) Select(ctx context.Context, in *pb.SelectRequest, opts ...grpc.CallOption) (*pb.ResultSet, error) {
+func (client grpcDataClient) Select(ctx context.Context, in *pb.SelectRequest, opts ...grpc.CallOption) (*pb.SelectResult, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (client grpcDataClient) Insert(ctx context.Context, in *pb.InsertRequest, opts ...grpc.CallOption) (*pb.Result, error) {
+func (client grpcDataClient) Insert(ctx context.Context, in *pb.InsertRequest, opts ...grpc.CallOption) (*pb.InsertResult, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (client grpcDataClient) Update(ctx context.Context, in *pb.UpdateRequest, opts ...grpc.CallOption) (*pb.Result, error) {
+func (client grpcDataClient) Update(ctx context.Context, in *pb.UpdateRequest, opts ...grpc.CallOption) (*pb.UpdateResult, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (client grpcDataClient) Delete(ctx context.Context, in *pb.DeleteRequest, opts ...grpc.CallOption) (*pb.Result, error) {
+func (client grpcDataClient) Delete(ctx context.Context, in *pb.DeleteRequest, opts ...grpc.CallOption) (*pb.DeleteResult, error) {
 	//TODO implement me
 	panic("implement me")
 }

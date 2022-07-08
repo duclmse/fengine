@@ -135,7 +135,7 @@ func TestGeneratedQuery(t *testing.T) {
 	fmt.Printf("%+v\n", cols)
 	for rows.Next() {
 		rowMap := make(map[string]interface{})
-		MapScan(rows, rowMap)
+		MapScan(rows, &rowMap)
 		t.Logf("%v\n", rowMap)
 	}
 }

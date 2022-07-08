@@ -20,7 +20,7 @@ export function getServer() {
 
 
 function execute(call: ServerUnaryCall<Script, Result>, callback: sendUnaryData<Result>) {
-  callback(null, executor.exec(call.request));
+  executor.exec(call.request).then(result => callback(null, result));
 }
 
 function upsertService(call: ServerUnaryCall<Script, Result>, callback: sendUnaryData<Result>) {

@@ -8,39 +8,41 @@ import (
 )
 
 func encodeSelectResponse(ctx context.Context, r any) (response any, err error) {
-	fmt.Printf("encodeSelectResponse %t\n", r)
-	res, ok := r.([]map[string]sql.Variable)
+	//fmt.Printf("encodeSelectResponse %t\n", r)
+	res, ok := r.(*sql.ResultSet)
 	if !ok {
-		return &viot.ResultSet{}, err
-	}
-	//res.Data.()
-	rows := []*viot.ResultRow{}
-	for _, v := range res {
-		a := []*viot.Value{}
-		for _, value := range v {
-			switch vl := value.Value.(type) {
-			case int32:
-				a = append(a, &viot.Value{Value: &viot.Value_I32{I32: vl}})
-			case int64:
-				a = append(a, &viot.Value{Value: &viot.Value_I64{I64: vl}})
-			case float32:
-				a = append(a, &viot.Value{Value: &viot.Value_F32{F32: vl}})
-			case float64:
-				a = append(a, &viot.Value{Value: &viot.Value_F64{F64: vl}})
-			case string:
-				a = append(a, &viot.Value{Value: &viot.Value_String_{String_: vl}})
-				//case json:
-				//	a = append(a, &viot.Value{Value: &viot.Value_I64{I64: vl}})
-			}
-		}
-		rows = append(rows, &viot.ResultRow{Values: a})
+		fmt.Printf("cannot convert %t\n", r)
+		return &viot.SelectResult{}, err
 	}
 
-	response = &viot.ResultSet{
-		ColumnNames: nil,
-		Rows:        rows,
+	rows := []*viot.ResultRow{}
+	for _, row := range res.Rows {
+		//fmt.Printf("%d:", i)
+		a := make([]*viot.Value, len(row))
+		for j, value := range row {
+			//fmt.Printf(" %d v=%v %t\n", j, value, value)
+			switch vl := value.(type) {
+			case int32:
+				a[j] = &viot.Value{Value: &viot.Value_I32{I32: vl}}
+			case int64:
+				a[j] = &viot.Value{Value: &viot.Value_I64{I64: vl}}
+			case float32:
+				a[j] = &viot.Value{Value: &viot.Value_F32{F32: vl}}
+			case float64:
+				a[j] = &viot.Value{Value: &viot.Value_F64{F64: vl}}
+			case string:
+				a[j] = &viot.Value{Value: &viot.Value_String_{String_: vl}}
+			case bool:
+				a[j] = &viot.Value{Value: &viot.Value_Bool{Bool: vl}}
+			case []byte:
+				a[j] = &viot.Value{Value: &viot.Value_Binary{Binary: vl}}
+			}
+		}
+		//fmt.Printf("row = %v\n", a)
+		rows = append(rows, &viot.ResultRow{Value: a})
 	}
-	return response, nil
+
+	return &viot.SelectResult{Column: res.Columns, Row: rows}, nil
 }
 
 func encodeDeleteResponse(ctx context.Context, r any) (response any, err error) {

@@ -10,14 +10,14 @@ service FEngineExecutor {
 }
 
 service FEngineThing {
-  rpc ResolveService(ScriptRequest) returns (Result) {}
+  //rpc ResolveService(ScriptRequest) returns (Result) {}
 }
 
 service FEngineData {
-  rpc Select(SelectRequest) returns (ResultSet) {}
-  rpc Insert(InsertRequest) returns (Result) {}
-  rpc Update(UpdateRequest) returns (Result) {}
-  rpc Delete(DeleteRequest) returns (Result) {}
+  rpc Select(SelectRequest) returns (SelectResult) {}
+  rpc Insert(InsertRequest) returns (InsertResult) {}
+  rpc Update(UpdateRequest) returns (UpdateResult) {}
+  rpc Delete(DeleteRequest) returns (DeleteResult) {}
 }
 
 
@@ -30,7 +30,7 @@ message Script {
 }
 
 message MethodInfo {
-  bytes thingID = 1;
+  bytes thing_id = 1;
   string name = 2;
   MethodType type = 3;
   repeated Variable input = 4;
@@ -58,8 +58,14 @@ message Function {
 }
 
 message Result {
-  Variable output = 1;
+  Error error = 1;
+  Variable output = 2;
   repeated Variable attributes = 3;
+}
+
+message Error {
+  int32 code = 1;
+  string message = 2;
 }
 
 message UpdateScript {
@@ -114,48 +120,61 @@ enum Type {
 
 
 
-message ScriptRequest {
-
-}
-
 message SelectRequest {
   string table = 1;
-  repeated string fieldNames = 2;
+  repeated string field = 2;
   string filter = 3;
   int32 limit = 4;
   int32 offset = 5;
-  repeated string groupBy = 6;
-  repeated string orderBy = 7;
+  repeated string group_by = 6;
+  repeated string order_by = 7;
 }
 
-message ResultSet {
-  repeated string columnNames = 1;
-  repeated ResultRow rows = 2;
+message SelectResult {
+  int32 code = 1;
+  repeated string column = 2;
+  repeated ResultRow row = 3;
 }
 
 message ResultRow {
-  repeated Value values = 1;
+  repeated Value value = 1;
 }
 
 message InsertRequest {
   string table = 1;
-  repeated Variable fieldNames = 2;
+  repeated DataRow row = 2;
+}
+
+message InsertResult {
+  int32 affected_row = 1;
+}
+
+message DataRow {
+  repeated Variable values = 1;
 }
 
 message UpsertRequest {
   string table = 1;
-  repeated Variable fieldNames = 2;
+  repeated Variable field = 2;
 }
 
 message UpdateRequest {
   string table = 1;
-  repeated Variable fieldNames = 2;
+  repeated Variable field = 2;
   string filter = 3;
+}
+
+message UpdateResult {
+  int32 affected_row = 1;
 }
 
 message DeleteRequest {
   string table = 1;
   string filter = 2;
+}
+
+message DeleteResult {
+  int32 affected_row = 1;
 }
 
 //#endregion

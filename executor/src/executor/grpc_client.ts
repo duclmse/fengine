@@ -1,14 +1,15 @@
 import {FEngineDataClient} from "../pb/fengine_grpc_pb";
-import {ChannelCredentials, Client} from "@grpc/grpc-js";
+import {ChannelCredentials} from "@grpc/grpc-js";
 
-let client: Client;
+let client: FEngineDataClient;
 
 export function initClient(address: string, credential: ChannelCredentials) {
   if (client == null) {
+    console.log(`Initialized gRPC client at ${address}`);
     client = new FEngineDataClient(address, credential);
   }
 }
 
-export function getClient(): Client {
+export function getClient(): FEngineDataClient {
   return client;
 }

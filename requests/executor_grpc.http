@@ -6,12 +6,13 @@ GRPC localhost:1234/viot.FEngineExecutor/Execute
     "name": "main",
     "type": "service",
     "input": [
-      {"name": "s", "type": "string", "value": "asdasd"}
+      {"name": "s", "type": "string", "string": "input string"},
+      {"name": "i", "type": "i32", "i32": "31"}
     ]
   },
   "attributes": [
-    {"name": "i", "type": "i32"},
-    {"name": "s", "type": "string"}
+    {"name": "i", "type": "i32", "i32": "100"},
+    {"name": "s", "type": "string", "string": "attr"}
   ],
   "services": {
     "main": {
@@ -20,7 +21,7 @@ GRPC localhost:1234/viot.FEngineExecutor/Execute
         {"name": "i", "type": "i32"}
       ],
       "output": "json",
-      "code": "me.test({s,i});\nTable('tbl_test').Select({and:[{a:{$gt:10,$lt:20}}]});\nme.i=0;\nreturn {i:i+me.i, s:s+me.s}"
+      "code": "let res = await Table('tbl_test').Select({filter: {$and: [{a: {$gt: 10, $lt: 20}}]}});me.i = 0;let result = [];for (let row of res) {let vals = [];for (let v of row) {vals.push(v);}result.push(vals);}return {i: i + me.i, s: s + me.s, result};"
     },
     "test": {
       "input": [

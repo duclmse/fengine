@@ -31,7 +31,7 @@ type Repository interface {
 	SetThingAttributes(ctx ctx.Context, attrs []Variable) (int64, error)
 	GetAttributeHistory(cts ctx.Context, attrs AttributeHistoryRequest) ([]Variable, error)
 
-	Select(ctx ctx.Context, sql string, params ...any) (r []map[string]Variable, e error)
+	Select(ctx ctx.Context, sql string, params ...any) (r *ResultSet, err error)
 	Insert(ctx ctx.Context, sql string, params ...any) (r int64, e error)
 	Update(ctx ctx.Context, sql string, params ...any) (r int64, e error)
 	Delete(ctx ctx.Context, sql string, params ...any) (r int64, e error)
@@ -231,30 +231,37 @@ func (fer fengineRepository) GetAttributeHistory(cts ctx.Context, attrs Attribut
 	panic("implement me")
 }
 
-func (fer fengineRepository) Select(ctx ctx.Context, sql string, params ...any) (r []map[string]Variable, err error) {
-	fmt.Printf("param.l = %d: %v\n", len(params), params)
+func (fer fengineRepository) Select(ctx ctx.Context, sql string, params ...any) (r *ResultSet, err error) {
 	rows, err := fer.db.Query(ctx, sql, params...)
 	defer rows.Close()
 	if err != nil {
+		fmt.Printf("repository select err: %s\n", err)
 		return
 	}
-	result := []map[string]Variable{}
+	result := [][]any{}
+	columns := []string{}
 	dess := rows.FieldDescriptions()
+	for _, des := range dess {
+		columns = append(columns, string(des.Name))
+	}
+	length := len(columns)
 	for rows.Next() {
-		row := map[string]Variable{}
+		row := make([]any, length)
 		values, err := rows.Values()
 		if err != nil {
 			return nil, err
 		}
-		for i, des := range dess {
-			row[string(des.Name)] = Variable{Value: values[i]}
+		for i := range dess {
+			row[i] = values[i]
 		}
 		result = append(result, row)
 	}
-	return result, nil
+	fmt.Printf("repo select: %s\n(%d): %v => %d\n", sql, len(params), params, len(result))
+	return &ResultSet{Columns: columns, Rows: result}, nil
 }
 
 func (fer fengineRepository) Insert(ctx ctx.Context, sql string, params ...any) (r int64, err error) {
+	fmt.Printf(`repository insert: %s\n`, sql)
 	inserted, err := fer.db.Exec(ctx, sql, params)
 	if err != nil {
 		return

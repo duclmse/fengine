@@ -20,24 +20,40 @@ func grpcSelect(svc Service) Endpoint {
 
 func grpcInsert(svc Service) Endpoint {
 	return func(ctx Context, request any) (any, error) {
-		return nil, nil
+		req, ok := request.(sql.InsertRequest)
+		if !ok {
+			return nil, errors.New("invalid request")
+		}
+		return svc.Insert(ctx, req)
 	}
 }
 
 func grpcUpdate(svc Service) Endpoint {
 	return func(ctx Context, request any) (any, error) {
-		return nil, nil
+		req, ok := request.(sql.UpdateRequest)
+		if !ok {
+			return nil, errors.New("invalid request")
+		}
+		return svc.Update(ctx, req)
 	}
 }
 
 func grpcDelete(svc Service) Endpoint {
 	return func(ctx Context, request any) (any, error) {
-		return nil, nil
+		req, ok := request.(sql.DeleteRequest)
+		if !ok {
+			return nil, errors.New("invalid request")
+		}
+		return svc.Delete(ctx, req)
 	}
 }
 
 func grpcResolve(svc Service) Endpoint {
 	return func(ctx Context, request any) (any, error) {
-		return nil, nil
+		selectRequest, ok := request.(sql.SelectRequest)
+		if !ok {
+			return nil, errors.New("invalid request")
+		}
+		return svc.Select(ctx, selectRequest)
 	}
 }

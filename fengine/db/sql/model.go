@@ -328,6 +328,7 @@ type Field struct {
 }
 
 //#region SelectRequest
+
 type SelectRequest struct {
 	Table   string   `json:"table"`
 	Fields  []string `json:"fields"`
@@ -344,7 +345,6 @@ func (sr SelectRequest) ToSQL() (string, error) {
 		fmt.Printf("err %s\n", err.Error())
 		return "", err
 	}
-
 	defaultValue := func(prefix, a, b string) string {
 		if a == "" {
 			return b
@@ -364,6 +364,11 @@ func (sr SelectRequest) ToSQL() (string, error) {
 	}
 	return fmt.Sprintf("SELECT %s FROM %s%s%s LIMIT %d OFFSET %d",
 		fields, sr.Table, groupBy, orderBy, sr.Limit, sr.Offset), nil
+}
+
+type ResultSet struct {
+	Columns []string
+	Rows    [][]any
 }
 
 //#endregion SelectRequest
@@ -426,6 +431,22 @@ func (r UpdateRequest) ToSQL() (sql string, values []any, e error) {
 type DeleteRequest struct {
 	Table  string `json:"table"`
 	Filter Filter `json:"filter"`
+}
+
+func (r DeleteRequest) ToSQL() (sql string, values []any, e error) {
+	logic, e := r.Filter.ToSQL()
+	if e != nil {
+		fmt.Printf("logic = %v\n", logic)
+		return
+	}
+
+	var sb strings.Builder
+	sb.WriteString(fmt.Sprintf(`DELETE FROM %s`, r.Table))
+
+	if logic != "" {
+		sb.WriteString(fmt.Sprintf(" WHERE %s", logic))
+	}
+	return sb.String(), values, nil
 }
 
 //#endregion DeleteRequest
@@ -611,9 +632,7 @@ func (logic Filter) ToSQL() (string, error) {
 			fmt.Printf("error building condition %s\n", err.Error())
 			return "", err
 		}
-		fmt.Printf("%v %v\n", k, v)
 	}
-	fmt.Printf("%s\n", sb.String())
 	return sb.String(), nil
 }
 

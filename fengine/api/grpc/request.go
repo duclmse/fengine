@@ -4,14 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
+
 	"github.com/duclmse/fengine/fengine/db/sql"
 	viot "github.com/duclmse/fengine/pb"
 )
 
 func decodeSelectRequest(ctx context.Context, r any) (request any, err error) {
 	req, ok := r.(*viot.SelectRequest)
-	fmt.Printf("decodeSelectRequest %v %+v\n", ok, r)
 	if !ok {
 		return nil, errors.New("request is not a select request")
 	}
@@ -21,7 +20,7 @@ func decodeSelectRequest(ctx context.Context, r any) (request any, err error) {
 	}
 	request = sql.SelectRequest{
 		Table:   req.Table,
-		Fields:  req.FieldNames,
+		Fields:  req.Field,
 		Filter:  filter,
 		GroupBy: req.GroupBy,
 		Limit:   req.Limit,
@@ -34,7 +33,7 @@ func decodeSelectRequest(ctx context.Context, r any) (request any, err error) {
 func decodeInsertRequest(ctx context.Context, r any) (request any, err error) {
 	request, ok := r.(*viot.InsertRequest)
 	if !ok {
-		return nil, errors.New("request is not a select request")
+		return nil, errors.New("request is not a insert request")
 	}
 	return
 }
@@ -42,7 +41,7 @@ func decodeInsertRequest(ctx context.Context, r any) (request any, err error) {
 func decodeUpdateRequest(ctx context.Context, r any) (request any, err error) {
 	request, ok := r.(*viot.UpdateRequest)
 	if !ok {
-		return nil, errors.New("request is not a select request")
+		return nil, errors.New("request is not a update request")
 	}
 	return
 }
@@ -50,7 +49,7 @@ func decodeUpdateRequest(ctx context.Context, r any) (request any, err error) {
 func decodeDeleteRequest(ctx context.Context, r any) (request any, err error) {
 	request, ok := r.(*viot.DeleteRequest)
 	if !ok {
-		return nil, errors.New("request is not a select request")
+		return nil, errors.New("request is not a delete request")
 	}
 	return
 }

@@ -112,7 +112,7 @@ func (frm fengineRepositoryMiddleware) GetAttributeHistory(ctx context.Context, 
 	return frm.repo.GetAttributeHistory(ContextWithSpan(ctx, span), attrs)
 }
 
-func (frm fengineRepositoryMiddleware) Select(ctx context.Context, sql string, params ...any) (r []map[string]db.Variable, e error) {
+func (frm fengineRepositoryMiddleware) Select(ctx context.Context, sql string, params ...any) (r *db.ResultSet, err error) {
 	span := createSpan(ctx, frm.tracer, "Select")
 	defer span.Finish()
 	return frm.repo.Select(ContextWithSpan(ctx, span), sql, params...)

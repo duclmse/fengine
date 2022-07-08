@@ -36,7 +36,7 @@ type Service interface {
 	ExecuteService(ctx ctx.Context, req sql.ServiceRequest) (r Result, e error)
 
 	CreateTable(ctx ctx.Context, req sql.TableDefinition) (r Result, e error)
-	Select(ctx ctx.Context, req sql.SelectRequest) ([]map[string]sql.Variable, error)
+	Select(ctx ctx.Context, req sql.SelectRequest) (res *sql.ResultSet, err error)
 	Insert(ctx ctx.Context, req sql.InsertRequest) (r Result, e error)
 	Update(ctx ctx.Context, req sql.UpdateRequest) (r Result, e error)
 	Delete(ctx ctx.Context, req sql.DeleteRequest) (r Result, e error)
@@ -113,27 +113,22 @@ func (s FengineService) CreateTable(ctx ctx.Context, table sql.TableDefinition) 
 	return Result{}, nil
 }
 
-func (s FengineService) Select(ctx ctx.Context, req sql.SelectRequest) (res []map[string]sql.Variable, err error) {
+func (s FengineService) Select(ctx ctx.Context, req sql.SelectRequest) (res *sql.ResultSet, err error) {
 	_sql, err := req.ToSQL()
 	if err != nil {
 		return
 	}
 
-	m, err := s.Repository.Select(ctx, _sql)
-	if err != nil {
-		return nil, err
-	}
-	//fmt.Printf("fengine service Select %t\n", m)
-	return m, nil
+	return s.Repository.Select(ctx, _sql)
 }
 
 func (s FengineService) Insert(ctx ctx.Context, req sql.InsertRequest) (Result, error) {
-	sql, err := req.ToSQL()
+	_sql, err := req.ToSQL()
 	if err != nil {
 		return result(err)
 	}
 
-	rs, err := s.Repository.Insert(ctx, sql)
+	rs, err := s.Repository.Insert(ctx, _sql)
 	if err != nil {
 		return result(err)
 	}
@@ -142,11 +137,31 @@ func (s FengineService) Insert(ctx ctx.Context, req sql.InsertRequest) (Result, 
 }
 
 func (s FengineService) Update(ctx ctx.Context, req sql.UpdateRequest) (Result, error) {
-	return Result{}, nil
+	_sql, params, err := req.ToSQL()
+	if err != nil {
+		return result(err)
+	}
+
+	rs, err := s.Repository.Update(ctx, _sql, params...)
+	if err != nil {
+		return result(err)
+	}
+
+	return Result{Data: rs}, nil
 }
 
 func (s FengineService) Delete(ctx ctx.Context, req sql.DeleteRequest) (Result, error) {
-	return Result{}, nil
+	_sql, params, err := req.ToSQL()
+	if err != nil {
+		return result(err)
+	}
+
+	rs, err := s.Repository.Update(ctx, _sql, params...)
+	if err != nil {
+		return result(err)
+	}
+
+	return Result{Data: rs}, nil
 }
 
 func result(e error) (Result, error) {
