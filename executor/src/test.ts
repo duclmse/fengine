@@ -7,9 +7,12 @@ let {RESOLVER_ADDRESS} = process.env;
 initClient(RESOLVER_ADDRESS, credentials.createInsecure());
 (async ({s, i}) => {
   let res = await Table("tbl_test").Select({
-    filter: {$and: [{a: {$gt: 10, $lt: 20}}]}
+    filter: {
+      $and: [
+        {a: {$gt: 10, $lt: 20}}
+      ]
+    }
   });
-  // res.
   let all = [];
   for (let row of res) {
     let vals = [];
