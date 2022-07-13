@@ -127,7 +127,12 @@ message SelectRequest {
   int32 limit = 4;
   int32 offset = 5;
   repeated string group_by = 6;
-  repeated string order_by = 7;
+  repeated OrderBy order_by = 7;
+
+  message OrderBy {
+    string field = 1;
+    bool ascending = 2;
+  }
 }
 
 message SelectResult {

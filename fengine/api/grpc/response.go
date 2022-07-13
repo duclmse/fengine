@@ -2,6 +2,7 @@ package grpc
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/duclmse/fengine/fengine/db/sql"
 	viot "github.com/duclmse/fengine/pb"
@@ -15,12 +16,11 @@ func encodeSelectResponse(ctx context.Context, r any) (response any, err error) 
 		return &viot.SelectResult{}, err
 	}
 
-	rows := []*viot.ResultRow{}
-	for _, row := range res.Rows {
-		//fmt.Printf("%d:", i)
+	resultRows := res.Rows
+	rows := make([]*viot.ResultRow, len(resultRows))
+	for i, row := range resultRows {
 		a := make([]*viot.Value, len(row))
 		for j, value := range row {
-			//fmt.Printf(" %d v=%v %t\n", j, value, value)
 			switch vl := value.(type) {
 			case int32:
 				a[j] = &viot.Value{Value: &viot.Value_I32{I32: vl}}
@@ -36,13 +36,21 @@ func encodeSelectResponse(ctx context.Context, r any) (response any, err error) 
 				a[j] = &viot.Value{Value: &viot.Value_Bool{Bool: vl}}
 			case []byte:
 				a[j] = &viot.Value{Value: &viot.Value_Binary{Binary: vl}}
+			default:
+				bytes, err := json.Marshal(vl)
+				if err == nil {
+					fmt.Printf("%t -> %s\n", vl, string(bytes))
+					a[j] = &viot.Value{Value: &viot.Value_Json{Json: string(bytes)}}
+				} else {
+					fmt.Printf("encodeSelectResponse err = %s\n", err)
+				}
 			}
 		}
 		//fmt.Printf("row = %v\n", a)
-		rows = append(rows, &viot.ResultRow{Value: a})
+		rows[i] = &viot.ResultRow{Value: a}
 	}
 
-	return &viot.SelectResult{Column: res.Columns, Row: rows}, nil
+	return &viot.SelectResult{Code: 0, Column: res.Columns, Row: rows}, nil
 }
 
 func encodeDeleteResponse(ctx context.Context, r any) (response any, err error) {

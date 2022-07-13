@@ -18,6 +18,16 @@ func decodeSelectRequest(ctx context.Context, r any) (request any, err error) {
 	if err = json.Unmarshal([]byte(req.Filter), &filter); err != nil {
 		return nil, err
 	}
+	toOrder := func(o []*viot.SelectRequest_OrderBy) []sql.OrderBy {
+		res := make([]sql.OrderBy, len(o))
+		for i, v := range o {
+			res[i] = sql.OrderBy{
+				Field:     v.Field,
+				Ascending: v.Ascending,
+			}
+		}
+		return res
+	}
 	request = sql.SelectRequest{
 		Table:   req.Table,
 		Fields:  req.Field,
@@ -25,7 +35,7 @@ func decodeSelectRequest(ctx context.Context, r any) (request any, err error) {
 		GroupBy: req.GroupBy,
 		Limit:   req.Limit,
 		Offset:  req.Offset,
-		OrderBy: req.OrderBy,
+		OrderBy: toOrder(req.OrderBy),
 	}
 	return
 }

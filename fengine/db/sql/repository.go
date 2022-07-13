@@ -256,7 +256,7 @@ func (fer fengineRepository) Select(ctx ctx.Context, sql string, params ...any) 
 		}
 		result = append(result, row)
 	}
-	fmt.Printf("repo select: %s\n(%d): %v => %d\n", sql, len(params), params, len(result))
+	fmt.Printf("repo select: %s\n(%d): %v => %d %v\n", sql, len(params), params, len(result), columns)
 	return &ResultSet{Columns: columns, Rows: result}, nil
 }
 

@@ -1,1 +1,1 @@
-export {Table, TableImpl, Filter} from "./db"
+export {Table, TableImpl} from "./db"

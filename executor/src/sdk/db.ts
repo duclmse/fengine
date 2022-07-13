@@ -74,8 +74,10 @@ export class TableImpl {
     });
   }
 
-  Delete(filter: Filter): Promise<DeleteResult> {
-    let req = new DeleteRequest().setTable(this._name).setFilter(JSON.stringify(filter));
+  Delete(filter: object): Promise<DeleteResult> {
+    let req = new DeleteRequest()
+      .setTable(this._name)
+      .setFilter(JSON.stringify(filter));
     return new Promise<DeleteResult>((resolve, reject) => {
       getClient().delete(req, (err, res) => err == null ? resolve(res) : reject(err));
     });
@@ -129,28 +131,61 @@ export class ResultSet {
 
   * [Symbol.iterator]() {
     for (let i of this.data) {
-      yield new Row(i.getValueList(), this.index);
+      yield new Row(i.getValueList(), this.index, this.cols);
     }
   }
 
-  Map(cb: Function) {
-    // for (let i of this) {
-    //
-    // }
+  filter(callback: (value: Row, index: number) => boolean): Row[] {
+    let arr: Row[] = [];
+    let i = 0;
+    for (let row of this) {
+      if (callback(row, i++)) {
+        arr.push(row);
+      }
+    }
+    return arr;
+  }
+
+  map<U>(callback: (value: Row, index: number) => U): U[] {
+    let arr: U[] = [];
+    let i = 0;
+    for (let row of this) {
+      arr.push(callback(row, i++));
+    }
+    return arr;
+  }
+
+  reduce<U>(callback: (previousValue: U, currentValue: Row, index: number) => U, initial: U): U {
+    let result = initial;
+    let i = 0;
+    for (let row of this) {
+      result = callback(result, row, i++);
+    }
+    return result;
   }
 }
 
 export class Row {
   private readonly values: Value[];
-  private readonly cols: Index;
+  private readonly index: Index;
+  private readonly cols: string[];
 
-  constructor(values: Value[], cols: Index) {
+  constructor(values: Value[], index: Index, cols: string[]) {
     this.values = values;
+    this.index = index;
     this.cols = cols;
   }
 
   Get(field: string) {
-    return this.values[this.cols[field]];
+    return this.values[this.index[field]];
+  }
+
+  ToObject() {
+    let obj: RowInfo = {};
+    for (let i = 0, l = this.cols.length; i < l; i++) {
+      obj[this.cols[i]] = this.values[i];
+    }
+    return obj;
   }
 
   * [Symbol.iterator]() {
@@ -161,12 +196,12 @@ export class Row {
 }
 
 export interface SelectInfo {
-  fieldNames: string[] | null;
-  filter: object | null;
-  limit: number | null;
-  offset: number | null;
-  groupBy: string[] | null;
-  orderBy: string[] | null;
+  fieldNames: string[] | undefined;
+  filter: object | undefined;
+  limit: number | undefined;
+  offset: number | undefined;
+  groupBy: string[] | undefined;
+  orderBy: string[] | undefined;
 }
 
 export interface InsertInfo {
@@ -175,9 +210,6 @@ export interface InsertInfo {
 
 export interface RowInfo {
   [key: string]: any;
-}
-
-export class Filter {
 }
 
 interface UpdateInfo {

@@ -1,12 +1,7 @@
-export class Binary {
-  private readonly schema: Schema;
-  private readonly bytes: Uint8Array;
-  private pointer: number = 0;
-
-  constructor(schema: string | object, bytes: Iterable<number>) {
+module.exports = class Binary {
+  constructor(schema, bytes) {
     this.schema = Binary.parseSchema(schema);
     Binary.validateSchema(this.schema);
-
     if (bytes instanceof Uint8Array) {
       this.bytes = bytes;
     } else if (Array.isArray(bytes)) {
@@ -14,35 +9,42 @@ export class Binary {
     } else {
       throw new Error("bytes must be an int array or an instance of Uint8Array");
     }
+    this.pointer = 0;
   }
 
-  static validateSchema(schema: Schema) {
+  static validateSchema(schema) {
     const {name, type, schemas} = schema;
-    if (!name) throw new Error(`name is invalid or undefined`);
-    if (!type) throw new Error(`type of ${name} is undefined`);
+    if (!name)
+      throw new Error(`name is invalid or undefined`);
+    if (!type)
+      throw new Error(`type of ${name} is undefined`);
     switch (type) {
       case "[]object":
         schema.isArray = true;
         schema.subtype = "object";
       case "object":
-        if (schemas == undefined) return false;
         for (let s of schemas) {
-          if (!Binary.validateSchema(s)) return false;
+          if (!Binary.validateSchema(s))
+            return false;
         }
         return true;
       default:
-        if (Binary.isValidType(type)) return true;
+        if (Binary.isValidType(type))
+          return true;
         return Binary.checkDefinedLengthArray(schema, type);
     }
   }
 
-  static parseSchema(schema: string | object) {
+  static parseSchema(schema) {
     switch (typeof schema) {
       case "string":
         return JSON.parse(schema, (k, v) => {
-          if (k === "name" && typeof v != "string") throw new Error("name must be a string");
-          if (k === "type" && typeof v != "string") throw new Error("type must be a string");
-          if (k === "schemas" && !Array.isArray(v)) throw new Error("schemas must be an array");
+          if (k === "name" && typeof v != "string")
+            throw new Error("name must be a string");
+          if (k === "type" && typeof v != "string")
+            throw new Error("type must be a string");
+          if (k === "schemas" && !Array.isArray(v))
+            throw new Error("schemas must be an array");
           return v;
         });
       case "object":
@@ -52,9 +54,10 @@ export class Binary {
     }
   }
 
-  static checkDefinedLengthArray(schema: Schema, type: string) {
+  static checkDefinedLengthArray(schema, type) {
     let matched = /\[(\d*)](\w+)/.exec(type);
-    if (!matched) return false;
+    if (!matched)
+      return false;
     let [_, length, subtype] = matched;
     let b = Binary.isValidType(subtype);
     schema.length = length ? +length : 0;
@@ -63,7 +66,7 @@ export class Binary {
     return b;
   }
 
-  static isValidType(type: string) {
+  static isValidType(type) {
     switch (type) {
       case "byte":
       case "int8":
@@ -80,10 +83,10 @@ export class Binary {
     }
   }
 
-  static hex(a: number) {
+  static hex(a) {
     let h = a.toString(16).toUpperCase();
     return h.length % 2 === 0 ? h : `0${h}`;
-  };
+  }
 
   toObject() {
     return this.readObject(this.schema);
@@ -105,7 +108,7 @@ export class Binary {
     return value;
   }
 
-  readObjectArray(schema: Schema, length: number) {
+  readObjectArray(schema, length) {
     let array = [];
     let {name, schemas} = schema;
     for (let i = 0; i < length; i++) {
@@ -114,26 +117,23 @@ export class Binary {
     return array;
   }
 
-  readObject(schema: Schema) {
+  readObject(schema) {
     const {type, isArray, length, subtype, schemas} = schema;
     if (isArray) {
       return this.readArray(schema, subtype, length);
     }
-    if (type !== "object") {
-      return this.readField(type, isArray, length, subtype);
+    if (type === "object") {
+      let result = {};
+      for (let s of schemas) {
+        let {name} = s;
+        result[name] = this.readObject(s);
+      }
+      return result;
     }
-    if (schemas == undefined) {
-      throw new Error("");
-    }
-    let result = {};
-    for (let s of schemas) {
-      let {name} = s;
-      result[name] = this.readObject(s);
-    }
-    return result;
+    return this.readField(type, isArray, length, subtype);
   }
 
-  readArray<T>(schema: Schema, subtype: string | undefined, length: number): T[] {
+  readArray(schema, subtype, length) {
     length = length || this.readBytes();
     switch (subtype) {
       case "byte":
@@ -156,15 +156,15 @@ export class Binary {
     }
   }
 
-  readGeneralArray<T>(length: number, reader: () => T): T[] {
-    let array: T[] = [];
+  readGeneralArray(length, reader) {
+    let array = [];
     for (let i = 0; i < length; i++) {
       array.push(reader());
     }
     return array;
   }
 
-  readField(type: string | undefined, isArray: boolean, length: number, subtype: string | undefined) {
+  readField(type, le) {
     switch (type) {
       case "byte":
       case "int8":
@@ -180,109 +180,49 @@ export class Binary {
       case "float64":
         return this.readFloat64(le);
       case "string":
-        return this.readString();
+        return this.readString(le);
     }
   }
 
-  readByte(le?: boolean): number {
+  readByte() {
     return this.bytes[this.pointer++] & 0xFF;
   }
 
-  readInt16(le: boolean = false) {
+  readInt16() {
     let b1 = this.bytes[this.pointer++] & 0xFF;
     let b2 = this.bytes[this.pointer++] & 0xFF;
     return (b1 << 8) | b2;
   }
 
-  readInt32(le: boolean = false) {
-    let i1 = this.readInt16(le);
-    let i2 = this.readInt16(le);
-
+  readInt32() {
+    let i1 = this.readInt16();
+    let i2 = this.readInt16();
     return (i1 << 16) | i2;
   }
 
-  readInt64(le: boolean = false) {
-    let i1 = this.readInt32(le);
-    let i2 = this.readInt32(le);
-
+  readInt64() {
+    let i1 = this.readInt32();
+    let i2 = this.readInt32();
     return (i1 * 4294967296) + i2;
   }
 
-  readFloat32(le: boolean = false) {
+  readFloat32() {
     let array = this.readByteArray(4);
     return Buffer.from(array).readFloatBE(0);
   }
 
-  readFloat64(le: boolean = false) {
+  readFloat64() {
     let array = this.readByteArray(8);
-    return le ? Buffer.from(array).readDoubleLE(0) : Buffer.from(array).readDoubleBE(0);
+    return Buffer.from(array).readDoubleBE(0);
   }
 
-  readString(length: number) {
+  readString(length) {
     let l = length || this.readByte();
     let array = this.readByteArray(l);
     return Buffer.from(array).toString("utf-8");
   }
 
   isDone() {
-    console.log(`pointer - length = ${this.pointer - this.bytes.length}`);
     return this.pointer - this.bytes.length;
   }
-}
-
-export class Schema {
-  private _name: string = "";
-  private _type: string | undefined;
-  private _subtype: string | undefined;
-  private _schemas: Schema[] | undefined;
-  private _isArray: boolean = false;
-  private _length: number = 0;
-
-  get name(): string {
-    return this._name;
-  }
-
-  set name(value: string) {
-    this._name = value;
-  }
-
-  get type() {
-    return this._type;
-  }
-
-  set type(value) {
-    this._type = value;
-  }
-
-  get subtype() {
-    return this._subtype;
-  }
-
-  set subtype(value) {
-    this._subtype = value;
-  }
-
-  get schemas(): Schema[] | undefined {
-    return this._schemas;
-  }
-
-  set schemas(value: Schema[] | undefined) {
-    this._schemas = value;
-  }
-
-  get isArray(): boolean {
-    return this._isArray;
-  }
-
-  set isArray(value: boolean) {
-    this._isArray = value;
-  }
-
-  get length(): number {
-    return this._length;
-  }
-
-  set length(value: number) {
-    this._length = value;
-  }
-}
+};

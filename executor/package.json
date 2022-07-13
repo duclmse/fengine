@@ -1,18 +1,23 @@
 {
   "name": "fengine",
-  "version": "1.0.0",
-  "description": "",
-  "scripts": {
-    "up": "npm run build && npm start",
-    "start": "node dist/index.js",
-    "build": "npx tsc -b --incremental --traceResolution",
-    "pb": "parcel build ./src/index.js",
-    "clean": "rm -rf ./dist",
-    "cleanAll": "rm -rf ./node_modules && rm -rf ./dist && rm package-lock.json",
-    "test": "npm run build && node ./dist/test.js"
-  },
   "author": "duclmdev@gmail.com",
   "license": "ISC",
+  "version": "1.0.0",
+  "description": "",
+  "source": "src/index.ts",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "up": "npm run _build && npm start",
+    "start": "node dist/index.js",
+    "build": "parcel build",
+    "_build": "npx tsc -b --incremental --traceResolution",
+    "pb": "parcel build src/index.ts",
+    "clean": "rm -rf ./dist",
+    "cleanAll": "rm -rf ./node_modules && rm -rf ./dist && rm package-lock.json",
+    "test": "npm run _build && node ./dist/test.js",
+    "watch": "parcel watch"
+  },
   "dependencies": {
     "@grpc/grpc-js": "^1.6.3",
     "@types/google-protobuf": "^3.15.5",
@@ -24,12 +29,13 @@
     "vm2": "^3.9.9"
   },
   "devDependencies": {
+    "@parcel/packager-ts": "^2.6.2",
     "@parcel/transformer-typescript-tsc": "^2.4.1",
     "browserify-zlib": "^0.2.0",
     "buffer": "^6.0.3",
     "grpc_tools_node_protoc_ts": "^5.3.2",
     "os-browserify": "^0.3.0",
-    "parcel": "^2.4.1",
+    "parcel": "^2.6.2",
     "path-browserify": "^1.0.1",
     "process": "^0.11.10",
     "stream-browserify": "^3.0.0",

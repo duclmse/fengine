@@ -4,9 +4,14 @@ import {credentials} from "@grpc/grpc-js";
 
 require("dotenv").config();
 let {RESOLVER_ADDRESS} = process.env;
-initClient(RESOLVER_ADDRESS, credentials.createInsecure());
+initClient(RESOLVER_ADDRESS || "", credentials.createInsecure());
 (async ({s, i}) => {
   let res = await Table("tbl_test").Select({
+    fieldNames: undefined,
+    groupBy: undefined,
+    limit: undefined,
+    offset: undefined,
+    orderBy: undefined,
     filter: {
       $and: [
         {a: {$gt: 10, $lt: 20}}

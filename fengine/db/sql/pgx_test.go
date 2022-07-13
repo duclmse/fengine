@@ -121,14 +121,17 @@ func TestQueryFunc(t *testing.T) {
 	conn := getPgxConnection(bg)
 	defer viot.CloseCtx(conn, bg)
 
-	var n int
 	// language=postgresql
-	tags, err := conn.QueryFunc(bg, `SELECT * FROM tbl_test WHERE a > $1`, []any{0}, []any{&n}, func(row pgx.QueryFuncRow) error {
-		row.RawValues()
-		return nil
-	})
+	tags, err := conn.Query(bg, `SELECT * FROM tbl_test WHERE a > $1`, 0)
 	if err != nil {
 		log.Panicf("QueryRow failed: %v\n", err)
 	}
-	fmt.Printf("%v\n", tags)
+	fmt.Printf("%+v\n", tags)
+	for tags.Next() {
+		values, err := tags.Values()
+		if err != nil {
+			return
+		}
+		fmt.Printf("%v\n", values)
+	}
 }

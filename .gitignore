@@ -112,3 +112,4 @@ go.sum
 **/.cache
 **/.parcel-cache
 **/vendor
+.idea/sonarlint/**

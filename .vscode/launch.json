@@ -1,11 +1,17 @@
 {
   "configurations": [
     {
+      "name": "Launch Package",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${fileDirname}"
+    },
+    {
       "command": "npm start",
       "name": "Run npm start",
       "request": "launch",
-      "type": "node-terminal",
-      
+      "type": "node-terminal"
     }
   ]
 }

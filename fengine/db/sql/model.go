@@ -323,20 +323,25 @@ type TableDefinition struct {
 type Field struct {
 	Name         string  `json:"name"`
 	Type         pb.Type `json:"type" sql:"type"`
-	IsPrimaryKey bool    `json:"is_primary_key" json:"is_primary_key"`
-	IsLogged     bool    `json:"is_logged" json:"is_logged"`
+	IsPrimaryKey bool    `json:"is_primary_key"`
+	IsLogged     bool    `json:"is_logged"`
 }
 
 //#region SelectRequest
 
+type OrderBy struct {
+	Field     string `json:"field"`
+	Ascending bool   `json:"ascending"`
+}
+
 type SelectRequest struct {
-	Table   string   `json:"table"`
-	Fields  []string `json:"fields"`
-	Filter  Filter   `json:"filter"`
-	GroupBy []string `json:"group_by"`
-	Limit   int32    `json:"limit"`
-	Offset  int32    `json:"offset"`
-	OrderBy []string `json:"order_by"`
+	Table   string    `json:"table"`
+	Fields  []string  `json:"fields"`
+	Filter  Filter    `json:"filter"`
+	GroupBy []string  `json:"group_by"`
+	Limit   int32     `json:"limit"`
+	Offset  int32     `json:"offset"`
+	OrderBy []OrderBy `json:"order_by"`
 }
 
 func (sr SelectRequest) ToSQL() (string, error) {
@@ -351,9 +356,26 @@ func (sr SelectRequest) ToSQL() (string, error) {
 		}
 		return prefix + a
 	}
+	order := func(orderBy []OrderBy) string {
+		length := len(orderBy)
+		if length == 0 {
+			return ""
+		}
+		var sb strings.Builder
+		first := orderBy[0]
+		asc := map[bool]string{
+			true:  "",
+			false: "DESC",
+		}
+		sb.WriteString(fmt.Sprintf("%s %s", first.Field, asc[first.Ascending]))
+		for i := 1; i < length; i++ {
+			sb.WriteString(fmt.Sprintf("%s %s", first.Field, asc[first.Ascending]))
+		}
+		return sb.String()
+	}
 	fields := defaultValue("", strings.Join(sr.Fields, ", "), "*")
 	groupBy := defaultValue(" GROUP BY ", strings.Join(sr.GroupBy, ", "), "")
-	orderBy := defaultValue(" ORDER BY ", strings.Join(sr.OrderBy, ", "), "")
+	orderBy := defaultValue(" ORDER BY ", order(sr.OrderBy), "")
 
 	if sr.Limit == 0 || sr.Limit > 10000 {
 		sr.Limit = 10000
