@@ -118,13 +118,13 @@ func (frm fengineRepositoryMiddleware) Select(ctx context.Context, sql string, p
 	return frm.repo.Select(ContextWithSpan(ctx, span), sql, params...)
 }
 
-func (frm fengineRepositoryMiddleware) Insert(ctx context.Context, sql string, params ...any) (r int64, e error) {
+func (frm fengineRepositoryMiddleware) Insert(ctx context.Context, sql string, params [][]any) (r int64, e error) {
 	span := createSpan(ctx, frm.tracer, "Insert")
 	defer span.Finish()
 	return frm.repo.Insert(ContextWithSpan(ctx, span), sql, params)
 }
 
-func (frm fengineRepositoryMiddleware) Update(ctx context.Context, sql string, params ...any) (r int64, e error) {
+func (frm fengineRepositoryMiddleware) Update(ctx context.Context, sql string, params []any) (r int64, e error) {
 	span := createSpan(ctx, frm.tracer, "Update")
 	defer span.Finish()
 	return frm.repo.Update(ContextWithSpan(ctx, span), sql, params)

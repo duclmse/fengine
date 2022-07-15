@@ -38,6 +38,7 @@ type Service interface {
 	CreateTable(ctx ctx.Context, req sql.TableDefinition) (r Result, e error)
 	Select(ctx ctx.Context, req sql.SelectRequest) (res *sql.ResultSet, err error)
 	Insert(ctx ctx.Context, req sql.InsertRequest) (r Result, e error)
+	InsertBatch(ctx ctx.Context, req sql.BatchInsertRequest) (Result, error)
 	Update(ctx ctx.Context, req sql.UpdateRequest) (r Result, e error)
 	Delete(ctx ctx.Context, req sql.DeleteRequest) (r Result, e error)
 }
@@ -122,8 +123,17 @@ func (s FengineService) Select(ctx ctx.Context, req sql.SelectRequest) (res *sql
 	return s.Repository.Select(ctx, _sql)
 }
 
+func (s FengineService) InsertBatch(ctx ctx.Context, req sql.InsertRequest) (Result, error) {
+	rs, err := s.Repository.InsertBatch(ctx, req)
+	if err != nil {
+		return result(err)
+	}
+
+	return Result{Data: rs}, nil
+}
+
 func (s FengineService) Insert(ctx ctx.Context, req sql.InsertRequest) (Result, error) {
-	_sql, err := req.ToSQL()
+	_sql, params, err := req.ToSQL()
 	if err != nil {
 		return result(err)
 	}
@@ -142,7 +152,7 @@ func (s FengineService) Update(ctx ctx.Context, req sql.UpdateRequest) (Result, 
 		return result(err)
 	}
 
-	rs, err := s.Repository.Update(ctx, _sql, params...)
+	rs, err := s.Repository.Update(ctx, _sql, params)
 	if err != nil {
 		return result(err)
 	}
@@ -156,7 +166,7 @@ func (s FengineService) Delete(ctx ctx.Context, req sql.DeleteRequest) (Result, 
 		return result(err)
 	}
 
-	rs, err := s.Repository.Update(ctx, _sql, params...)
+	rs, err := s.Repository.Update(ctx, _sql, params)
 	if err != nil {
 		return result(err)
 	}

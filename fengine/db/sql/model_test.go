@@ -69,7 +69,7 @@ func TestSelectRequest_ToSQL(t *testing.T) {
 		"group_by": ["name"],
 		"limit":   1000,
 		"offset":  10,
-		"order_by": ["name"]
+		"order_by": [{"field":"name", "ascending": false}]
 	}`)
 	req := SelectRequest{}
 	if err := json.Unmarshal(jsonb, &req); err != nil {

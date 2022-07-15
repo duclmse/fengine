@@ -398,17 +398,33 @@ type ResultSet struct {
 //#region InsertRequest
 
 type InsertRequest struct {
-	Table  string           `json:"table"`
-	Values []map[string]any `json:"values"`
+	Table  string         `json:"table"`
+	Values map[string]any `json:"values"`
 }
 
-func (r InsertRequest) ToSQL() (sql string, e error) {
-	var sb strings.Builder
-	sb.WriteString(fmt.Sprintf(`INSERT INTO %s (`, r.Table))
-	sb.WriteString(` (`)
-	sb.WriteString(`) VALUES (`)
+type BatchInsertRequest struct {
+	Table   string   `json:"table"`
+	Columns []string `json:"columns"`
+	Values  [][]any  `json:"values"`
+}
 
-	return sb.String(), nil
+func (r InsertRequest) ToSQL() (sql string, params []any, e error) {
+	var nameSB strings.Builder
+	var varSB strings.Builder
+
+	vars := make([]any, len(r.Values))
+	i := 0
+	for k, v := range r.Values {
+		if i == 1 {
+			nameSB.WriteString(fmt.Sprintf("%s", k))
+			varSB.WriteString("$1")
+		}
+		i += 1
+		vars[i] = v
+		nameSB.WriteString(fmt.Sprintf(", %s", k))
+		varSB.WriteString(fmt.Sprintf(", $%d", i+1))
+	}
+	return fmt.Sprintf(`INSERT INTO %s (%s) VALUES (%s);`, r.Table, nameSB.String(), varSB.String()), vars, nil
 }
 
 //#endregion InsertRequest

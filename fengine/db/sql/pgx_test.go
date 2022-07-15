@@ -120,9 +120,26 @@ func TestErrorHandling(t *testing.T) {
 func TestQueryFunc(t *testing.T) {
 	conn := getPgxConnection(bg)
 	defer viot.CloseCtx(conn, bg)
-
 	// language=postgresql
 	tags, err := conn.Query(bg, `SELECT * FROM tbl_test WHERE a > $1`, 0)
+	if err != nil {
+		log.Panicf("QueryRow failed: %v\n", err)
+	}
+	fmt.Printf("%+v\n", tags)
+	for tags.Next() {
+		values, err := tags.Values()
+		if err != nil {
+			return
+		}
+		fmt.Printf("%v\n", values)
+	}
+}
+
+func TestQueryIn(t *testing.T) {
+	conn := getPgxConnection(bg)
+	defer viot.CloseCtx(conn, bg)
+	// language=postgresql
+	tags, err := conn.Query(bg, `SELECT * FROM tbl_test WHERE a = ANY($1)`, []any{17, 18, 19, 20, 21})
 	if err != nil {
 		log.Panicf("QueryRow failed: %v\n", err)
 	}

@@ -32,9 +32,9 @@ func connect(t *testing.T) (logger.Logger, *pgxpool.Pool) {
 
 func TestGenUUID(t *testing.T) {
 	if id, err := uuid.NewRandom(); err != nil {
-		fmt.Printf("err")
+		fmt.Printf("err %s\n", err)
 	} else {
-		fmt.Printf("uuid:= %s\n", id)
+		fmt.Printf("uuid = %s\n", id)
 	}
 }
 
@@ -102,7 +102,7 @@ func TestGeneratedQuery(t *testing.T) {
 	// language=json
 	jsonb := []byte(`{
 		"table":   "tbl_test",
-		"fields":  ["id", "name as n", "description d", "a", "b", "c"],
+		"fields":  ["id", "name as n", "description d", "a", "b", "j", "t"],
 		"filter":  {
 			"$and": [
 				{"a": {"$gt": 10, "$lt": 20}},
@@ -115,7 +115,7 @@ func TestGeneratedQuery(t *testing.T) {
 		},
 		"limit":   1000,
 		"offset":  1,
-		"order_by": ["name"]
+		"order_by": [{"field": "name"}]
 	}`)
 	req := new(SelectRequest)
 	if err := json.Unmarshal(jsonb, &req); err != nil {
@@ -129,17 +129,19 @@ func TestGeneratedQuery(t *testing.T) {
 	}
 	t.Logf("%s\n", sql)
 
-	log, db := connect(t)
+	_, db := connect(t)
 	rows, err := db.Query(context.Background(), sql)
 	if err != nil {
-		log.Info("err=%v", err)
+		t.Fatalf("err=%v", err)
 	}
 	cols := Columns(rows)
 
 	fmt.Printf("%+v\n", cols)
 	for rows.Next() {
-		rowMap := make(map[string]interface{})
-		MapScan(rows, &rowMap)
-		t.Logf("%v\n", rowMap)
+		vals, err := rows.Values()
+		if err != nil {
+			t.Fatalf("err getting values %s\n", err)
+		}
+		fmt.Printf("%v\n", vals)
 	}
 }

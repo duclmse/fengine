@@ -98,6 +98,6 @@ func execServiceEndpoint(svc fengine.Service, c fengine.ServiceComponent) endpoi
 			return nil, err
 		}
 		c.Log.Info("Done: %v", result)
-		return nil, nil
+		return result, nil
 	}
 }

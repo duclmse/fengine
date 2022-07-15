@@ -1,7 +1,7 @@
 package sql
 
 import (
-	ctx "context"
+	"context"
 	"fmt"
 
 	"github.com/duclmse/fengine/pkg/logger"
@@ -13,28 +13,29 @@ import (
 var _ Repository = (*fengineRepository)(nil)
 
 type Repository interface {
-	GetEntity(ctx ctx.Context, id UUID) (*EntityDefinition, error)
-	UpsertEntity(ctx ctx.Context, def EntityDefinition) (int64, error)
-	DeleteEntity(ctx ctx.Context, thingId UUID) (int64, error)
+	GetEntity(ctx context.Context, id UUID) (*EntityDefinition, error)
+	UpsertEntity(ctx context.Context, def EntityDefinition) (int64, error)
+	DeleteEntity(ctx context.Context, thingId UUID) (int64, error)
 
-	GetThingAllServices(ctx ctx.Context, thingId UUID) ([]EntityService, error)
-	GetThingService(ctx ctx.Context, id ThingServiceId) (*EntityService, error)
-	UpsertThingService(ctx ctx.Context, service ...ThingService) (int, error)
-	DeleteThingService(ctx ctx.Context, id ThingServiceId) (int, error)
+	GetThingAllServices(ctx context.Context, thingId UUID) ([]EntityService, error)
+	GetThingService(ctx context.Context, id ThingServiceId) (*EntityService, error)
+	UpsertThingService(ctx context.Context, service ...ThingService) (int, error)
+	DeleteThingService(ctx context.Context, id ThingServiceId) (int, error)
 
-	GetThingAllSubscriptions(ctx ctx.Context, thingId UUID) ([]EntitySubscription, error)
-	GetThingSubscriptions(ctx ctx.Context, id ThingSubscriptionId) (*EntitySubscription, error)
-	UpsertThingSubscription(ctx ctx.Context, sub ...ThingSubscription) (int64, error)
-	DeleteThingSubscription(ctx ctx.Context, id ThingSubscriptionId) (int64, error)
+	GetThingAllSubscriptions(ctx context.Context, thingId UUID) ([]EntitySubscription, error)
+	GetThingSubscriptions(ctx context.Context, id ThingSubscriptionId) (*EntitySubscription, error)
+	UpsertThingSubscription(ctx context.Context, sub ...ThingSubscription) (int64, error)
+	DeleteThingSubscription(ctx context.Context, id ThingSubscriptionId) (int64, error)
 
-	GetThingAttributes(ctx ctx.Context, attrs ...string) ([]Variable, error)
-	SetThingAttributes(ctx ctx.Context, attrs []Variable) (int64, error)
-	GetAttributeHistory(cts ctx.Context, attrs AttributeHistoryRequest) ([]Variable, error)
+	GetThingAttributes(ctx context.Context, attrs ...string) ([]Variable, error)
+	SetThingAttributes(ctx context.Context, attrs []Variable) (int64, error)
+	GetAttributeHistory(cts context.Context, attrs AttributeHistoryRequest) ([]Variable, error)
 
-	Select(ctx ctx.Context, sql string, params ...any) (r *ResultSet, err error)
-	Insert(ctx ctx.Context, sql string, params ...any) (r int64, e error)
-	Update(ctx ctx.Context, sql string, params ...any) (r int64, e error)
-	Delete(ctx ctx.Context, sql string, params ...any) (r int64, e error)
+	Select(ctx context.Context, sql string, params ...any) (r *ResultSet, err error)
+	Insert(ctx context.Context, sql string, params [][]any) (r int64, e error)
+	InsertBatch(ctx context.Context, req InsertRequest) (r int64, interface{})
+	Update(ctx context.Context, sql string, params []any) (r int64, e error)
+	Delete(ctx context.Context, sql string, params ...any) (r int64, e error)
 }
 
 type RowMapper func(pgx.Rows) error
@@ -52,7 +53,7 @@ type fengineRepository struct {
 	log logger.Logger
 }
 
-func (fer fengineRepository) GetEntity(ctx ctx.Context, thingId UUID) (*EntityDefinition, error) {
+func (fer fengineRepository) GetEntity(ctx context.Context, thingId UUID) (*EntityDefinition, error) {
 	// language=sql
 	query := `SELECT "id", "name", "type", "description", "project_id", "base_template", "base_shapes", "create_ts",
        "update_ts" FROM entity WHERE id = $1`
@@ -69,7 +70,7 @@ func (fer fengineRepository) GetEntity(ctx ctx.Context, thingId UUID) (*EntityDe
 	return nil, nil
 }
 
-func (fer fengineRepository) UpsertEntity(ctx ctx.Context, def EntityDefinition) (int64, error) {
+func (fer fengineRepository) UpsertEntity(ctx context.Context, def EntityDefinition) (int64, error) {
 	// language=sql
 	query := `INSERT INTO entity("id", "name", "type", "description", "project_id", "base_template", "base_shapes"
  		) VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT DO UPDATE SET base_template = $6, base_shapes = $7`
@@ -98,7 +99,7 @@ func (fer fengineRepository) UpsertEntity(ctx ctx.Context, def EntityDefinition)
 	return affected, nil
 }
 
-func (fer fengineRepository) DeleteEntity(ctx ctx.Context, thingId UUID) (int64, error) {
+func (fer fengineRepository) DeleteEntity(ctx context.Context, thingId UUID) (int64, error) {
 	// language=postgresql
 	result, err := fer.db.Exec(ctx, `DELETE FROM entity WHERE id = $1::UUID`, thingId)
 	if err != nil {
@@ -107,7 +108,7 @@ func (fer fengineRepository) DeleteEntity(ctx ctx.Context, thingId UUID) (int64,
 	return result.RowsAffected(), nil
 }
 
-func (fer fengineRepository) GetThingAllServices(ctx ctx.Context, thingId UUID) ([]EntityService, error) {
+func (fer fengineRepository) GetThingAllServices(ctx context.Context, thingId UUID) ([]EntityService, error) {
 	// language=postgresql
 	query := `SELECT m1.entity_id AS id, m1.name, m1."input", m1."output", m1."from",
     	CASE WHEN m1."from" IS NULL THEN m1."code" ELSE m2."code" END AS code
@@ -130,7 +131,7 @@ func (fer fengineRepository) GetThingAllServices(ctx ctx.Context, thingId UUID) 
 	return result, nil
 }
 
-func (fer fengineRepository) GetThingService(ctx ctx.Context, id ThingServiceId) (*EntityService, error) {
+func (fer fengineRepository) GetThingService(ctx context.Context, id ThingServiceId) (*EntityService, error) {
 	// language=postgresql
 	query := `SELECT m1.entity_id AS id, m1.name, m1."input", m1."output", m1."from",
     	CASE WHEN m1."from" IS NULL THEN m1."code" ELSE m2."code" END AS code
@@ -154,7 +155,7 @@ func (fer fengineRepository) GetThingService(ctx ctx.Context, id ThingServiceId)
 	return nil, nil
 }
 
-func (fer fengineRepository) UpsertThingService(ctx ctx.Context, service ...ThingService) (int, error) {
+func (fer fengineRepository) UpsertThingService(ctx context.Context, service ...ThingService) (int, error) {
 	// language=postgresql
 	query := `INSERT INTO service("entity_id", "name", "input", "output", "code") VALUES ($1, $2, $3, $4, $5)
 		ON CONFLICT DO UPDATE SET "input" = $3, "output" = $4, "code" = $5, update_ts = NOW()`
@@ -165,7 +166,7 @@ func (fer fengineRepository) UpsertThingService(ctx ctx.Context, service ...Thin
 	return int(result.RowsAffected()), nil
 }
 
-func (fer fengineRepository) DeleteThingService(ctx ctx.Context, id ThingServiceId) (int, error) {
+func (fer fengineRepository) DeleteThingService(ctx context.Context, id ThingServiceId) (int, error) {
 	// language=postgresql
 	query := `DELETE FROM service s WHERE s.entity_id = $1::UUID AND s.name = $2;`
 	result, err := fer.db.Exec(ctx, query, id.EntityId, id.Name)
@@ -175,7 +176,7 @@ func (fer fengineRepository) DeleteThingService(ctx ctx.Context, id ThingService
 	return int(result.RowsAffected()), nil
 }
 
-func (fer fengineRepository) GetThingAllSubscriptions(ctx ctx.Context, thingId UUID) (subs []EntitySubscription, err error) {
+func (fer fengineRepository) GetThingAllSubscriptions(ctx context.Context, thingId UUID) (subs []EntitySubscription, err error) {
 	// language=postgresql
 	query := `SELECT "entity_id", "name", "subs_on", "event", "from", "code", "create_ts", "update_ts" FROM subscription
 		WHERE entity_id = $1::UUID`
@@ -190,12 +191,12 @@ func (fer fengineRepository) GetThingAllSubscriptions(ctx ctx.Context, thingId U
 	return
 }
 
-func (fer fengineRepository) GetThingSubscriptions(ctx ctx.Context, id ThingSubscriptionId) (*EntitySubscription, error) {
+func (fer fengineRepository) GetThingSubscriptions(ctx context.Context, id ThingSubscriptionId) (*EntitySubscription, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (fer fengineRepository) UpsertThingSubscription(ctx ctx.Context, sub ...ThingSubscription) (int64, error) {
+func (fer fengineRepository) UpsertThingSubscription(ctx context.Context, sub ...ThingSubscription) (int64, error) {
 	// language=postgresql
 	query := `INSERT INTO subscription("entity_id", "name", "event", "subs_on", "code") VALUES ($1, $2, $3, $4, $5)
 		ON CONFLICT DO UPDATE SET "event" = $3, "subs_on" = $4, "code" = $5, update_ts = NOW()`
@@ -206,7 +207,7 @@ func (fer fengineRepository) UpsertThingSubscription(ctx ctx.Context, sub ...Thi
 	return result.RowsAffected(), nil
 }
 
-func (fer fengineRepository) DeleteThingSubscription(ctx ctx.Context, id ThingSubscriptionId) (int64, error) {
+func (fer fengineRepository) DeleteThingSubscription(ctx context.Context, id ThingSubscriptionId) (int64, error) {
 	// language=postgresql
 	query := `DELETE FROM "subscription" s WHERE s.entity_id = $1::UUID AND s.name = $2;`
 	result, err := fer.db.Exec(ctx, query, id.EntityId, id.Name)
@@ -216,22 +217,22 @@ func (fer fengineRepository) DeleteThingSubscription(ctx ctx.Context, id ThingSu
 	return result.RowsAffected(), nil
 }
 
-func (fer fengineRepository) GetThingAttributes(ctx ctx.Context, attrs ...string) ([]Variable, error) {
+func (fer fengineRepository) GetThingAttributes(ctx context.Context, attrs ...string) ([]Variable, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (fer fengineRepository) SetThingAttributes(ctx ctx.Context, attrs []Variable) (int64, error) {
+func (fer fengineRepository) SetThingAttributes(ctx context.Context, attrs []Variable) (int64, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (fer fengineRepository) GetAttributeHistory(cts ctx.Context, attrs AttributeHistoryRequest) ([]Variable, error) {
+func (fer fengineRepository) GetAttributeHistory(cts context.Context, attrs AttributeHistoryRequest) ([]Variable, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (fer fengineRepository) Select(ctx ctx.Context, sql string, params ...any) (r *ResultSet, err error) {
+func (fer fengineRepository) Select(ctx context.Context, sql string, params ...any) (r *ResultSet, err error) {
 	rows, err := fer.db.Query(ctx, sql, params...)
 	defer rows.Close()
 	if err != nil {
@@ -260,16 +261,22 @@ func (fer fengineRepository) Select(ctx ctx.Context, sql string, params ...any) 
 	return &ResultSet{Columns: columns, Rows: result}, nil
 }
 
-func (fer fengineRepository) Insert(ctx ctx.Context, sql string, params ...any) (r int64, err error) {
+func (fer fengineRepository) Insert(ctx context.Context, sql string, params [][]any) (r int64, err error) {
 	fmt.Printf(`repository insert: %s\n`, sql)
-	inserted, err := fer.db.Exec(ctx, sql, params)
+
+	copyCount, err := fer.db.CopyFrom(
+		context.Background(),
+		pgx.Identifier{"people"},
+		[]string{"first_name", "last_name", "age"},
+		pgx.CopyFromRows(params),
+	)
 	if err != nil {
-		return
+		return 0, err
 	}
-	return inserted.RowsAffected(), nil
+	return copyCount, nil
 }
 
-func (fer fengineRepository) Update(ctx ctx.Context, sql string, params ...any) (r int64, err error) {
+func (fer fengineRepository) Update(ctx context.Context, sql string, params []any) (r int64, err error) {
 	updated, err := fer.db.Exec(ctx, sql, params)
 	if err != nil {
 		return
@@ -277,7 +284,7 @@ func (fer fengineRepository) Update(ctx ctx.Context, sql string, params ...any) 
 	return updated.RowsAffected(), nil
 }
 
-func (fer fengineRepository) Delete(ctx ctx.Context, sql string, params ...any) (r int64, err error) {
+func (fer fengineRepository) Delete(ctx context.Context, sql string, params ...any) (r int64, err error) {
 	deleted, err := fer.db.Exec(ctx, sql, params)
 	if err != nil {
 		return 0, err
