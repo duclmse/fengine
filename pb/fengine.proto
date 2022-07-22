@@ -26,7 +26,6 @@ message Script {
   MethodInfo method = 1;
   repeated Variable attributes = 2;
   map<string, Function> services = 3;
-  map<string, Function> subscription = 4;
 }
 
 message MethodInfo {
@@ -79,16 +78,16 @@ message Parameter {
 
 message Variable {
   string name = 1;
-  Type   type = 2;
   oneof value {
-    int32  i32 = 3;
-    int64  i64 = 4;
-    float  f32 = 5;
-    double f64 = 6;
-    bool   bool = 7;
-    string json = 8;
-    string string = 9;
-    bytes  binary = 10;
+    int32  i32 = 2;
+    int64  i64 = 3;
+    float  f32 = 4;
+    double f64 = 5;
+    bool   bool = 6;
+    string str = 7;
+    int64  time = 8;
+    bytes  bin = 9;
+    string json = 10;
   }
 }
 
@@ -99,9 +98,10 @@ message Value {
     float  f32 = 3;
     double f64 = 4;
     bool   bool = 5;
-    string json = 6;
-    string string = 7;
-    bytes  binary = 8;
+    string str = 6;
+    int64  time = 7;
+    bytes  bin = 8;
+    string json = 9;
   }
 }
 
@@ -111,9 +111,10 @@ enum Type {
   f32 = 2;
   f64 = 3;
   bool = 4;
-  json = 5;
-  string = 6;
-  binary = 7;
+  str = 5;
+  time = 6;
+  bin = 7;
+  json = 8;
 }
 
 //#endregion

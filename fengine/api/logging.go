@@ -56,6 +56,11 @@ func (l loggingMiddleware) Insert(ctx context.Context, request sql.InsertRequest
 	return l.svc.Insert(ctx, request)
 }
 
+func (l loggingMiddleware) BatchInsert(ctx context.Context, request sql.BatchInsertRequest) (r fengine.Result, e error) {
+	defer l.log.Elapse("BatchInsert")(time.Now(), &e)
+	return l.svc.BatchInsert(ctx, request)
+}
+
 func (l loggingMiddleware) Update(ctx context.Context, request sql.UpdateRequest) (r fengine.Result, e error) {
 	defer l.log.Elapse("Update")(time.Now(), &e)
 	return l.svc.Update(ctx, request)

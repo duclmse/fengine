@@ -38,7 +38,7 @@ type Service interface {
 	CreateTable(ctx ctx.Context, req sql.TableDefinition) (r Result, e error)
 	Select(ctx ctx.Context, req sql.SelectRequest) (res *sql.ResultSet, err error)
 	Insert(ctx ctx.Context, req sql.InsertRequest) (r Result, e error)
-	InsertBatch(ctx ctx.Context, req sql.BatchInsertRequest) (Result, error)
+	BatchInsert(ctx ctx.Context, req sql.BatchInsertRequest) (Result, error)
 	Update(ctx ctx.Context, req sql.UpdateRequest) (r Result, e error)
 	Delete(ctx ctx.Context, req sql.DeleteRequest) (r Result, e error)
 }
@@ -123,8 +123,13 @@ func (s FengineService) Select(ctx ctx.Context, req sql.SelectRequest) (res *sql
 	return s.Repository.Select(ctx, _sql)
 }
 
-func (s FengineService) InsertBatch(ctx ctx.Context, req sql.InsertRequest) (Result, error) {
-	rs, err := s.Repository.InsertBatch(ctx, req)
+func (s FengineService) Insert(ctx ctx.Context, req sql.InsertRequest) (Result, error) {
+	_sql, params, err := req.ToSQL()
+	if err != nil {
+		return result(err)
+	}
+
+	rs, err := s.Repository.Insert(ctx, _sql, params)
 	if err != nil {
 		return result(err)
 	}
@@ -132,13 +137,8 @@ func (s FengineService) InsertBatch(ctx ctx.Context, req sql.InsertRequest) (Res
 	return Result{Data: rs}, nil
 }
 
-func (s FengineService) Insert(ctx ctx.Context, req sql.InsertRequest) (Result, error) {
-	_sql, params, err := req.ToSQL()
-	if err != nil {
-		return result(err)
-	}
-
-	rs, err := s.Repository.Insert(ctx, _sql)
+func (s FengineService) BatchInsert(ctx ctx.Context, req sql.BatchInsertRequest) (Result, error) {
+	rs, err := s.Repository.BatchInsert(ctx, req.Table, req.Fields, req.Data)
 	if err != nil {
 		return result(err)
 	}

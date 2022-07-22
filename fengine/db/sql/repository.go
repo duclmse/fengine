@@ -32,8 +32,8 @@ type Repository interface {
 	GetAttributeHistory(cts context.Context, attrs AttributeHistoryRequest) ([]Variable, error)
 
 	Select(ctx context.Context, sql string, params ...any) (r *ResultSet, err error)
-	Insert(ctx context.Context, sql string, params [][]any) (r int64, e error)
-	InsertBatch(ctx context.Context, req InsertRequest) (r int64, interface{})
+	Insert(ctx context.Context, sql string, params []any) (r int64, e error)
+	BatchInsert(ctx context.Context, table string, fields []string, data [][]any) (r int64, e error)
 	Update(ctx context.Context, sql string, params []any) (r int64, e error)
 	Delete(ctx context.Context, sql string, params ...any) (r int64, e error)
 }
@@ -261,19 +261,18 @@ func (fer fengineRepository) Select(ctx context.Context, sql string, params ...a
 	return &ResultSet{Columns: columns, Rows: result}, nil
 }
 
-func (fer fengineRepository) Insert(ctx context.Context, sql string, params [][]any) (r int64, err error) {
+func (fer fengineRepository) Insert(ctx context.Context, sql string, params []any) (r int64, err error) {
 	fmt.Printf(`repository insert: %s\n`, sql)
 
-	copyCount, err := fer.db.CopyFrom(
-		context.Background(),
-		pgx.Identifier{"people"},
-		[]string{"first_name", "last_name", "age"},
-		pgx.CopyFromRows(params),
-	)
+	tags, err := fer.db.Exec(ctx, sql, params...)
 	if err != nil {
 		return 0, err
 	}
-	return copyCount, nil
+	return tags.RowsAffected(), nil
+}
+
+func (fer fengineRepository) BatchInsert(ctx context.Context, table string, fields []string, data [][]any) (r int64, e error) {
+	return fer.db.CopyFrom(ctx, pgx.Identifier{table}, fields, pgx.CopyFromRows(data))
 }
 
 func (fer fengineRepository) Update(ctx context.Context, sql string, params []any) (r int64, err error) {

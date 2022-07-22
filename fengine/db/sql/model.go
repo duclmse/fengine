@@ -403,9 +403,9 @@ type InsertRequest struct {
 }
 
 type BatchInsertRequest struct {
-	Table   string   `json:"table"`
-	Columns []string `json:"columns"`
-	Values  [][]any  `json:"values"`
+	Table  string   `json:"table"`
+	Fields []string `json:"fields"`
+	Data   [][]any  `json:"data"`
 }
 
 func (r InsertRequest) ToSQL() (sql string, params []any, e error) {
@@ -538,27 +538,27 @@ func (a Variable) ToArgument() *pb.Variable {
 	}
 	switch a.Type {
 	case pb.Type_i32:
-		return &pb.Variable{Name: name, Type: pb.Type_i32, Value: &pb.Variable_I32{I32: int32(a.Value.(float64))}}
+		return &pb.Variable{Name: name, Value: &pb.Variable_I32{I32: int32(a.Value.(float64))}}
 	case pb.Type_i64:
-		return &pb.Variable{Name: name, Type: pb.Type_i64, Value: &pb.Variable_I64{I64: int64(a.Value.(float64))}}
+		return &pb.Variable{Name: name, Value: &pb.Variable_I64{I64: int64(a.Value.(float64))}}
 	case pb.Type_f32:
-		return &pb.Variable{Name: name, Type: pb.Type_f32, Value: &pb.Variable_F32{F32: float32(a.Value.(float64))}}
+		return &pb.Variable{Name: name, Value: &pb.Variable_F32{F32: float32(a.Value.(float64))}}
 	case pb.Type_f64:
-		return &pb.Variable{Name: name, Type: pb.Type_f64, Value: &pb.Variable_F64{F64: a.Value.(float64)}}
+		return &pb.Variable{Name: name, Value: &pb.Variable_F64{F64: a.Value.(float64)}}
 	case pb.Type_bool:
-		return &pb.Variable{Name: name, Type: pb.Type_bool, Value: &pb.Variable_Bool{Bool: a.Value.(bool)}}
+		return &pb.Variable{Name: name, Value: &pb.Variable_Bool{Bool: a.Value.(bool)}}
 	case pb.Type_json:
-		return &pb.Variable{Name: name, Type: pb.Type_json, Value: &pb.Variable_Json{Json: a.Value.(string)}}
-	case pb.Type_string:
-		return &pb.Variable{Name: name, Type: pb.Type_string, Value: &pb.Variable_String_{String_: a.Value.(string)}}
-	case pb.Type_binary:
+		return &pb.Variable{Name: name, Value: &pb.Variable_Json{Json: a.Value.(string)}}
+	case pb.Type_str:
+		return &pb.Variable{Name: name, Value: &pb.Variable_Str{Str: a.Value.(string)}}
+	case pb.Type_bin:
 		s := a.Value.(string)
 		binary, err := base64.StdEncoding.DecodeString(s)
 		if err != nil {
 			fmt.Printf("cannot decode base64 with %s\n", s)
 			return &pb.Variable{}
 		}
-		return &pb.Variable{Name: name, Type: pb.Type_binary, Value: &pb.Variable_Binary{Binary: binary}}
+		return &pb.Variable{Name: name, Value: &pb.Variable_Bin{Bin: binary}}
 	}
 	return nil
 }
@@ -587,9 +587,9 @@ func SqlType(t pb.Type) (string, error) {
 		return "FLOAT(8)", nil
 	case pb.Type_json:
 		return "JSONB", nil
-	case pb.Type_string:
+	case pb.Type_str:
 		return "VARCHAR(5000)", nil
-	case pb.Type_binary:
+	case pb.Type_bin:
 		return "BYTEA", nil
 	default:
 		return "", errors.New("invalid db type")

@@ -31,11 +31,11 @@ func encodeSelectResponse(ctx context.Context, r any) (response any, err error) 
 			case float64:
 				a[j] = &viot.Value{Value: &viot.Value_F64{F64: vl}}
 			case string:
-				a[j] = &viot.Value{Value: &viot.Value_String_{String_: vl}}
+				a[j] = &viot.Value{Value: &viot.Value_Str{Str: vl}}
 			case bool:
 				a[j] = &viot.Value{Value: &viot.Value_Bool{Bool: vl}}
 			case []byte:
-				a[j] = &viot.Value{Value: &viot.Value_Binary{Binary: vl}}
+				a[j] = &viot.Value{Value: &viot.Value_Bin{Bin: vl}}
 			default:
 				bytes, err := json.Marshal(vl)
 				if err == nil {

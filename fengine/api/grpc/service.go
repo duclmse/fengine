@@ -2,7 +2,7 @@ package grpc
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	pb "github.com/duclmse/fengine/pb"
 )
 
@@ -11,12 +11,11 @@ func (g grpcDataServer) Select(ctx context.Context, request *pb.SelectRequest) (
 	if err != nil {
 		return nil, err
 	}
-	set, ok := resp.(*pb.SelectResult)
+	result, ok := resp.(*pb.SelectResult)
 	if !ok {
-		fmt.Printf("GRPC Select: result is not result set")
-		return nil, err
+		return nil, errors.New("GRPC Select: result is not valid result set")
 	}
-	return set, nil
+	return result, nil
 }
 
 func (g grpcDataServer) Insert(ctx context.Context, request *pb.InsertRequest) (*pb.InsertResult, error) {
@@ -24,7 +23,11 @@ func (g grpcDataServer) Insert(ctx context.Context, request *pb.InsertRequest) (
 	if err != nil {
 		return nil, err
 	}
-	return resp.(*pb.InsertResult), nil
+	result, ok := resp.(*pb.InsertResult)
+	if !ok {
+		return nil, errors.New("GRPC Insert: result is not valid")
+	}
+	return result, nil
 }
 
 func (g grpcDataServer) Update(ctx context.Context, request *pb.UpdateRequest) (*pb.UpdateResult, error) {
@@ -32,7 +35,11 @@ func (g grpcDataServer) Update(ctx context.Context, request *pb.UpdateRequest) (
 	if err != nil {
 		return nil, err
 	}
-	return resp.(*pb.UpdateResult), nil
+	result, ok := resp.(*pb.UpdateResult)
+	if !ok {
+		return nil, errors.New("GRPC Update: result is not valid")
+	}
+	return result, nil
 }
 
 func (g grpcDataServer) Delete(ctx context.Context, request *pb.DeleteRequest) (*pb.DeleteResult, error) {
@@ -40,7 +47,11 @@ func (g grpcDataServer) Delete(ctx context.Context, request *pb.DeleteRequest) (
 	if err != nil {
 		return nil, err
 	}
-	return resp.(*pb.DeleteResult), nil
+	result, ok := resp.(*pb.DeleteResult)
+	if !ok {
+		return nil, errors.New("GRPC Delete: result is not valid")
+	}
+	return result, nil
 }
 
 //func (g grpcThingServer) ResolveService(ctx context.Context, request *pb.ScriptRequest) (*pb.Result, error) {

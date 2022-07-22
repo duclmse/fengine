@@ -62,6 +62,11 @@ func (mm metricsMiddleware) Insert(ctx context.Context, request sql.InsertReques
 	return mm.svc.Insert(ctx, request)
 }
 
+func (mm metricsMiddleware) BatchInsert(ctx context.Context, request sql.BatchInsertRequest) (fengine.Result, error) {
+	defer mm.count("BatchInsert")(time.Now())
+	return mm.svc.BatchInsert(ctx, request)
+}
+
 func (mm metricsMiddleware) Update(ctx context.Context, request sql.UpdateRequest) (fengine.Result, error) {
 	defer mm.count("Update")(time.Now())
 	return mm.svc.Update(ctx, request)
